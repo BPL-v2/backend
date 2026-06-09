@@ -130,7 +130,11 @@ func (c *CharacterServiceImpl) UpdateCharacter(characterId string) (*client.Char
 	if user.GetPoEToken() == "" {
 		return nil, fmt.Errorf("user has no poe token")
 	}
-	response, clientErr := c.poeClient.GetCharacter(user.GetPoEToken(), character.Name, nil)
+	event, err := c.eventRepository.GetEventById(character.EventId)
+	if err != nil {
+		return nil, err
+	}
+	response, clientErr := c.poeClient.GetCharacter(user.GetPoEToken(), character.Name, event.GetRealm())
 	if clientErr != nil {
 		return nil, fmt.Errorf("%s", clientErr.Description)
 	}

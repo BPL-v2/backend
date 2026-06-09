@@ -38,12 +38,11 @@ type Event struct {
 	Objectives           []*Objective `gorm:"foreignKey:EventId;constraint:OnDelete:CASCADE"`
 }
 
-func (e *Event) GetRealm() *client.Realm {
+func (e *Event) GetRealm() client.Realm {
 	if e.GameVersion == PoE2 {
-		realm := client.PoE2
-		return &realm
+		return client.PoE2
 	}
-	return nil
+	return client.PC
 }
 
 func (e *Event) TeamIds() []int {

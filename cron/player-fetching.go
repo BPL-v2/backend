@@ -208,17 +208,14 @@ func (s *PlayerFetchingService) UpdateLadder(players []*parser.PlayerUpdate, eve
 	s.lastLadderUpdate = time.Now()
 	var resp *client.GetLeagueLadderResponse
 	var clientError *client.ClientError
-	if event.GameVersion == repository.PoE2 {
-		// todo: get the ladder for the correct event
-		resp, clientError = s.poeClient.GetPoE2Ladder(event.Name)
-	} else {
-		token, err := s.oauthService.GetApplicationToken(repository.ProviderPoE)
-		if err != nil {
-			log.Printf("Error fetching application token: %v", err)
-			return
-		}
-		resp, clientError = s.poeClient.GetFullLadder(token, event.Name)
+
+	token, err := s.oauthService.GetApplicationToken(repository.ProviderPoE)
+	if err != nil {
+		log.Printf("Error fetching application token: %v", err)
+		return
 	}
+
+	resp, clientError = s.poeClient.GetFullLadder(token, event.Name, event.GetRealm())
 	if clientError != nil {
 		log.Printf("Error fetching ladder: %v", clientError)
 		return
@@ -248,7 +245,7 @@ func (s *PlayerFetchingService) UpdateLadder(players []*parser.PlayerUpdate, eve
 			player.Mu.Unlock()
 		}
 	}
-	err := s.ladderService.UpsertLadder(entriesToPersist, event.Id, charToUserId)
+	err = s.ladderService.UpsertLadder(entriesToPersist, event.Id, charToUserId)
 	if err != nil {
 		log.Print(clientError)
 	}

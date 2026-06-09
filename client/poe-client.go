@@ -161,7 +161,7 @@ func (c *PoEClient) GetLeague(token string, league string, realm string) (*GetLe
 	)
 }
 
-func (c *PoEClient) GetLeagueLadder(token string, league string, realm string, sort string, limit int, offset int) (*GetLeagueLadderResponse, *ClientError) {
+func (c *PoEClient) GetLeagueLadder(token string, league string, realm Realm, sort string, limit int, offset int) (*GetLeagueLadderResponse, *ClientError) {
 	timer := prometheus.NewTimer(metrics.RequestDuration.WithLabelValues("GetLeagueLadder"))
 	defer timer.ObserveDuration()
 	metrics.PoeRequestCounter.WithLabelValues("GetLeagueLadder").Inc()
@@ -173,7 +173,7 @@ func (c *PoEClient) GetLeagueLadder(token string, league string, realm string, s
 			Token:      token,
 			Method:     "GET",
 			QueryParams: map[string]string{
-				"realm":  realm,
+				"realm":  string(realm),
 				"sort":   sort,
 				"limit":  fmt.Sprintf("%d", limit),
 				"offset": fmt.Sprintf("%d", offset),
@@ -182,19 +182,22 @@ func (c *PoEClient) GetLeagueLadder(token string, league string, realm string, s
 	)
 }
 
-func (c *PoEClient) GetFullLadder(token string, league string) (*GetLeagueLadderResponse, *ClientError) {
-	response, err := c.GetLeagueLadder(token, league, "pc", "xp", 500, 0)
+func (c *PoEClient) GetFullLadder(token string, league string, realm Realm) (*GetLeagueLadderResponse, *ClientError) {
+	response, err := c.GetLeagueLadder(token, league, realm, "xp", 500, 0)
 	if err != nil {
 		return nil, err
 	}
-	Total := response.Ladder.Total
+	pages := int(math.Ceil(float64(response.Ladder.Total) / 500))
 	wg := sync.WaitGroup{}
-	for i := 1; i < int(math.Ceil(float64(Total)/500)); i++ {
+	mu := sync.Mutex{}
+	for i := 1; i < pages; i++ {
 		wg.Go(func() {
-			newResp, err := c.GetLeagueLadder(token, league, "pc", "xp", 500, i*500)
+			newResp, err := c.GetLeagueLadder(token, league, realm, "xp", 500, i*500)
 			if err != nil {
 				return
 			}
+			mu.Lock()
+			defer mu.Unlock()
 			response.Ladder.Entries = append(response.Ladder.Entries, newResp.Ladder.Entries...)
 		})
 	}
@@ -325,13 +328,13 @@ func (c *PoEClient) GetAccountLeagues(token string) (*ListLeaguesResponse, *Clie
 	)
 }
 
-func (c *PoEClient) ListCharacters(token string, realm *Realm) (*ListCharactersResponse, *ClientError) {
+func (c *PoEClient) ListCharacters(token string, realm Realm) (*ListCharactersResponse, *ClientError) {
 	timer := prometheus.NewTimer(metrics.RequestDuration.WithLabelValues("ListCharacters"))
 	defer timer.ObserveDuration()
 	metrics.PoeRequestCounter.WithLabelValues("ListCharacters").Inc()
 	endpoint := "character"
-	if realm != nil {
-		endpoint += fmt.Sprintf("/%s", *realm)
+	if realm == PoE2 {
+		endpoint += fmt.Sprintf("/%s", string(realm))
 	}
 	return sendRequest[ListCharactersResponse](c,
 		"ListCharacters",
@@ -343,12 +346,12 @@ func (c *PoEClient) ListCharacters(token string, realm *Realm) (*ListCharactersR
 	)
 }
 
-func (c *PoEClient) GetCharacter(token string, character string, realm *Realm) (*GetCharacterResponse, *ClientError) {
+func (c *PoEClient) GetCharacter(token string, character string, realm Realm) (*GetCharacterResponse, *ClientError) {
 	timer := prometheus.NewTimer(metrics.RequestDuration.WithLabelValues("GetCharacter"))
 	defer timer.ObserveDuration()
 	endpoint := "character"
-	if realm != nil {
-		endpoint += fmt.Sprintf("/%s", *realm)
+	if realm == PoE2 {
+		endpoint += fmt.Sprintf("/%s", string(realm))
 	}
 	metrics.PoeRequestCounter.WithLabelValues("GetCharacter").Inc()
 	return sendRequest[GetCharacterResponse](c,
