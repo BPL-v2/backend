@@ -38,8 +38,8 @@ func withCorrupted(b bool) func(*clientModel.Item) {
 func withIdentified(b bool) func(*clientModel.Item) {
 	return func(i *clientModel.Item) { i.Identified = b }
 }
-func withFrameType(ft int) func(*clientModel.Item) {
-	return func(i *clientModel.Item) { i.FrameType = new(ft) }
+func withFrameTypeId(ft string) func(*clientModel.Item) {
+	return func(i *clientModel.Item) { i.FrameTypeId = ft }
 }
 func withStackSize(s int) func(*clientModel.Item) {
 	return func(i *clientModel.Item) { i.StackSize = new(s) }
@@ -254,7 +254,7 @@ func TestIntFieldGetter(t *testing.T) {
 		expected int
 	}{
 		{"ilvl", dbModel.ILVL, makeItem(withIlvl(83)), 83},
-		{"frame type set", dbModel.FRAME_TYPE, makeItem(withFrameType(3)), 3},
+		{"frame type set", dbModel.FRAME_TYPE, makeItem(withFrameTypeId("3")), 3},
 		{"frame type nil", dbModel.FRAME_TYPE, makeItem(), 0},
 		{"talisman tier set", dbModel.TALISMAN_TIER, makeItem(withTalismanTier(4)), 4},
 		{"talisman tier nil", dbModel.TALISMAN_TIER, makeItem(), 0},
@@ -915,7 +915,7 @@ func TestItemCheckerCheckForCompletions(t *testing.T) {
 		checker, err := NewItemChecker(objectives, true)
 		require.NoError(t, err)
 
-		results := checker.CheckForCompletions(makeItem(withBaseType("Chaos Orb"), withFrameType(10)))
+		results := checker.CheckForCompletions(makeItem(withBaseType("Chaos Orb"), withFrameTypeId("10")))
 		assert.Len(t, results, 0)
 	})
 

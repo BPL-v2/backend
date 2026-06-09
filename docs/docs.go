@@ -234,8 +234,8 @@ const docTemplate = `{
                         "type": "array",
                         "uniqueItems": false
                     },
-                    "frameType": {
-                        "type": "integer"
+                    "frameTypeId": {
+                        "type": "string"
                     },
                     "gemSockets": {
                         "items": {
@@ -948,6 +948,14 @@ const docTemplate = `{
                     },
                     "pantheon_minor": {
                         "type": "string"
+                    },
+                    "quest_stats": {
+                        "description": "PoE2 only; passives granted via quests",
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
                     },
                     "skill_overrides": {
                         "additionalProperties": {

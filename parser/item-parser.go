@@ -155,6 +155,10 @@ func StringFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) st
 			}
 			return (*item.SocketedItems)[0].BaseType
 		}, nil
+	case dbModel.FRAME_TYPE:
+		return func(item *clientModel.Item) string {
+			return item.FrameTypeId
+		}, nil
 	default:
 		return nil, fmt.Errorf("%s is not a valid string field", field)
 	}
@@ -282,13 +286,6 @@ func IntFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) int, 
 	case dbModel.ILVL:
 		return func(item *clientModel.Item) int {
 			return item.Ilvl
-		}, nil
-	case dbModel.FRAME_TYPE:
-		return func(item *clientModel.Item) int {
-			if item.FrameType != nil {
-				return *item.FrameType
-			}
-			return 0
 		}, nil
 	case dbModel.TALISMAN_TIER:
 		return func(item *clientModel.Item) int {
@@ -795,7 +792,6 @@ type ItemObjectiveChecker struct {
 	ValidTo   *time.Time
 }
 
-
 func (oc *ItemObjectiveChecker) Check(item *clientModel.Item) int {
 	now := time.Now()
 	if (oc.ValidFrom != nil && oc.ValidFrom.After(now)) || (oc.ValidTo != nil && oc.ValidTo.Before(now)) {
@@ -889,7 +885,7 @@ func (ic *ItemChecker) CheckForCompletions(item *clientModel.Item) []*CheckResul
 func applyCheckers(checkers []*ItemObjectiveChecker, item *clientModel.Item) []*CheckResult {
 	results := make([]*CheckResult, 0)
 	// sort out foiled items
-	if item.FrameType != nil && *item.FrameType == 10 {
+	if item.FrameTypeId == "SupporterFoil" {
 		return results
 	}
 	for _, checker := range checkers {

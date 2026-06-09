@@ -394,7 +394,7 @@ type Item struct {
 	Foreseeing             *bool               `json:"foreseeing,omitempty"`
 	IncubatedItem          *ItemIncubatedItem  `json:"incubatedItem,omitempty"`
 	Ruthless               *bool               `json:"ruthless,omitempty"`
-	FrameType              *int                `json:"frameType,omitempty"`
+	FrameTypeId            string              `json:"frameTypeId"`
 	Hybrid                 *ItemHybrid         `json:"hybrid,omitempty"`
 	Extended               *ItemExtended       `json:"extended,omitempty"`
 	Socket                 *int                `json:"socket,omitempty"`
@@ -447,7 +447,15 @@ type Item struct {
 	// Replica               *bool           `json:"replica,omitempty"`
 	// Scourged              *ItemScourged   `json:"scourged,omitempty"`
 	// ArtFilename           *string         `json:"artFilename,omitempty"`
-	// Requirements           *[]ItemProperty     `json:"requirements,omitempty"`
+	// Requirements         *[]ItemProperty `json:"requirements,omitempty"`
+	// SocketedIcon         *string         `json:"socketedIcon,omitempty"`         // PoE2 only
+	// TamedBeastProperties *[]ItemProperty `json:"tamedBeastProperties,omitempty"` // PoE2 only
+	// BuiltInSupport       *string         `json:"builtInSupport,omitempty"`       // PoE1 only; Supported by level 1 x
+	// MonsterLevel         *int            `json:"monsterLevel,omitempty"`         // PoE1 only; used for items that always display their monster level
+	// IconTierText  	  	*string         `json:"iconTierText,omitempty"`         // usually roman numerals
+	// Sanctified 			*bool           `json:"sanctified,omitempty"`			// PoE2 only
+	// DesecratedMods 	   	*[]string       `json:"desecratedMods,omitempty"` 		// PoE2 only
+	// Desecrated 			*bool           `json:"desecrated,omitempty"` 			// PoE2 only
 }
 
 func (i *Item) GetPositionIndex() string {
@@ -517,6 +525,7 @@ type Passives struct {
 	JewelData           map[string]ItemJewelData `json:"jewel_data"`
 	AlternateAscendancy *string                  `json:"alternate_ascendancy,omitempty"`
 	Specialisations     *Specialisations         `json:"specialisation,omitempty"` // PoE2 only
+	QuestStats          *[]string                `json:"quest_stats,omitempty"`    // PoE2 only; passives granted via quests
 }
 
 type Metadata struct {

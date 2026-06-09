@@ -129,7 +129,7 @@ func (c *ItemServiceImpl) GetItemIds(character *client.Character) (pq.Int32Array
 		if item.Rarity != nil && *item.Rarity == "Unique" {
 			items = append(items, &repository.Item{Name: item.Name, ItemType: repository.ItemTypeUnique})
 		}
-		if item.FrameType != nil && *item.FrameType == 4 {
+		if item.FrameTypeId == "Gem" {
 			items = append(items, &repository.Item{Name: item.TypeLine, ItemType: repository.ItemTypeGem})
 		}
 	}
