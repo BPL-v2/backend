@@ -2,6 +2,7 @@
 
 -- Rename old achievements table so we can migrate data
 ALTER TABLE bpl2.achievements RENAME TO user_achievements_old;
+ALTER INDEX bpl2.achievements_pkey RENAME TO user_achievements_old_pkey;
 
 -- Create achievement definitions table
 CREATE TABLE bpl2.achievements (
@@ -72,3 +73,4 @@ DROP TABLE bpl2.user_achievements;
 DROP TABLE bpl2.achievements;
 
 ALTER TABLE bpl2.user_achievements_old RENAME TO achievements;
+ALTER INDEX bpl2.user_achievements_old_pkey RENAME TO achievements_pkey;
