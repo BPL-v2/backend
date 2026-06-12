@@ -1123,17 +1123,58 @@
             },
             "AchievementCreate": {
                 "properties": {
+                    "description": {
+                        "type": "string"
+                    },
                     "name": {
-                        "$ref": "#/components/schemas/AchievementName"
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name"
+                ],
+                "type": "object"
+            },
+            "AchievementGrant": {
+                "properties": {
+                    "achievement_id": {
+                        "type": "integer"
                     },
                     "user_id": {
                         "type": "integer"
                     }
                 },
                 "required": [
-                    "name",
+                    "achievement_id",
                     "user_id"
                 ],
+                "type": "object"
+            },
+            "AchievementResponse": {
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "icon": {
+                        "items": {
+                            "type": "integer"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "icon_mime_type": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "integer"
+                    },
+                    "is_custom": {
+                        "type": "boolean"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
                 "type": "object"
             },
             "Action": {
@@ -2864,6 +2905,23 @@
                 ],
                 "type": "object"
             },
+            "UserAchievementResponse": {
+                "properties": {
+                    "achievement_id": {
+                        "type": "integer"
+                    },
+                    "granted_at": {
+                        "type": "string"
+                    },
+                    "granted_by": {
+                        "type": "integer"
+                    },
+                    "user_id": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
             "UserUpdate": {
                 "properties": {
                     "display_name": {
@@ -2908,39 +2966,6 @@
                     "sleep_after_each_run_seconds"
                 ],
                 "type": "object"
-            },
-            "AchievementName": {
-                "enum": [
-                    "Participated in an event",
-                    "Won an event",
-                    "Teamlead",
-                    "MVP",
-                    "Played 5 leagues",
-                    "Played 10 leagues",
-                    "Reached level 90",
-                    "Reached level 95",
-                    "Reached level 100",
-                    "Submitted a bounty",
-                    "Submitted a point unique",
-                    "Played 5 different ascendancies",
-                    "Played 10 different ascendancies"
-                ],
-                "type": "string",
-                "x-enum-varnames": [
-                    "AchievementParticipated",
-                    "AchievementWinner",
-                    "AchievementTeamlead",
-                    "AchievementMVP",
-                    "AchievementPlayed5Leagues",
-                    "AchievementPlayed10Leagues",
-                    "AchievementReachedLvl90",
-                    "AchievementReachedLvl95",
-                    "AchievementReachedLvl100",
-                    "AchievementSubmittedABounty",
-                    "AchievementSubmittedAPointUnique",
-                    "AchievementPlayed5DifferentAscendancies",
-                    "AchievementPlayed10DifferentAscendancies"
-                ]
             },
             "ApprovalStatus": {
                 "enum": [
@@ -3173,14 +3198,16 @@
                     "admin",
                     "manager",
                     "objective_designer",
-                    "submission_judge"
+                    "submission_judge",
+                    "achievement_assigner"
                 ],
                 "type": "string",
                 "x-enum-varnames": [
                     "PermissionAdmin",
                     "PermissionManager",
                     "PermissionObjectiveDesigner",
-                    "PermissionSubmissionJudge"
+                    "PermissionSubmissionJudge",
+                    "PermissionAchievementAssigner"
                 ]
             },
             "ScoringRuleType": {
@@ -3456,52 +3483,29 @@
     "paths": {
         "/achievements": {
             "get": {
-                "description": "Retrieve all user achievements in the system.",
                 "operationId": "getAchievements",
                 "responses": {
                     "200": {
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "additionalProperties": {
-                                        "items": {
-                                            "type": "integer"
-                                        },
-                                        "type": "array"
+                                    "items": {
+                                        "$ref": "#/components/schemas/AchievementResponse"
                                     },
-                                    "type": "object"
+                                    "type": "array"
                                 }
                             }
                         },
                         "description": "OK"
                     }
                 },
-                "summary": "Get achievements",
-                "tags": [
-                    "Achievement"
-                ]
-            },
-            "patch": {
-                "description": "Update achievements for all users based on their current progress.",
-                "operationId": "updateAchievements",
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    }
-                },
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "summary": "Update achievements",
+                "summary": "List achievement definitions",
                 "tags": [
                     "Achievement"
                 ]
             },
             "post": {
-                "description": "Add new achievement to the system.",
-                "operationId": "addAchievement",
+                "operationId": "createAchievement",
                 "requestBody": {
                     "content": {
                         "application/json": {
@@ -3512,14 +3516,14 @@
                                     },
                                     {
                                         "$ref": "#/components/schemas/AchievementCreate",
-                                        "summary": "achievements",
-                                        "description": "Achievement to add"
+                                        "summary": "body",
+                                        "description": "Achievement to create"
                                     }
                                 ]
                             }
                         }
                     },
-                    "description": "Achievement to add",
+                    "description": "Achievement to create",
                     "required": true
                 },
                 "responses": {
@@ -3527,7 +3531,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/AchievementResponse"
                                 }
                             }
                         },
@@ -3539,7 +3543,188 @@
                         "BearerAuth": []
                     }
                 ],
-                "summary": "Add achievement",
+                "summary": "Create a custom achievement",
+                "tags": [
+                    "Achievement"
+                ]
+            }
+        },
+        "/achievements/sync": {
+            "post": {
+                "operationId": "syncAchievements",
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Trigger system achievement sync",
+                "tags": [
+                    "Achievement"
+                ]
+            }
+        },
+        "/achievements/{achievement_id}": {
+            "delete": {
+                "operationId": "deleteAchievement",
+                "parameters": [
+                    {
+                        "description": "Achievement ID",
+                        "in": "path",
+                        "name": "achievement_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Delete a custom achievement",
+                "tags": [
+                    "Achievement"
+                ]
+            },
+            "patch": {
+                "operationId": "updateAchievement",
+                "parameters": [
+                    {
+                        "description": "Achievement ID",
+                        "in": "path",
+                        "name": "achievement_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/AchievementCreate",
+                                        "summary": "body",
+                                        "description": "Updated fields"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Updated fields",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AchievementResponse"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Update a custom achievement",
+                "tags": [
+                    "Achievement"
+                ]
+            }
+        },
+        "/achievements/{achievement_id}/icon": {
+            "get": {
+                "operationId": "getIcon",
+                "parameters": [
+                    {
+                        "description": "Achievement ID",
+                        "in": "path",
+                        "name": "achievement_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "image/*": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    }
+                },
+                "summary": "Get the icon for an achievement",
+                "tags": [
+                    "Achievement"
+                ]
+            },
+            "put": {
+                "operationId": "uploadIcon",
+                "parameters": [
+                    {
+                        "description": "Achievement ID",
+                        "in": "path",
+                        "name": "achievement_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "title": "icon",
+                                "type": "file"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object"
+                            }
+                        }
+                    },
+                    "description": "Icon file",
+                    "required": true
+                },
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Upload an icon for an achievement",
                 "tags": [
                     "Achievement"
                 ]
@@ -6055,6 +6240,123 @@
                 "summary": "Set timing configurations",
                 "tags": [
                     "Timing"
+                ]
+            }
+        },
+        "/user-achievements": {
+            "get": {
+                "operationId": "getUserAchievements",
+                "parameters": [
+                    {
+                        "description": "Filter by user ID",
+                        "in": "query",
+                        "name": "user_id",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/UserAchievementResponse"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    }
+                },
+                "summary": "List user achievement grants",
+                "tags": [
+                    "Achievement"
+                ]
+            },
+            "post": {
+                "operationId": "grantAchievement",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/AchievementGrant",
+                                        "summary": "body",
+                                        "description": "Grant details"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Grant details",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Grant an achievement to a user",
+                "tags": [
+                    "Achievement"
+                ]
+            }
+        },
+        "/user-achievements/{user_id}/{achievement_id}": {
+            "delete": {
+                "operationId": "revokeAchievement",
+                "parameters": [
+                    {
+                        "description": "User ID",
+                        "in": "path",
+                        "name": "user_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Achievement ID",
+                        "in": "path",
+                        "name": "achievement_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Revoke an achievement from a user",
+                "tags": [
+                    "Achievement"
                 ]
             }
         },

@@ -2,13 +2,23 @@ package service
 
 import (
 	"bpl/repository"
+	"errors"
 )
 
 type AchievementService interface {
-	FindAllAchievements() (map[repository.AchievementName][]int, error)
-	SaveAchievement(achievement *repository.Achievement) error
-	FindAchievementsForUser(userId int) ([]*repository.Achievement, error)
-	UpdateAchievements() error
+	GetAllAchievements() ([]*repository.Achievement, error)
+	GetAchievementById(id int) (*repository.Achievement, error)
+	CreateAchievement(name, description string) (*repository.Achievement, error)
+	UpdateAchievement(id int, name, description string) (*repository.Achievement, error)
+	DeleteAchievement(id int) error
+
+	UploadIcon(id int, icon []byte, mimeType string) error
+
+	GetAllUserAchievements(userId *int) ([]*repository.UserAchievement, error)
+	GrantAchievement(userId, achievementId int, grantedBy *int) error
+	RevokeAchievement(userId, achievementId int) error
+
+	SyncAchievements() error
 }
 
 type AchievementServiceImpl struct {
@@ -23,50 +33,101 @@ func NewAchievementService() AchievementService {
 	}
 }
 
-func (s *AchievementServiceImpl) FindAllAchievements() (map[repository.AchievementName][]int, error) {
+func (s *AchievementServiceImpl) GetAllAchievements() ([]*repository.Achievement, error) {
+	return s.achievementRepository.GetAllAchievements()
+}
 
-	achievements, err := s.achievementRepository.GetAllAchievements()
+func (s *AchievementServiceImpl) GetAchievementById(id int) (*repository.Achievement, error) {
+	return s.achievementRepository.GetAchievementById(id)
+}
+
+func (s *AchievementServiceImpl) CreateAchievement(name, description string) (*repository.Achievement, error) {
+	return s.achievementRepository.SaveAchievement(&repository.Achievement{
+		Name:        name,
+		Description: description,
+		IsCustom:    true,
+	})
+}
+
+func (s *AchievementServiceImpl) UpdateAchievement(id int, name, description string) (*repository.Achievement, error) {
+	achievement, err := s.achievementRepository.GetAchievementById(id)
 	if err != nil {
 		return nil, err
 	}
-	result := make(map[repository.AchievementName][]int)
-	for _, achievement := range achievements {
-		result[achievement.Name] = append(result[achievement.Name], achievement.UserId)
+	if !achievement.IsCustom {
+		return nil, errors.New("cannot modify system achievements")
 	}
-	return result, nil
-}
-
-func (s *AchievementServiceImpl) SaveAchievement(achievement *repository.Achievement) error {
+	achievement.Name = name
+	achievement.Description = description
 	return s.achievementRepository.SaveAchievement(achievement)
 }
 
-func (s *AchievementServiceImpl) FindAchievementsForUser(userId int) ([]*repository.Achievement, error) {
-	return s.achievementRepository.GetAchievementsForUser(userId)
+func (s *AchievementServiceImpl) DeleteAchievement(id int) error {
+	achievement, err := s.achievementRepository.GetAchievementById(id)
+	if err != nil {
+		return err
+	}
+	if !achievement.IsCustom {
+		return errors.New("cannot delete system achievements")
+	}
+	return s.achievementRepository.DeleteAchievement(id)
 }
 
-func (s *AchievementServiceImpl) UpdateAchievements() error {
-	character, err := s.characterRepository.GetAllHighestLevelCharactersForEachEventAndUser()
+func (s *AchievementServiceImpl) UploadIcon(id int, icon []byte, mimeType string) error {
+	return s.achievementRepository.SaveIcon(id, icon, mimeType)
+}
+
+func (s *AchievementServiceImpl) GetAllUserAchievements(userId *int) ([]*repository.UserAchievement, error) {
+	return s.achievementRepository.GetAllUserAchievements(userId)
+}
+
+func (s *AchievementServiceImpl) GrantAchievement(userId, achievementId int, grantedBy *int) error {
+	return s.achievementRepository.SaveUserAchievement(&repository.UserAchievement{
+		UserId:        userId,
+		AchievementId: achievementId,
+		GrantedBy:     grantedBy,
+	})
+}
+
+func (s *AchievementServiceImpl) RevokeAchievement(userId, achievementId int) error {
+	return s.achievementRepository.DeleteUserAchievement(userId, achievementId)
+}
+
+func (s *AchievementServiceImpl) SyncAchievements() error {
+	allAchievements, err := s.achievementRepository.GetAllAchievements()
+	if err != nil {
+		return err
+	}
+	nameToId := make(map[string]int, len(allAchievements))
+	for _, a := range allAchievements {
+		nameToId[a.Name] = a.Id
+	}
+
+	characters, err := s.characterRepository.GetAllHighestLevelCharactersForEachEventAndUser()
 	if err != nil {
 		return err
 	}
 	characterMap := make(map[int][]*repository.Character)
-	for _, char := range character {
+	for _, char := range characters {
 		if char.UserId != nil {
 			characterMap[*char.UserId] = append(characterMap[*char.UserId], char)
 		}
 	}
-	achievements := []*repository.Achievement{}
+
+	var grants []*repository.UserAchievement
 	for userId, chars := range characterMap {
-		userAchievements := checkAchievements(chars)
-		for _, achievementName := range userAchievements {
-			achievement := &repository.Achievement{
-				UserId: userId,
-				Name:   achievementName,
+		for _, name := range checkAchievements(chars) {
+			id, ok := nameToId[name]
+			if !ok {
+				continue
 			}
-			achievements = append(achievements, achievement)
+			grants = append(grants, &repository.UserAchievement{
+				UserId:        userId,
+				AchievementId: id,
+			})
 		}
 	}
-	return s.achievementRepository.SaveAchievements(achievements)
+	return s.achievementRepository.SaveUserAchievements(grants)
 }
 
 var baseClasses = map[string]bool{
@@ -79,47 +140,27 @@ var baseClasses = map[string]bool{
 	"Templar":  true,
 }
 
-func checkAchievements(chars []*repository.Character) []repository.AchievementName {
-	achievements := []repository.AchievementName{}
-	for achievement := range repository.Achievements {
-		switch achievement {
-		case repository.AchievementReachedLvl90:
-			if hasLevelNCharacter(90, chars) {
-				achievements = append(achievements, achievement)
-			}
-		case repository.AchievementReachedLvl95:
-			if hasLevelNCharacter(95, chars) {
-				achievements = append(achievements, achievement)
-			}
-		case repository.AchievementReachedLvl100:
-			if hasLevelNCharacter(100, chars) {
-				achievements = append(achievements, achievement)
-			}
-		case repository.AchievementParticipated:
-			if playedNLeagues(1, chars) {
-				achievements = append(achievements, achievement)
-			}
-		case repository.AchievementPlayed5Leagues:
-			if playedNLeagues(5, chars) {
-				achievements = append(achievements, achievement)
-			}
-		case repository.AchievementPlayed10Leagues:
-			if playedNLeagues(10, chars) {
-				achievements = append(achievements, achievement)
-			}
-		case repository.AchievementPlayed5DifferentAscendancies:
-			if playedNDifferentAscendancies(5, chars) {
-				achievements = append(achievements, achievement)
-			}
-		case repository.AchievementPlayed10DifferentAscendancies:
-			if playedNDifferentAscendancies(10, chars) {
-				achievements = append(achievements, achievement)
-			}
-		default:
-			continue
+func checkAchievements(chars []*repository.Character) []string {
+	var results []string
+	checks := []struct {
+		name string
+		pass bool
+	}{
+		{"Reached level 90", hasLevelNCharacter(90, chars)},
+		{"Reached level 95", hasLevelNCharacter(95, chars)},
+		{"Reached level 100", hasLevelNCharacter(100, chars)},
+		{"Participated in an event", playedNLeagues(1, chars)},
+		{"Played 5 leagues", playedNLeagues(5, chars)},
+		{"Played 10 leagues", playedNLeagues(10, chars)},
+		{"Played 5 different ascendancies", playedNDifferentAscendancies(5, chars)},
+		{"Played 10 different ascendancies", playedNDifferentAscendancies(10, chars)},
+	}
+	for _, c := range checks {
+		if c.pass {
+			results = append(results, c.name)
 		}
 	}
-	return achievements
+	return results
 }
 
 func hasLevelNCharacter(level int, chars []*repository.Character) bool {

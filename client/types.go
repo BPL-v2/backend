@@ -421,11 +421,11 @@ type Item struct {
 	ObjectiveId int `json:"objectiveId,omitempty"` // filled by us and not ggg
 
 	// commenting out unused fields to reduce storage requirements. Uncomment as needed.
-	// GemTabs               *[]GemTab       `json:"gemTabs,omitempty"` // PoE2 only
-	// GemBackground         *string         `json:"gemBackground,omitempty"` // PoE2 only
-	// GemSkill              *string         `json:"gemSkill,omitempty"` // PoE2 only
+	// GemTabs               *[]GemTab       `json:"gemTabs,omitempty"`          // PoE2 only
+	// GemBackground         *string         `json:"gemBackground,omitempty"`    // PoE2 only
+	// GemSkill              *string         `json:"gemSkill,omitempty"`         // PoE2 only
 	// UnidentifiedTier      *int            `json:"unidentifiedTier,omitempty"` // PoE2 only
-	// Realm                 *Realm          `json:"realm,omitempty"` // PoE2 only
+	// Realm                 *Realm          `json:"realm,omitempty"`            // PoE2 only
 	// Verified              bool            `json:"verified"`
 	// MaxStackSize          *int            `json:"maxStackSize,omitempty"`
 	// StackSizeText         *string         `json:"stackSizeText,omitempty"`
@@ -447,15 +447,13 @@ type Item struct {
 	// Replica               *bool           `json:"replica,omitempty"`
 	// Scourged              *ItemScourged   `json:"scourged,omitempty"`
 	// ArtFilename           *string         `json:"artFilename,omitempty"`
-	// Requirements         *[]ItemProperty `json:"requirements,omitempty"`
-	// SocketedIcon         *string         `json:"socketedIcon,omitempty"`         // PoE2 only
-	// TamedBeastProperties *[]ItemProperty `json:"tamedBeastProperties,omitempty"` // PoE2 only
-	// BuiltInSupport       *string         `json:"builtInSupport,omitempty"`       // PoE1 only; Supported by level 1 x
-	// MonsterLevel         *int            `json:"monsterLevel,omitempty"`         // PoE1 only; used for items that always display their monster level
-	// IconTierText  	  	*string         `json:"iconTierText,omitempty"`         // usually roman numerals
-	// Sanctified 			*bool           `json:"sanctified,omitempty"`			// PoE2 only
-	// DesecratedMods 	   	*[]string       `json:"desecratedMods,omitempty"` 		// PoE2 only
-	// Desecrated 			*bool           `json:"desecrated,omitempty"` 			// PoE2 only
+	// Requirements          *[]ItemProperty `json:"requirements,omitempty"`
+	// SocketedIcon          *string         `json:"socketedIcon,omitempty"`         // PoE2 only
+	// TamedBeastProperties  *[]ItemProperty `json:"tamedBeastProperties,omitempty"` // PoE2 only
+	// BuiltInSupport        *string         `json:"builtInSupport,omitempty"`       // PoE1 only; Supported by level 1 x
+	// MonsterLevel          *int            `json:"monsterLevel,omitempty"`         // PoE1 only; used for items that always display their monster level
+	// IconTierText          *string         `json:"iconTierText,omitempty"`         // usually roman numerals
+	// Sanctified            *bool           `json:"sanctified,omitempty"`           // PoE2 only
 }
 
 func (i *Item) GetPositionIndex() string {

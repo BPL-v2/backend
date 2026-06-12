@@ -19,10 +19,11 @@ import (
 type Permission string
 
 const (
-	PermissionAdmin             Permission = "admin"
-	PermissionManager           Permission = "manager"
-	PermissionObjectiveDesigner Permission = "objective_designer"
-	PermissionSubmissionJudge   Permission = "submission_judge"
+	PermissionAdmin              Permission = "admin"
+	PermissionManager            Permission = "manager"
+	PermissionObjectiveDesigner  Permission = "objective_designer"
+	PermissionSubmissionJudge    Permission = "submission_judge"
+	PermissionAchievementAssigner Permission = "achievement_assigner"
 )
 
 type Permissions []Permission
