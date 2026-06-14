@@ -1162,11 +1162,8 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "icon": {
-                        "items": {
-                            "type": "integer"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
+                        "format": "byte",
+                        "type": "string"
                     },
                     "icon_mime_type": {
                         "type": "string"

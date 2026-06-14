@@ -312,7 +312,7 @@ type AchievementResponse struct {
 	Name         string `json:"name"`
 	Description  string `json:"description"`
 	IsCustom     bool   `json:"is_custom"`
-	Icon         []byte `json:"icon,omitempty"`
+	Icon         []byte `json:"icon,omitempty" swaggertype:"string" format:"byte"`
 	IconMimeType string `json:"icon_mime_type,omitempty"`
 }
 
