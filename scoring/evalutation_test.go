@@ -1872,6 +1872,49 @@ func TestHandleChildBonus_MissingParentScore(t *testing.T) {
 	assert.NoError(t, err) // should not panic
 }
 
+func TestHandleChildBonus_Grandchildren(t *testing.T) {
+	presetId := 1
+	// parent
+	//   child1 (id=2)
+	//     grandchild1 (id=4)
+	//     grandchild2 (id=5)
+	//   child2 (id=3)
+	//     grandchild3 (id=6)
+	parent := &repository.Objective{
+		Id: 1,
+		Children: []*repository.Objective{
+			{Id: 2, Children: []*repository.Objective{
+				{Id: 4},
+				{Id: 5},
+			}},
+			{Id: 3, Children: []*repository.Objective{
+				{Id: 6},
+			}},
+		},
+		ScoringRules: []*repository.ScoringRule{{
+			Id:     presetId,
+			Points: repository.ExtendingNumberSlice{10, 7, 5},
+		}},
+	}
+
+	now := time.Now()
+	scoreMap := map[int]map[int]*Score{
+		1: {
+			1: {ObjectiveId: 1, TeamId: 1, PresetCompletions: map[int]*PresetCompletion{presetId: {}}},
+			4: {ObjectiveId: 4, TeamId: 1, PresetCompletions: map[int]*PresetCompletion{presetId: {Finished: true, Timestamp: now.Add(-3 * time.Hour)}}},
+			5: {ObjectiveId: 5, TeamId: 1, PresetCompletions: map[int]*PresetCompletion{presetId: {Finished: true, Timestamp: now.Add(-2 * time.Hour)}}},
+			6: {ObjectiveId: 6, TeamId: 1, PresetCompletions: map[int]*PresetCompletion{presetId: {Finished: true, Timestamp: now.Add(-1 * time.Hour)}}},
+		},
+	}
+
+	err := handleChildBonus(parent, parent.ScoringRules[0], nil, scoreMap)
+	assert.NoError(t, err)
+
+	assert.Equal(t, 10, scoreMap[1][4].BonusPoints, "grandchild1 (1st finished) should get 10 bonus")
+	assert.Equal(t, 7, scoreMap[1][5].BonusPoints, "grandchild2 (2nd finished) should get 7 bonus")
+	assert.Equal(t, 5, scoreMap[1][6].BonusPoints, "grandchild3 (3rd finished) should get 5 bonus")
+}
+
 // ========== handleBingoBoard edge cases ==========
 
 func TestHandleBingoBoard_InvalidRequiredBingos(t *testing.T) {

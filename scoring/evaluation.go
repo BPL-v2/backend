@@ -341,10 +341,22 @@ func getBingoCompletionTime(numberOfBingosRequired int, girdTimestamps map[int]m
 	return time.Unix(0, finishTime)
 }
 
+func getLeafIds(objective *repository.Objective) []int {
+	if len(objective.Children) == 0 {
+		return []int{objective.Id}
+	}
+	leafIds := []int{}
+	for _, child := range objective.Children {
+		leafIds = append(leafIds, getLeafIds(child)...)
+	}
+	return leafIds
+}
+
 func handleChildBonus(objective *repository.Objective, scoringRule *repository.ScoringRule, aggregations ObjectiveTeamMatches, scoreMap map[int]map[int]*Score) error {
 	finishCounts := make(map[int]int)
 	teamIds := make(map[int]bool)
-	childIds := utils.Map(objective.Children, func(o *repository.Objective) int { return o.Id })
+	childIds := getLeafIds(objective)
+
 	teamChildScores := map[int][]*Score{}
 	for teamId, objectiveScores := range scoreMap {
 		teamIds[teamId] = true

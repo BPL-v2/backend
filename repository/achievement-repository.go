@@ -25,6 +25,16 @@ type UserAchievement struct {
 	User *User `gorm:"foreignKey:UserId"`
 }
 
+const (
+	AchievementReachedLvl90                 = "Reached level 90"
+	AchievementReachedLvl95                 = "Reached level 95"
+	AchievementReachedLvl100                = "Reached level 100"
+	AchievementParticipated                 = "Participated in an event"
+	AchievementPlayed5Leagues               = "Played 5 leagues"
+	AchievementPlayed10Leagues              = "Played 10 leagues"
+	AchievementPlayed10DifferentAscendancies = "Played 10 different ascendancies"
+)
+
 // SystemAchievements lists all achievement names that are auto-awarded by the sync job.
 var SystemAchievements = []string{
 	"Participated in an event",

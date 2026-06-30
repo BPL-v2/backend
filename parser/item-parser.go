@@ -452,6 +452,17 @@ func IntFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) int, 
 			}
 			return 0
 		}, nil
+	case dbModel.FRAME_TYPE:
+		return func(item *clientModel.Item) int {
+			if item.FrameTypeId == "" {
+				return 0
+			}
+			frameType, err := strconv.Atoi(item.FrameTypeId)
+			if err != nil {
+				return 0
+			}
+			return frameType
+		}, nil
 	default:
 		return nil, fmt.Errorf("%s is not a valid integer field", field)
 	}
@@ -884,8 +895,8 @@ func (ic *ItemChecker) CheckForCompletions(item *clientModel.Item) []*CheckResul
 
 func applyCheckers(checkers []*ItemObjectiveChecker, item *clientModel.Item) []*CheckResult {
 	results := make([]*CheckResult, 0)
-	// sort out foiled items
-	if item.FrameTypeId == "SupporterFoil" {
+	// sort out foiled items (SupporterFoil or numeric frame type 10)
+	if item.FrameTypeId == "SupporterFoil" || item.FrameTypeId == "10" {
 		return results
 	}
 	for _, checker := range checkers {
