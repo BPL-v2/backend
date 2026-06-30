@@ -1504,6 +1504,17 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "CopyObjectiveRequest": {
+                "properties": {
+                    "target_parent_id": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "target_parent_id"
+                ],
+                "type": "object"
+            },
             "CreateItemWish": {
                 "properties": {
                     "build_enabling": {
@@ -4420,6 +4431,72 @@ const docTemplate = `{
                             }
                         },
                         "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "objective"
+                ]
+            }
+        },
+        "/events/{event_id}/objectives/{id}/copy": {
+            "post": {
+                "description": "Copies an objective and all its children onto another objective, stripping scoring rules",
+                "operationId": "CopyObjective",
+                "parameters": [
+                    {
+                        "description": "Event Id",
+                        "in": "path",
+                        "name": "event_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Source Objective Id",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/CopyObjectiveRequest",
+                                        "summary": "copyRequest",
+                                        "description": "Copy request"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Copy request",
+                    "required": true
+                },
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Objective"
+                                }
+                            }
+                        },
+                        "description": "Created"
                     }
                 },
                 "security": [

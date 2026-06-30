@@ -17,6 +17,7 @@ type ObjectiveService interface {
 	GetObjectivesForEvent(eventId int, preloads ...string) ([]*repository.Objective, error)
 	GetAllObjectives(preloads ...string) ([]*repository.Objective, error)
 	DuplicateObjectives(oldEventId int, newEventId int, ruleMap map[int]*repository.ScoringRule) error
+	CopyObjectiveSubtree(sourceObjectiveId int, targetParentId int) (*repository.Objective, error)
 }
 
 type ObjectiveServiceImpl struct {
@@ -78,6 +79,74 @@ func (e *ObjectiveServiceImpl) GetObjectivesForEvent(eventId int, preloads ...st
 
 func (e *ObjectiveServiceImpl) GetAllObjectives(preloads ...string) ([]*repository.Objective, error) {
 	return e.objectiveRepository.GetAllObjectives(preloads...)
+}
+
+func (e *ObjectiveServiceImpl) CopyObjectiveSubtree(sourceObjectiveId int, targetParentId int) (*repository.Objective, error) {
+	source, err := e.objectiveRepository.GetObjectiveById(sourceObjectiveId)
+	if err != nil {
+		return nil, err
+	}
+
+	allObjectives, err := e.objectiveRepository.GetObjectivesByEventIdFlat(source.EventId)
+	if err != nil {
+		return nil, err
+	}
+
+	childrenMap := make(map[int][]int)
+	for _, obj := range allObjectives {
+		if obj.ParentId != nil {
+			childrenMap[*obj.ParentId] = append(childrenMap[*obj.ParentId], obj.Id)
+		}
+	}
+
+	subtreeIds := make(map[int]struct{})
+	queue := []int{sourceObjectiveId}
+	for len(queue) > 0 {
+		id := queue[0]
+		queue = queue[1:]
+		subtreeIds[id] = struct{}{}
+		queue = append(queue, childrenMap[id]...)
+	}
+
+	targetParent, err := e.objectiveRepository.GetObjectiveById(targetParentId)
+	if err != nil {
+		return nil, err
+	}
+
+	oldToNew := make(map[int]*repository.Objective)
+	for _, obj := range allObjectives {
+		if _, ok := subtreeIds[obj.Id]; !ok {
+			continue
+		}
+		newObj := *obj
+		newObj.Id = 0
+		newObj.EventId = targetParent.EventId
+		newObj.ScoringRules = nil
+		oldToNew[obj.Id] = &newObj
+	}
+
+	newObjectives := utils.Values(oldToNew)
+	_, err = e.objectiveRepository.SaveObjectives(newObjectives)
+	if err != nil {
+		return nil, err
+	}
+
+	for oldId, newObj := range oldToNew {
+		if oldId == sourceObjectiveId {
+			newObj.ParentId = &targetParentId
+		} else if newObj.ParentId != nil {
+			if newParent, ok := oldToNew[*newObj.ParentId]; ok {
+				newObj.ParentId = &newParent.Id
+			}
+		}
+	}
+
+	_, err = e.objectiveRepository.SaveObjectives(newObjectives)
+	if err != nil {
+		return nil, err
+	}
+
+	return oldToNew[sourceObjectiveId], nil
 }
 
 func (e *ObjectiveServiceImpl) DuplicateObjectives(oldEventId int, newEventId int, ruleMap map[int]*repository.ScoringRule) error {

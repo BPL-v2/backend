@@ -41,6 +41,7 @@ func setupObjectiveController(poeClient *client.PoEClient) []RouteInfo {
 		{Method: "PUT", Path: "", HandlerFunc: e.createObjectiveHandler(), Authenticated: true, RequiredRoles: editorRoles},
 		{Method: "GET", Path: "/:id", HandlerFunc: e.getObjectiveByIdHandler(), Authenticated: true, RequiredRoles: editorRoles},
 		{Method: "DELETE", Path: "/:id", HandlerFunc: e.deleteObjectiveHandler(), Authenticated: true, RequiredRoles: editorRoles},
+		{Method: "POST", Path: "/:id/copy", HandlerFunc: e.copyObjectiveHandler(), Authenticated: true, RequiredRoles: editorRoles},
 		// todo: move this somewhere else
 		{Method: "POST", Path: "/parser", HandlerFunc: e.getObjectiveParserHandler(), Authenticated: true, RequiredRoles: editorRoles},
 		{Method: "POST", Path: "/validations", HandlerFunc: e.validateObjectivesHandler(), Authenticated: true, RequiredRoles: editorRoles},
@@ -270,6 +271,50 @@ func (e *ObjectiveController) getObjectiveByIdHandler() gin.HandlerFunc {
 	}
 }
 
+type CopyObjectiveRequest struct {
+	TargetParentId int `json:"target_parent_id" binding:"required"`
+}
+
+// @id CopyObjective
+// @Description Copies an objective and all its children onto another objective, stripping scoring rules
+// @Security BearerAuth
+// @Tags objective
+// @Accept json
+// @Produce json
+// @Param event_id path int true "Event Id"
+// @Param id path int true "Source Objective Id"
+// @Param copyRequest body CopyObjectiveRequest true "Copy request"
+// @Success 201 {object} Objective
+// @Router /events/{event_id}/objectives/{id}/copy [post]
+func (e *ObjectiveController) copyObjectiveHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id, err := strconv.Atoi(c.Param("id"))
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		var req CopyObjectiveRequest
+		if err := c.BindJSON(&req); err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		event := getEvent(c)
+		if event == nil {
+			return
+		}
+		if event.Locked {
+			c.JSON(400, gin.H{"error": "event is locked"})
+			return
+		}
+		copied, err := e.objectiveService.CopyObjectiveSubtree(id, req.TargetParentId)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(201, toObjectiveResponse(copied, false, event.EventEndTime))
+	}
+}
+
 func (e *ObjectiveController) getObjectiveParserHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		event := getEvent(c)
@@ -326,7 +371,7 @@ type Objective struct {
 	Conditions              []*Condition              `json:"conditions" binding:"required"`
 	ValidFrom               *time.Time                `json:"valid_from" binding:"omitempty" format:"date-time"`
 	ValidTo                 *time.Time                `json:"valid_to" binding:"omitempty" format:"date-time"`
-	ScoringRules            []*ScoringRule          `json:"scoring_rules" binding:"required"`
+	ScoringRules            []*ScoringRule            `json:"scoring_rules" binding:"required"`
 	TrackedValue            repository.TrackedValue   `json:"tracked_value" binding:"required"`
 	TrackedValueExplanation *string                   `json:"tracked_value_explanation"`
 	CountingMethod          repository.CountingMethod `json:"counting_method" binding:"required"`
