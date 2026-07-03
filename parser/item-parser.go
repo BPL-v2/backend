@@ -865,7 +865,7 @@ func NewItemChecker(objectives []*dbModel.Objective, ignoreTime bool) (*ItemChec
 			case dbModel.TrackedValueFossilFuelHigh:
 				multiplier = 10
 			case dbModel.TrackedValueFossilFuelMid:
-				multiplier = 2
+				multiplier = 5
 			}
 			fn := func(item *clientModel.Item) int {
 				if conditionFn(item) == 0 {
