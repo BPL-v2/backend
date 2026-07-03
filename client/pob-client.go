@@ -5,7 +5,6 @@ import (
 	"bpl/utils"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -27,7 +26,6 @@ func GetPoBExport(characterData *Character) (*PathOfBuilding, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
-	fmt.Printf("Sending character data to POB server: %s\n", string(jsonData))
 	gameVersion := "poe1"
 	if characterData.Realm == PoE2 {
 		gameVersion = "poe2"
