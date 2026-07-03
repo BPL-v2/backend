@@ -394,6 +394,7 @@ type Item struct {
 	Foreseeing             *bool               `json:"foreseeing,omitempty"`
 	IncubatedItem          *ItemIncubatedItem  `json:"incubatedItem,omitempty"`
 	Ruthless               *bool               `json:"ruthless,omitempty"`
+	FrameType              *int                `json:"frameType,omitempty"`
 	FrameTypeId            string              `json:"frameTypeId"`
 	Hybrid                 *ItemHybrid         `json:"hybrid,omitempty"`
 	Extended               *ItemExtended       `json:"extended,omitempty"`
@@ -420,40 +421,39 @@ type Item struct {
 
 	ObjectiveId int `json:"objectiveId,omitempty"` // filled by us and not ggg
 
-	// commenting out unused fields to reduce storage requirements. Uncomment as needed.
-	// GemTabs               *[]GemTab       `json:"gemTabs,omitempty"`          // PoE2 only
-	// GemBackground         *string         `json:"gemBackground,omitempty"`    // PoE2 only
-	// GemSkill              *string         `json:"gemSkill,omitempty"`         // PoE2 only
-	// UnidentifiedTier      *int            `json:"unidentifiedTier,omitempty"` // PoE2 only
-	// Realm                 *Realm          `json:"realm,omitempty"`            // PoE2 only
-	// Verified              bool            `json:"verified"`
-	// MaxStackSize          *int            `json:"maxStackSize,omitempty"`
-	// StackSizeText         *string         `json:"stackSizeText,omitempty"`
-	// League                string          `json:"league"`
-	// Note                  *string         `json:"note,omitempty"`
-	// ForumNote             *string         `json:"forum_note,omitempty"`
-	// LockedToCharacter     *bool           `json:"lockedToCharacter,omitempty"`
-	// LockedToAccount       *bool           `json:"lockedToAccount,omitempty"`
-	// CisRaceReward         *bool           `json:"cisRaceReward,omitempty"`
-	// SeaRaceReward         *bool           `json:"seaRaceReward,omitempty"`
-	// ThRaceReward          *bool           `json:"thRaceReward,omitempty"`
-	// NextLevelRequirements *[]ItemProperty `json:"nextLevelRequirements,omitempty"`
-	// SecDescrText          *string         `json:"secDescrText,omitempty"`
-	// DescrText             *string         `json:"descrText,omitempty"`
-	// FlavourText           *[]string       `json:"flavourText,omitempty"`
-	// FlavourTextParsed     *[]interface{}  `json:"flavourTextParsed,omitempty"`
-	// FlavourTextNote       *string         `json:"flavourTextNote,omitempty"`
-	// ProphecyText          *string         `json:"prophecyText,omitempty"`
-	// Replica               *bool           `json:"replica,omitempty"`
-	// Scourged              *ItemScourged   `json:"scourged,omitempty"`
-	// ArtFilename           *string         `json:"artFilename,omitempty"`
-	// Requirements          *[]ItemProperty `json:"requirements,omitempty"`
-	// SocketedIcon          *string         `json:"socketedIcon,omitempty"`         // PoE2 only
-	// TamedBeastProperties  *[]ItemProperty `json:"tamedBeastProperties,omitempty"` // PoE2 only
-	// BuiltInSupport        *string         `json:"builtInSupport,omitempty"`       // PoE1 only; Supported by level 1 x
-	// MonsterLevel          *int            `json:"monsterLevel,omitempty"`         // PoE1 only; used for items that always display their monster level
-	// IconTierText          *string         `json:"iconTierText,omitempty"`         // usually roman numerals
-	// Sanctified            *bool           `json:"sanctified,omitempty"`           // PoE2 only
+	Requirements          *[]ItemProperty `json:"requirements,omitempty"`
+	GemTabs               *[]GemTab       `json:"gemTabs,omitempty"`          // PoE2 only
+	GemBackground         *string         `json:"gemBackground,omitempty"`    // PoE2 only
+	GemSkill              *string         `json:"gemSkill,omitempty"`         // PoE2 only
+	UnidentifiedTier      *int            `json:"unidentifiedTier,omitempty"` // PoE2 only
+	Realm                 *Realm          `json:"realm,omitempty"`            // PoE2 only
+	Verified              bool            `json:"verified"`
+	MaxStackSize          *int            `json:"maxStackSize,omitempty"`
+	StackSizeText         *string         `json:"stackSizeText,omitempty"`
+	League                string          `json:"league"`
+	Note                  *string         `json:"note,omitempty"`
+	ForumNote             *string         `json:"forum_note,omitempty"`
+	LockedToCharacter     *bool           `json:"lockedToCharacter,omitempty"`
+	LockedToAccount       *bool           `json:"lockedToAccount,omitempty"`
+	CisRaceReward         *bool           `json:"cisRaceReward,omitempty"`
+	SeaRaceReward         *bool           `json:"seaRaceReward,omitempty"`
+	ThRaceReward          *bool           `json:"thRaceReward,omitempty"`
+	NextLevelRequirements *[]ItemProperty `json:"nextLevelRequirements,omitempty"`
+	SecDescrText          *string         `json:"secDescrText,omitempty"`
+	DescrText             *string         `json:"descrText,omitempty"`
+	FlavourText           *[]string       `json:"flavourText,omitempty"`
+	FlavourTextParsed     *[]any          `json:"flavourTextParsed,omitempty"`
+	FlavourTextNote       *string         `json:"flavourTextNote,omitempty"`
+	ProphecyText          *string         `json:"prophecyText,omitempty"`
+	Replica               *bool           `json:"replica,omitempty"`
+	Scourged              *ItemScourged   `json:"scourged,omitempty"`
+	ArtFilename           *string         `json:"artFilename,omitempty"`
+	SocketedIcon          *string         `json:"socketedIcon,omitempty"`         // PoE2 only
+	TamedBeastProperties  *[]ItemProperty `json:"tamedBeastProperties,omitempty"` // PoE2 only
+	BuiltInSupport        *string         `json:"builtInSupport,omitempty"`       // PoE1 only; Supported by level 1 x
+	MonsterLevel          *int            `json:"monsterLevel,omitempty"`         // PoE1 only; used for items that always display their monster level
+	IconTierText          *string         `json:"iconTierText,omitempty"`         // usually roman numerals
+	Sanctified            *bool           `json:"sanctified,omitempty"`           // PoE2 only
 }
 
 func (i *Item) GetPositionIndex() string {
