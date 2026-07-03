@@ -35,6 +35,9 @@ type Score struct {
 }
 
 func (s *Score) Finished() bool {
+	if len(s.PresetCompletions) == 0 {
+		return false
+	}
 	for _, pc := range s.PresetCompletions {
 		if !pc.Finished {
 			return false

@@ -3156,7 +3156,6 @@ const docTemplate = `{
             "ObjectiveType": {
                 "enum": [
                     "ITEM",
-                    "STASH_TAB",
                     "PLAYER",
                     "TEAM",
                     "SUBMISSION",
@@ -3165,7 +3164,6 @@ const docTemplate = `{
                 "type": "string",
                 "x-enum-varnames": [
                     "ObjectiveTypeItem",
-                    "ObjectiveTypeStashTab",
                     "ObjectiveTypePlayer",
                     "ObjectiveTypeTeam",
                     "ObjectiveTypeSubmission",

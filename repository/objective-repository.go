@@ -13,7 +13,6 @@ type ObjectiveType string
 
 const (
 	ObjectiveTypeItem       ObjectiveType = "ITEM"
-	ObjectiveTypeStashTab   ObjectiveType = "STASH_TAB"
 	ObjectiveTypePlayer     ObjectiveType = "PLAYER"
 	ObjectiveTypeTeam       ObjectiveType = "TEAM"
 	ObjectiveTypeSubmission ObjectiveType = "SUBMISSION"

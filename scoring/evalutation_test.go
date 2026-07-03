@@ -33,9 +33,13 @@ func TestScoreFinished(t *testing.T) {
 		assert.False(t, s.Finished())
 	})
 
-	t.Run("empty presets is finished", func(t *testing.T) {
+	t.Run("empty presets is not finished", func(t *testing.T) {
+		// A score with no PresetCompletions hasn't actually completed anything yet
+		// (e.g. a CATEGORY objective with no scoring rules of its own and no children
+		// populated yet). It must not be vacuously treated as finished, otherwise
+		// handleChildBonus would award bonus points to it before anything happened.
 		s := &Score{PresetCompletions: map[int]*PresetCompletion{}}
-		assert.True(t, s.Finished())
+		assert.False(t, s.Finished())
 	})
 }
 
@@ -1913,6 +1917,45 @@ func TestHandleChildBonus_Grandchildren(t *testing.T) {
 	assert.Equal(t, 10, scoreMap[1][4].BonusPoints, "grandchild1 (1st finished) should get 10 bonus")
 	assert.Equal(t, 7, scoreMap[1][5].BonusPoints, "grandchild2 (2nd finished) should get 7 bonus")
 	assert.Equal(t, 5, scoreMap[1][6].BonusPoints, "grandchild3 (3rd finished) should get 5 bonus")
+}
+
+func TestHandleChildBonus_DoesNotAwardUnpopulatedCategoryLeaf(t *testing.T) {
+	// Regression test: a CATEGORY child that has no scoring rules of its own and no
+	// children populated yet (e.g. event setup isn't finished) has an empty
+	// PresetCompletions map. getLeafIds treats it as a leaf since it has no children,
+	// and it must NOT be mistaken for an already-finished child by handleChildBonus.
+	presetId := 1
+	finishedChild := &repository.Objective{Id: 2}
+	unpopulatedCategoryChild := &repository.Objective{Id: 3}
+	parent := &repository.Objective{
+		Id:       1,
+		Children: []*repository.Objective{finishedChild, unpopulatedCategoryChild},
+		ScoringRules: []*repository.ScoringRule{{
+			Id:     presetId,
+			Points: repository.ExtendingNumberSlice{10, 5},
+		}},
+	}
+
+	now := time.Now()
+	scoreMap := map[int]map[int]*Score{
+		1: {
+			1: {ObjectiveId: 1, TeamId: 1, PresetCompletions: map[int]*PresetCompletion{presetId: {}}},
+			2: {ObjectiveId: 2, TeamId: 1, PresetCompletions: map[int]*PresetCompletion{
+				presetId: {Finished: true, Timestamp: now},
+			}},
+			// unpopulated CATEGORY objective: no scoring rules of its own, so its
+			// PresetCompletions map is empty even though nothing has happened.
+			3: {ObjectiveId: 3, TeamId: 1, PresetCompletions: map[int]*PresetCompletion{}},
+		},
+	}
+
+	err := handleChildBonus(parent, parent.ScoringRules[0], nil, scoreMap)
+	assert.NoError(t, err)
+
+	assert.Equal(t, 10, scoreMap[1][2].BonusPoints, "the actually finished child should get the bonus")
+	assert.Equal(t, 0, scoreMap[1][3].BonusPoints, "unpopulated category leaf must not be awarded a bonus")
+	assert.Equal(t, 1, scoreMap[1][1].PresetCompletions[presetId].Number, "only 1 of 2 children should count as finished")
+	assert.False(t, scoreMap[1][1].PresetCompletions[presetId].Finished, "parent should not be finished since only 1 of 2 children is done")
 }
 
 // ========== handleBingoBoard edge cases ==========

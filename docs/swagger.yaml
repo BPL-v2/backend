@@ -2223,7 +2223,6 @@ components:
     ObjectiveType:
       enum:
       - ITEM
-      - STASH_TAB
       - PLAYER
       - TEAM
       - SUBMISSION
@@ -2231,7 +2230,6 @@ components:
       type: string
       x-enum-varnames:
       - ObjectiveTypeItem
-      - ObjectiveTypeStashTab
       - ObjectiveTypePlayer
       - ObjectiveTypeTeam
       - ObjectiveTypeSubmission

@@ -3150,7 +3150,6 @@
             "ObjectiveType": {
                 "enum": [
                     "ITEM",
-                    "STASH_TAB",
                     "PLAYER",
                     "TEAM",
                     "SUBMISSION",
@@ -3159,7 +3158,6 @@
                 "type": "string",
                 "x-enum-varnames": [
                     "ObjectiveTypeItem",
-                    "ObjectiveTypeStashTab",
                     "ObjectiveTypePlayer",
                     "ObjectiveTypeTeam",
                     "ObjectiveTypeSubmission",
