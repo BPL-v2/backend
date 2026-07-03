@@ -23,7 +23,7 @@ var httpClient = &http.Client{
 }
 
 func GetPoBExport(characterData *Character) (*PathOfBuilding, string, error) {
-	fmt.Println("Sending character data to PoB server for export with equipment:")
+	fmt.Printf("Sending character data for char %s to PoB server for export with equipment:\n", characterData.Name)
 	if characterData.Equipment == nil || len(*characterData.Equipment) == 0 {
 		fmt.Println("  - No equipment found")
 	} else {
