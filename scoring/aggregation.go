@@ -116,7 +116,10 @@ func calculateDerivedMatches(db *gorm.DB, objectives []*repository.Objective) er
 		return err
 	}
 	matches = append(matches, m...)
-	return db.Save(&matches).Error
+	if len(matches) == 0 {
+		return nil
+	}
+	return db.CreateInBatches(&matches, 1000).Error
 }
 
 func buildChildMaps(objectives []*repository.Objective) ([]int, map[int]int) {

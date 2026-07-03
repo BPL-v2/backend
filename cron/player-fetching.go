@@ -500,7 +500,6 @@ func PlayerFetchLoop(ctx context.Context, event *repository.Event, poeClient *cl
 				if pob, ok := pobMap[player.New.Character.Id]; ok {
 					player.New.PoB = pob
 				}
-				fmt.Printf("Char %s: exp-diff: %d\n", player.New.Character.Name, player.New.Character.Experience-player.Old.Character.Experience)
 				if player.New.Character.Experience != player.Old.Character.Experience {
 					player.LastActive = time.Now()
 					err = service.activityRepository.SaveActivity(&repository.Activity{
