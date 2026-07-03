@@ -463,6 +463,24 @@ func IntFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) int, 
 			}
 			return frameType
 		}, nil
+	case dbModel.MAX_LINKS:
+		return func(item *clientModel.Item) int {
+			if item.Sockets == nil || len(*item.Sockets) == 0 {
+				return 0
+			}
+			groupLinks := make(map[int]int)
+			for _, socket := range *item.Sockets {
+				groupLinks[socket.Group]++
+			}
+			maxLinks := 0
+			for _, links := range groupLinks {
+				if links > maxLinks {
+					maxLinks = links
+				}
+			}
+			return maxLinks
+
+		}, nil
 	default:
 		return nil, fmt.Errorf("%s is not a valid integer field", field)
 	}

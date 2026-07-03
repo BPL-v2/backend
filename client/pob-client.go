@@ -5,7 +5,6 @@ import (
 	"bpl/utils"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -23,15 +22,6 @@ var httpClient = &http.Client{
 }
 
 func GetPoBExport(characterData *Character) (*PathOfBuilding, string, error) {
-	fmt.Printf("Sending character data for char %s to PoB server for export with equipment:\n", characterData.Name)
-	if characterData.Equipment == nil || len(*characterData.Equipment) == 0 {
-		fmt.Println("  - No equipment found")
-	} else {
-		for _, item := range *characterData.Equipment {
-			fmt.Printf("  - %s\n", item.Name)
-		}
-	}
-
 	jsonData, err := json.Marshal(characterData)
 	if err != nil {
 		return nil, "", err

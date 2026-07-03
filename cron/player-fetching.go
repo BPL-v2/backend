@@ -521,7 +521,6 @@ func PlayerFetchLoop(ctx context.Context, event *repository.Event, poeClient *cl
 				teamPlayers := utils.Filter(players, func(player *parser.PlayerUpdate) bool {
 					return player.TeamId == team.Id
 				})
-				fmt.Printf("Checking team objectives for team %d with %d players\n", team.Id, len(teamPlayers))
 				teamMatches := service.GetTeamMatches(teamPlayers, teamChecker)
 				matches = append(matches, teamMatches...)
 			}
