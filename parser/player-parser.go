@@ -237,22 +237,22 @@ func poChecker() (PlayerObjectiveChecker, error) {
 		score = min(score, 9)
 
 		// custom progression
-		if armour >= 30000 {
+		if armour >= 15_000 {
 			score += 1
 		}
-		if armour >= 60000 {
+		if armour >= 30_000 {
 			score += 1
 		}
-		if armour >= 150000 {
+		if armour >= 100_000 {
 			score += 2
 		}
-		if evasion >= 30000 {
+		if evasion >= 15_000 {
 			score += 1
 		}
-		if evasion >= 60000 {
+		if evasion >= 30_000 {
 			score += 1
 		}
-		if evasion >= 150000 {
+		if evasion >= 100_000 {
 			score += 2
 		}
 		if level >= 95 {
@@ -273,82 +273,85 @@ func poChecker() (PlayerObjectiveChecker, error) {
 		if movementSpeed >= 150 {
 			score += 2
 		}
-		if es >= 9000 {
+		if es >= 4000 {
 			score += 1
 		}
-		if es >= 12000 {
+		if es >= 8000 {
 			score += 1
 		}
-		if es >= 15000 {
+		if es >= 15_000 {
 			score += 2
 		}
-		if hp >= 5500 {
+		if hp >= 4000 {
 			score += 1
 		}
-		if hp >= 6250 {
+		if hp >= 5000 {
 			score += 1
 		}
 		if hp >= 7000 {
 			score += 2
 		}
+		if mana >= 2000 {
+			score += 1
+		}
+		if mana >= 4000 {
+			score += 1
+		}
 		if mana >= 8000 {
-			score += 1
-		}
-		if mana >= 11000 {
-			score += 1
-		}
-		if mana >= 14000 {
 			score += 2
 		}
-		if dps >= 5000000 {
+		if dps >= 2_000_000 {
 			score += 1
 		}
-		if dps >= 10000000 {
+		if dps >= 5_000_000 {
 			score += 1
 		}
-		if dps >= 32000000 {
+		if dps >= 50_000_000 {
 			score += 2
 		}
-		if ehp >= 50000 {
+		if ehp >= 50_000 {
 			score += 1
 		}
-		if ehp >= 150000 {
+		if ehp >= 150_000 {
 			score += 1
 		}
-		if ehp >= 400000 {
+		if ehp >= 400_000 {
 			score += 2
 		}
-		if block >= 50 {
+		if block >= 60 {
+			score += 1
+		}
+		if block >= 70 {
 			score += 1
 		}
 		if block >= 80 {
-			score += 1
-		}
-		if block >= 83 {
 			score += 2
 		}
-		if maxRes >= 84 {
+		if maxRes >= 80 {
+			score += 1
+		}
+		if maxRes >= 85 {
 			score += 1
 		}
 		if maxRes >= 90 {
-			score += 1
-		}
-		if eleMaxHit >= 40000 {
-			score += 1
-		}
-		if eleMaxHit >= 80000 {
-			score += 1
-		}
-		if eleMaxHit >= 120000 {
 			score += 2
 		}
-		if physMaxHit >= 12000 {
+		if eleMaxHit >= 40_000 {
 			score += 1
 		}
-		if physMaxHit >= 16000 {
+		if eleMaxHit >= 80_000 {
 			score += 1
 		}
-		if physMaxHit >= 20000 {
+		if eleMaxHit >= 120_000 {
+			score += 2
+		}
+		if physMaxHit >= 12_000 {
+			score += 1
+		}
+		if physMaxHit >= 16_000 {
+			score += 1
+		}
+		if physMaxHit >= 20_000 {
 			score += 2
 		}
 		return min(score, 17)
