@@ -52,6 +52,10 @@ var aggregationMap = map[repository.CountingMethod]AggregationHandler{
 }
 
 func AggregateMatches(db *gorm.DB, event *repository.Event, objectives []*repository.Objective) ObjectiveTeamMatches {
+	err := calculateDerivedMatches(db, objectives)
+	if err != nil {
+		log.Print("Error calculating derived matches: ", err)
+	}
 	totalTime := time.Now()
 	aggregations := make(ObjectiveTeamMatches)
 	teamIds := utils.Map(event.Teams, func(team *repository.Team) int {
@@ -91,6 +95,138 @@ func AggregateMatches(db *gorm.DB, event *repository.Event, objectives []*reposi
 	}
 	metrics.ScoreAggregationDuration.WithLabelValues("total").Set(time.Since(totalTime).Seconds())
 	return aggregations
+}
+
+func calculateDerivedMatches(db *gorm.DB, objectives []*repository.Objective) error {
+	matches := []*repository.ObjectiveMatch{}
+	childSumObjectives := utils.Filter(objectives, func(objective *repository.Objective) bool {
+		return objective.TrackedValue == repository.TrackedValueChildNumerValueSum
+	})
+	m, err := calculateLatestChildNumerValueSum(db, childSumObjectives)
+	if err != nil {
+		return err
+	}
+	matches = append(matches, m...)
+
+	childCompletionObjectives := utils.Filter(objectives, func(objective *repository.Objective) bool {
+		return objective.TrackedValue == repository.TrackedValueCompletedChildObjectiveCount
+	})
+	m, err = calculateLatestChildCompletionNumber(db, childCompletionObjectives)
+	if err != nil {
+		return err
+	}
+	matches = append(matches, m...)
+	return db.Save(&matches).Error
+}
+
+func buildChildMaps(objectives []*repository.Objective) ([]int, map[int]int) {
+	childIds := make([]int, 0)
+	childToParent := make(map[int]int)
+	for _, objective := range objectives {
+		for _, child := range objective.Children {
+			childIds = append(childIds, child.Id)
+			childToParent[child.Id] = objective.Id
+		}
+	}
+	return childIds, childToParent
+}
+
+func getOrCreateMatch(matches map[ObjectiveIdTeamId]*repository.ObjectiveMatch, parentId int, teamId int, timestamp time.Time) *repository.ObjectiveMatch {
+	key := ObjectiveIdTeamId{ObjectiveId: parentId, TeamId: teamId}
+	if matches[key] == nil {
+		matches[key] = &repository.ObjectiveMatch{
+			ObjectiveId: parentId,
+			TeamId:      teamId,
+			Timestamp:   timestamp,
+		}
+	}
+	return matches[key]
+}
+
+func flattenMatches(matches map[ObjectiveIdTeamId]*repository.ObjectiveMatch) []*repository.ObjectiveMatch {
+	flatMatches := make([]*repository.ObjectiveMatch, 0, len(matches))
+	for _, match := range matches {
+		flatMatches = append(flatMatches, match)
+	}
+	return flatMatches
+}
+
+func calculateLatestChildCompletionNumber(db *gorm.DB, objectives []*repository.Objective) ([]*repository.ObjectiveMatch, error) {
+	childIds, childToParent := buildChildMaps(objectives)
+	if len(childIds) == 0 {
+		return make([]*repository.ObjectiveMatch, 0), nil
+	}
+	query := `
+	SELECT
+		objective_id,
+		team_id,
+		objectives.required_amount <= MAX(number) AS finished
+	FROM objective_matches AS match
+	JOIN objectives ON objectives.id = match.objective_id
+	WHERE
+		match.objective_id IN @objectiveIds
+	GROUP BY
+		match.objective_id, match.team_id, objectives.required_amount
+	`
+	result := make([]struct {
+		ObjectiveId int
+		TeamId      int
+		Finished    bool
+	}, 0)
+	err := db.Raw(query, map[string]any{"objectiveIds": childIds}).Scan(&result).Error
+	if err != nil {
+		return nil, err
+	}
+	matches := make(map[ObjectiveIdTeamId]*repository.ObjectiveMatch)
+	for _, row := range result {
+		parentId, ok := childToParent[row.ObjectiveId]
+		if !ok {
+			continue
+		}
+		match := getOrCreateMatch(matches, parentId, row.TeamId, time.Now())
+		if row.Finished {
+			match.Number += 1
+		}
+	}
+	return flattenMatches(matches), nil
+}
+
+func calculateLatestChildNumerValueSum(db *gorm.DB, objectives []*repository.Objective) ([]*repository.ObjectiveMatch, error) {
+	childIds, childToParent := buildChildMaps(objectives)
+	if len(childIds) == 0 {
+		return make([]*repository.ObjectiveMatch, 0), nil
+	}
+	query := `
+	SELECT
+		objective_id,
+		team_id,
+		MAX(number) AS number
+	FROM
+		objective_matches AS match
+	WHERE
+		match.objective_id IN @objectiveIds
+	GROUP BY
+		match.objective_id, match.team_id
+	`
+	result := make([]struct {
+		ObjectiveId int
+		TeamId      int
+		Number      int
+	}, 0)
+	err := db.Raw(query, map[string]any{"objectiveIds": childIds}).Scan(&result).Error
+	if err != nil {
+		return nil, err
+	}
+	matches := make(map[ObjectiveIdTeamId]*repository.ObjectiveMatch)
+	for _, row := range result {
+		parentId, ok := childToParent[row.ObjectiveId]
+		if !ok {
+			continue
+		}
+		match := getOrCreateMatch(matches, parentId, row.TeamId, time.Now())
+		match.Number += row.Number
+	}
+	return flattenMatches(matches), nil
 }
 
 func getObjectiveIds(objectives []*repository.Objective) []int {

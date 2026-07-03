@@ -87,6 +87,31 @@ const docTemplate = `{
                 },
                 "type": "object"
             },
+            "GemPage": {
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "properties": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemProperty"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "skillName": {
+                        "type": "string"
+                    },
+                    "stats": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    }
+                },
+                "type": "object"
+            },
             "GemSocket": {
                 "enum": [
                     "W"
@@ -95,6 +120,21 @@ const docTemplate = `{
                 "x-enum-varnames": [
                     "W"
                 ]
+            },
+            "GemTab": {
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "pages": {
+                        "items": {
+                            "$ref": "#/components/schemas/GemPage"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    }
+                },
+                "type": "object"
             },
             "GuildStashTabGGG": {
                 "properties": {
@@ -145,6 +185,9 @@ const docTemplate = `{
                         "type": "array",
                         "uniqueItems": false
                     },
+                    "artFilename": {
+                        "type": "string"
+                    },
                     "baseType": {
                         "type": "string"
                     },
@@ -155,6 +198,13 @@ const docTemplate = `{
                         },
                         "type": "array",
                         "uniqueItems": false
+                    },
+                    "builtInSupport": {
+                        "description": "PoE1 only; Supported by level 1 x",
+                        "type": "string"
+                    },
+                    "cisRaceReward": {
+                        "type": "boolean"
                     },
                     "colour": {
                         "type": "string"
@@ -178,6 +228,9 @@ const docTemplate = `{
                     },
                     "delve": {
                         "type": "boolean"
+                    },
+                    "descrText": {
+                        "type": "string"
                     },
                     "desecrated": {
                         "description": "PoE2 only",
@@ -218,11 +271,29 @@ const docTemplate = `{
                     "extended": {
                         "$ref": "#/components/schemas/ItemExtended"
                     },
+                    "flavourText": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "flavourTextNote": {
+                        "type": "string"
+                    },
+                    "flavourTextParsed": {
+                        "items": {},
+                        "type": "array",
+                        "uniqueItems": false
+                    },
                     "foilVariation": {
                         "type": "integer"
                     },
                     "foreseeing": {
                         "type": "boolean"
+                    },
+                    "forum_note": {
+                        "type": "string"
                     },
                     "fractured": {
                         "type": "boolean"
@@ -234,12 +305,31 @@ const docTemplate = `{
                         "type": "array",
                         "uniqueItems": false
                     },
+                    "frameType": {
+                        "type": "integer"
+                    },
                     "frameTypeId": {
+                        "type": "string"
+                    },
+                    "gemBackground": {
+                        "description": "PoE2 only",
+                        "type": "string"
+                    },
+                    "gemSkill": {
+                        "description": "PoE2 only",
                         "type": "string"
                     },
                     "gemSockets": {
                         "items": {
                             "$ref": "#/components/schemas/GemSocket"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "gemTabs": {
+                        "description": "PoE2 only",
+                        "items": {
+                            "$ref": "#/components/schemas/GemTab"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -259,6 +349,10 @@ const docTemplate = `{
                         "$ref": "#/components/schemas/ItemHybrid"
                     },
                     "icon": {
+                        "type": "string"
+                    },
+                    "iconTierText": {
+                        "description": "usually roman numerals",
                         "type": "string"
                     },
                     "id": {
@@ -295,6 +389,15 @@ const docTemplate = `{
                     "itemLevel": {
                         "type": "integer"
                     },
+                    "league": {
+                        "type": "string"
+                    },
+                    "lockedToAccount": {
+                        "type": "boolean"
+                    },
+                    "lockedToCharacter": {
+                        "type": "boolean"
+                    },
                     "logbookMods": {
                         "items": {
                             "$ref": "#/components/schemas/ItemLogbookMod"
@@ -302,8 +405,15 @@ const docTemplate = `{
                         "type": "array",
                         "uniqueItems": false
                     },
+                    "maxStackSize": {
+                        "type": "integer"
+                    },
                     "memoryItem": {
                         "type": "boolean"
+                    },
+                    "monsterLevel": {
+                        "description": "PoE1 only; used for items that always display their monster level",
+                        "type": "integer"
                     },
                     "mutated": {
                         "type": "boolean"
@@ -318,12 +428,22 @@ const docTemplate = `{
                     "name": {
                         "type": "string"
                     },
+                    "nextLevelRequirements": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemProperty"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
                     "notableProperties": {
                         "items": {
                             "$ref": "#/components/schemas/ItemProperty"
                         },
                         "type": "array",
                         "uniqueItems": false
+                    },
+                    "note": {
+                        "type": "string"
                     },
                     "objectiveId": {
                         "description": "filled by us and not ggg",
@@ -336,8 +456,24 @@ const docTemplate = `{
                         "type": "array",
                         "uniqueItems": false
                     },
+                    "prophecyText": {
+                        "type": "string"
+                    },
                     "rarity": {
                         "type": "string"
+                    },
+                    "realm": {
+                        "$ref": "#/components/schemas/Realm"
+                    },
+                    "replica": {
+                        "type": "boolean"
+                    },
+                    "requirements": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemProperty"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
                     },
                     "rewards": {
                         "items": {
@@ -357,6 +493,10 @@ const docTemplate = `{
                     "ruthless": {
                         "type": "boolean"
                     },
+                    "sanctified": {
+                        "description": "PoE2 only",
+                        "type": "boolean"
+                    },
                     "scourgeMods": {
                         "items": {
                             "type": "string"
@@ -364,14 +504,27 @@ const docTemplate = `{
                         "type": "array",
                         "uniqueItems": false
                     },
+                    "scourged": {
+                        "$ref": "#/components/schemas/ItemScourged"
+                    },
+                    "seaRaceReward": {
+                        "type": "boolean"
+                    },
                     "searing": {
                         "type": "boolean"
+                    },
+                    "secDescrText": {
+                        "type": "string"
                     },
                     "shaper": {
                         "type": "boolean"
                     },
                     "socket": {
                         "type": "integer"
+                    },
+                    "socketedIcon": {
+                        "description": "PoE2 only",
+                        "type": "string"
                     },
                     "socketedItems": {
                         "items": {
@@ -393,6 +546,9 @@ const docTemplate = `{
                     "stackSize": {
                         "type": "integer"
                     },
+                    "stackSizeText": {
+                        "type": "string"
+                    },
                     "support": {
                         "type": "boolean"
                     },
@@ -410,7 +566,18 @@ const docTemplate = `{
                     "talismanTier": {
                         "type": "integer"
                     },
+                    "tamedBeastProperties": {
+                        "description": "PoE2 only",
+                        "items": {
+                            "$ref": "#/components/schemas/ItemProperty"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
                     "tangled": {
+                        "type": "boolean"
+                    },
+                    "thRaceReward": {
                         "type": "boolean"
                     },
                     "typeLine": {
@@ -422,6 +589,10 @@ const docTemplate = `{
                         },
                         "type": "array",
                         "uniqueItems": false
+                    },
+                    "unidentifiedTier": {
+                        "description": "PoE2 only",
+                        "type": "integer"
                     },
                     "unmodifiable": {
                         "type": "boolean"
@@ -442,6 +613,9 @@ const docTemplate = `{
                         },
                         "type": "array",
                         "uniqueItems": false
+                    },
+                    "verified": {
+                        "type": "boolean"
                     },
                     "w": {
                         "type": "integer"
@@ -627,6 +801,23 @@ const docTemplate = `{
                             "type": "integer"
                         },
                         "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "ItemScourged": {
+                "properties": {
+                    "level": {
+                        "type": "integer"
+                    },
+                    "progress": {
+                        "type": "integer"
+                    },
+                    "tier": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
                     }
                 },
                 "type": "object"
@@ -970,6 +1161,7 @@ const docTemplate = `{
                 "type": "object"
             },
             "Realm": {
+                "description": "PoE2 only",
                 "enum": [
                     "pc",
                     "sony",
@@ -3322,7 +3514,8 @@ const docTemplate = `{
                     "JEWELS_WITH_IMPLICITS_COUNT",
                     "ENCHANTED_ITEM_COUNT",
                     "SUBMITTED_VALUE",
-                    "COMPLETED_CHILD_OBJECTIVE_COUNT"
+                    "COMPLETED_CHILD_OBJECTIVE_COUNT",
+                    "CHILD_NUMER_VALUE_SUM"
                 ],
                 "type": "string",
                 "x-enum-varnames": [
@@ -3366,7 +3559,8 @@ const docTemplate = `{
                     "TrackedValueJewelsWithImplicitsCount",
                     "TrackedValueEnchantedItemCount",
                     "TrackedValueSubmittedValue",
-                    "TrackedValueCompletedChildObjectiveCount"
+                    "TrackedValueCompletedChildObjectiveCount",
+                    "TrackedValueChildNumerValueSum"
                 ]
             },
             "ApplicationStatus": {

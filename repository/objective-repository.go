@@ -83,6 +83,7 @@ const (
 	TrackedValueSubmittedValue TrackedValue = "SUBMITTED_VALUE"
 
 	TrackedValueCompletedChildObjectiveCount TrackedValue = "COMPLETED_CHILD_OBJECTIVE_COUNT"
+	TrackedValueChildNumerValueSum           TrackedValue = "CHILD_NUMER_VALUE_SUM"
 )
 
 var playerObjectiveTrackedValues = []TrackedValue{
@@ -124,7 +125,7 @@ var ObjectiveTypeToTrackedValues = map[ObjectiveType][]TrackedValue{
 	ObjectiveTypePlayer:     playerObjectiveTrackedValues,
 	ObjectiveTypeTeam:       playerObjectiveTrackedValues,
 	ObjectiveTypeSubmission: {TrackedValueSubmittedValue},
-	ObjectiveTypeCategory:   {TrackedValueCompletedChildObjectiveCount},
+	ObjectiveTypeCategory:   {TrackedValueCompletedChildObjectiveCount, TrackedValueChildNumerValueSum},
 }
 
 type SyncStatus string

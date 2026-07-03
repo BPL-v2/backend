@@ -55,12 +55,39 @@ components:
           type: array
           uniqueItems: false
       type: object
+    GemPage:
+      properties:
+        description:
+          type: string
+        properties:
+          items:
+            $ref: '#/components/schemas/ItemProperty'
+          type: array
+          uniqueItems: false
+        skillName:
+          type: string
+        stats:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+      type: object
     GemSocket:
       enum:
       - W
       type: string
       x-enum-varnames:
       - W
+    GemTab:
+      properties:
+        name:
+          type: string
+        pages:
+          items:
+            $ref: '#/components/schemas/GemPage'
+          type: array
+          uniqueItems: false
+      type: object
     GuildStashTabGGG:
       properties:
         children:
@@ -95,6 +122,8 @@ components:
             $ref: '#/components/schemas/ItemProperty'
           type: array
           uniqueItems: false
+        artFilename:
+          type: string
         baseType:
           type: string
         bondedMods:
@@ -103,6 +132,11 @@ components:
             type: string
           type: array
           uniqueItems: false
+        builtInSupport:
+          description: PoE1 only; Supported by level 1 x
+          type: string
+        cisRaceReward:
+          type: boolean
         colour:
           type: string
         corrupted:
@@ -119,6 +153,8 @@ components:
           uniqueItems: false
         delve:
           type: boolean
+        descrText:
+          type: string
         desecrated:
           description: PoE2 only
           type: boolean
@@ -147,10 +183,23 @@ components:
           uniqueItems: false
         extended:
           $ref: '#/components/schemas/ItemExtended'
+        flavourText:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+        flavourTextNote:
+          type: string
+        flavourTextParsed:
+          items: {}
+          type: array
+          uniqueItems: false
         foilVariation:
           type: integer
         foreseeing:
           type: boolean
+        forum_note:
+          type: string
         fractured:
           type: boolean
         fracturedMods:
@@ -158,11 +207,25 @@ components:
             type: string
           type: array
           uniqueItems: false
+        frameType:
+          type: integer
         frameTypeId:
+          type: string
+        gemBackground:
+          description: PoE2 only
+          type: string
+        gemSkill:
+          description: PoE2 only
           type: string
         gemSockets:
           items:
             $ref: '#/components/schemas/GemSocket'
+          type: array
+          uniqueItems: false
+        gemTabs:
+          description: PoE2 only
+          items:
+            $ref: '#/components/schemas/GemTab'
           type: array
           uniqueItems: false
         grantedSkills:
@@ -176,6 +239,9 @@ components:
         hybrid:
           $ref: '#/components/schemas/ItemHybrid'
         icon:
+          type: string
+        iconTierText:
+          description: usually roman numerals
           type: string
         id:
           type: string
@@ -200,13 +266,25 @@ components:
           type: boolean
         itemLevel:
           type: integer
+        league:
+          type: string
+        lockedToAccount:
+          type: boolean
+        lockedToCharacter:
+          type: boolean
         logbookMods:
           items:
             $ref: '#/components/schemas/ItemLogbookMod'
           type: array
           uniqueItems: false
+        maxStackSize:
+          type: integer
         memoryItem:
           type: boolean
+        monsterLevel:
+          description: PoE1 only; used for items that always display their monster
+            level
+          type: integer
         mutated:
           type: boolean
         mutatedMods:
@@ -216,11 +294,18 @@ components:
           uniqueItems: false
         name:
           type: string
+        nextLevelRequirements:
+          items:
+            $ref: '#/components/schemas/ItemProperty'
+          type: array
+          uniqueItems: false
         notableProperties:
           items:
             $ref: '#/components/schemas/ItemProperty'
           type: array
           uniqueItems: false
+        note:
+          type: string
         objectiveId:
           description: filled by us and not ggg
           type: integer
@@ -229,8 +314,19 @@ components:
             $ref: '#/components/schemas/ItemProperty'
           type: array
           uniqueItems: false
+        prophecyText:
+          type: string
         rarity:
           type: string
+        realm:
+          $ref: '#/components/schemas/Realm'
+        replica:
+          type: boolean
+        requirements:
+          items:
+            $ref: '#/components/schemas/ItemProperty'
+          type: array
+          uniqueItems: false
         rewards:
           items:
             $ref: '#/components/schemas/ItemReward'
@@ -244,17 +340,29 @@ components:
           uniqueItems: false
         ruthless:
           type: boolean
+        sanctified:
+          description: PoE2 only
+          type: boolean
         scourgeMods:
           items:
             type: string
           type: array
           uniqueItems: false
+        scourged:
+          $ref: '#/components/schemas/ItemScourged'
+        seaRaceReward:
+          type: boolean
         searing:
           type: boolean
+        secDescrText:
+          type: string
         shaper:
           type: boolean
         socket:
           type: integer
+        socketedIcon:
+          description: PoE2 only
+          type: string
         socketedItems:
           items:
             $ref: '#/components/schemas/Item'
@@ -269,6 +377,8 @@ components:
           type: boolean
         stackSize:
           type: integer
+        stackSizeText:
+          type: string
         support:
           type: boolean
         supportGemRequirements:
@@ -281,7 +391,15 @@ components:
           type: boolean
         talismanTier:
           type: integer
+        tamedBeastProperties:
+          description: PoE2 only
+          items:
+            $ref: '#/components/schemas/ItemProperty'
+          type: array
+          uniqueItems: false
         tangled:
+          type: boolean
+        thRaceReward:
           type: boolean
         typeLine:
           type: string
@@ -290,6 +408,9 @@ components:
             $ref: '#/components/schemas/ItemUltimatumMod'
           type: array
           uniqueItems: false
+        unidentifiedTier:
+          description: PoE2 only
+          type: integer
         unmodifiable:
           type: boolean
         utilityMods:
@@ -304,6 +425,8 @@ components:
             type: string
           type: array
           uniqueItems: false
+        verified:
+          type: boolean
         w:
           type: integer
         weaponRequirements:
@@ -427,6 +550,17 @@ components:
           additionalProperties:
             type: integer
           type: object
+      type: object
+    ItemScourged:
+      properties:
+        level:
+          type: integer
+        progress:
+          type: integer
+        tier:
+          type: integer
+        total:
+          type: integer
       type: object
     ItemSocket:
       properties:
@@ -663,6 +797,7 @@ components:
           $ref: '#/components/schemas/Specialisations'
       type: object
     Realm:
+      description: PoE2 only
       enum:
       - pc
       - sony
@@ -2375,6 +2510,7 @@ components:
       - ENCHANTED_ITEM_COUNT
       - SUBMITTED_VALUE
       - COMPLETED_CHILD_OBJECTIVE_COUNT
+      - CHILD_NUMER_VALUE_SUM
       type: string
       x-enum-varnames:
       - TrackedValueStackSize
@@ -2418,6 +2554,7 @@ components:
       - TrackedValueEnchantedItemCount
       - TrackedValueSubmittedValue
       - TrackedValueCompletedChildObjectiveCount
+      - TrackedValueChildNumerValueSum
     ApplicationStatus:
       enum:
       - applied
