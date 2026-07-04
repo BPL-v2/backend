@@ -52,10 +52,10 @@ var aggregationMap = map[repository.CountingMethod]AggregationHandler{
 }
 
 func AggregateMatches(db *gorm.DB, event *repository.Event, objectives []*repository.Objective) ObjectiveTeamMatches {
-	err := calculateDerivedMatches(db, objectives)
-	if err != nil {
-		log.Print("Error calculating derived matches: ", err)
-	}
+	// err := calculateDerivedMatches(db, objectives)
+	// if err != nil {
+	// 	log.Print("Error calculating derived matches: ", err)
+	// }
 	totalTime := time.Now()
 	aggregations := make(ObjectiveTeamMatches)
 	teamIds := utils.Map(event.Teams, func(team *repository.Team) int {
