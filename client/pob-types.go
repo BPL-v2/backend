@@ -562,7 +562,7 @@ func DecodePoBExport(input string) (*PathOfBuilding, error) {
 	input = strings.ReplaceAll(input, "_", "/")
 	decoded, err := base64.StdEncoding.DecodeString(input)
 	if err != nil {
-		return nil, fmt.Errorf("base64 decode error: %w", err)
+		return nil, fmt.Errorf("base64 decode error: %w, input: %s", err, input)
 	}
 	b := bytes.NewReader(decoded)
 	z, err := zlib.NewReader(b)
