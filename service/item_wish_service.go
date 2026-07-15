@@ -13,7 +13,7 @@ type ItemWishService interface {
 	GetItemWishById(id int) (*repository.ItemWish, error)
 	DeleteItemWish(id int) error
 	GetItemWishesForTeam(teamId int) ([]*repository.ItemWish, error)
-	UpdateItemWishFulfillment(teamId int, userId int, character *client.Character) error
+	UpdateItemWishFulfillment(teamId int, userId int, character *client.GGGCharacter) error
 }
 
 type ItemWishServiceImpl struct {
@@ -79,7 +79,7 @@ func (s *ItemWishServiceImpl) GetItemWishesForTeam(teamId int) ([]*repository.It
 	return itemWishes, nil
 }
 
-func (s *ItemWishServiceImpl) UpdateItemWishFulfillment(teamId int, userId int, character *client.Character) error {
+func (s *ItemWishServiceImpl) UpdateItemWishFulfillment(teamId int, userId int, character *client.GGGCharacter) error {
 	itemWishes, err := s.itemWishRepository.GetItemWishesForTeamAndUser(teamId, userId)
 	if err != nil {
 		return err

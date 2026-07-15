@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	charQueue      = make(chan *client.Character, 2000)
+	charQueue      = make(chan *client.GGGCharacter, 2000)
 	pobQueue       = make(chan *repository.CharacterPob, 2000)
 	activeServices sync.Map // eventId int -> *PlayerFetchingService
 )
@@ -113,7 +113,7 @@ func (s *PlayerFetchingService) UpdateCharacterName(player *parser.PlayerUpdate,
 	}
 }
 
-func (s *PlayerFetchingService) UpdateCharacter(player *parser.PlayerUpdate, event *repository.Event) (*client.Character, error) {
+func (s *PlayerFetchingService) UpdateCharacter(player *parser.PlayerUpdate, event *repository.Event) (*client.GGGCharacter, error) {
 	fmt.Println("Updating character", player.New.Character.Name)
 	characterResponse, clientError := s.poeClient.GetCharacter(player.Token, player.New.Character.Name, event.GetRealm())
 	player.Mu.Lock()
@@ -265,11 +265,11 @@ func (service *PlayerFetchingService) initPlayerUpdates(event *repository.Event)
 			TokenExpiry:      user.TokenExpiry,
 			SuccessiveErrors: 0,
 			New: parser.Player{
-				Character: &client.Character{},
+				Character: &client.GGGCharacter{},
 				PoB:       &repository.CharacterPob{},
 			},
 			Old: parser.Player{
-				Character: &client.Character{},
+				Character: &client.GGGCharacter{},
 				PoB:       &repository.CharacterPob{},
 			},
 			Mu: sync.Mutex{},
@@ -346,7 +346,7 @@ func (service *PlayerFetchingService) UpdatePlayerTokens(players []*parser.Playe
 	return players
 }
 
-func updateStats(character *client.Character, characterRepo repository.CharacterRepository, itemService service.ItemService) {
+func updateStats(character *client.GGGCharacter, characterRepo repository.CharacterRepository, itemService service.ItemService) {
 	pob, export, err := client.GetPoBExport(character)
 	if err != nil {
 		metrics.PobsCalculatedErrorCounter.Inc()
@@ -407,7 +407,7 @@ func PlayerStatsLoop(ctx context.Context) {
 				return
 			}
 			semaphore <- struct{}{}
-			go func(character *client.Character) {
+			go func(character *client.GGGCharacter) {
 				defer func() { <-semaphore }() // Release the slot when done
 				updateStats(character, characterRepo, itemService)
 			}(entry)

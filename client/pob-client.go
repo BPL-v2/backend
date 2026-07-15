@@ -22,7 +22,7 @@ var httpClient = &http.Client{
 	Timeout: 30 * time.Second,
 }
 
-func GetPoBExport(characterData *Character) (*PathOfBuilding, string, error) {
+func GetPoBExport(characterData *GGGCharacter) (*PathOfBuilding, string, error) {
 	jsonData, err := json.Marshal(characterData)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to marshal character data: %v", err)

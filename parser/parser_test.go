@@ -1144,7 +1144,7 @@ func TestShouldUpdateCharacter(t *testing.T) {
 		p := &PlayerUpdate{
 			Token:       "token",
 			TokenExpiry: time.Now().Add(1 * time.Hour),
-			New:         Player{Character: &clientModel.Character{Name: ""}},
+			New:         Player{Character: &clientModel.GGGCharacter{Name: ""}},
 		}
 		assert.False(t, p.ShouldUpdateCharacter(timings))
 	})
@@ -1154,7 +1154,7 @@ func TestShouldUpdateCharacter(t *testing.T) {
 			Token:       "token",
 			TokenExpiry: time.Now().Add(1 * time.Hour),
 			LastActive:  time.Now(),
-			New: Player{Character: &clientModel.Character{
+			New: Player{Character: &clientModel.GGGCharacter{
 				Name:  "TestChar",
 				Level: 30,
 			}},
@@ -1168,7 +1168,7 @@ func TestShouldUpdateCharacter(t *testing.T) {
 			Token:       "token",
 			TokenExpiry: time.Now().Add(1 * time.Hour),
 			LastActive:  time.Now().Add(-2 * time.Hour), // inactive
-			New: Player{Character: &clientModel.Character{
+			New: Player{Character: &clientModel.GGGCharacter{
 				Name:  "TestChar",
 				Level: 30,
 			}},
@@ -1195,7 +1195,7 @@ func TestShouldUpdateLeagueAccount(t *testing.T) {
 		p := &PlayerUpdate{
 			Token:       "token",
 			TokenExpiry: time.Now().Add(1 * time.Hour),
-			New:         Player{Character: &clientModel.Character{Level: 50}},
+			New:         Player{Character: &clientModel.GGGCharacter{Level: 50}},
 		}
 		assert.False(t, p.ShouldUpdateLeagueAccount(timings))
 	})
@@ -1206,7 +1206,7 @@ func TestShouldUpdateLeagueAccount(t *testing.T) {
 			TokenExpiry: time.Now().Add(1 * time.Hour),
 			LastActive:  time.Now(),
 			New: Player{
-				Character:         &clientModel.Character{Level: 60},
+				Character:         &clientModel.GGGCharacter{Level: 60},
 				AtlasPassiveTrees: []clientModel.AtlasPassiveTree{{Hashes: make([]int, 50)}},
 			},
 		}
@@ -1221,7 +1221,7 @@ func TestShouldUpdateLeagueAccount(t *testing.T) {
 			TokenExpiry: time.Now().Add(1 * time.Hour),
 			LastActive:  time.Now(),
 			New: Player{
-				Character:         &clientModel.Character{Level: 60},
+				Character:         &clientModel.GGGCharacter{Level: 60},
 				AtlasPassiveTrees: []clientModel.AtlasPassiveTree{{Hashes: make([]int, 150)}},
 			},
 		}
@@ -1248,7 +1248,7 @@ func TestGetPlayerChecker(t *testing.T) {
 		obj := makePlayerObjective(1, dbModel.TrackedValueCharacterLevel)
 		checker, err := GetPlayerChecker(obj)
 		require.NoError(t, err)
-		assert.Equal(t, 90, checker(&Player{Character: &clientModel.Character{Level: 90}}))
+		assert.Equal(t, 90, checker(&Player{Character: &clientModel.GGGCharacter{Level: 90}}))
 		assert.Equal(t, 0, checker(&Player{Character: nil}))
 	})
 
@@ -1272,16 +1272,16 @@ func TestGetPlayerChecker(t *testing.T) {
 		checker, err := GetPlayerChecker(obj)
 		require.NoError(t, err)
 
-		assert.Equal(t, 2, checker(&Player{Character: &clientModel.Character{
+		assert.Equal(t, 2, checker(&Player{Character: &clientModel.GGGCharacter{
 			Passives: clientModel.Passives{
 				PantheonMajor: new("Soul of Lunaris"),
 				PantheonMinor: new("Soul of Gruthkul"),
 			},
 		}}))
-		assert.Equal(t, 1, checker(&Player{Character: &clientModel.Character{
+		assert.Equal(t, 1, checker(&Player{Character: &clientModel.GGGCharacter{
 			Passives: clientModel.Passives{PantheonMajor: new("Soul of Lunaris")},
 		}}))
-		assert.Equal(t, 0, checker(&Player{Character: &clientModel.Character{}}))
+		assert.Equal(t, 0, checker(&Player{Character: &clientModel.GGGCharacter{}}))
 		assert.Equal(t, 0, checker(&Player{}))
 	})
 
@@ -1293,7 +1293,7 @@ func TestGetPlayerChecker(t *testing.T) {
 		// Needs GetAscendancyPoints >= 8 - using character with Passives.Hashes
 		// Since GetAscendancyPoints depends on static ascendancy node sets, we test with nil character
 		assert.Equal(t, 0, checker(&Player{Character: nil}))
-		assert.Equal(t, 0, checker(&Player{Character: &clientModel.Character{}}))
+		assert.Equal(t, 0, checker(&Player{Character: &clientModel.GGGCharacter{}}))
 	})
 
 	t.Run("PoB stats return 0 with nil PoB", func(t *testing.T) {
@@ -1336,7 +1336,7 @@ func TestGetPlayerChecker(t *testing.T) {
 			{Influences: &influences},
 			{},
 		}
-		assert.Equal(t, 1, checker(&Player{Character: &clientModel.Character{Equipment: &equipment}}))
+		assert.Equal(t, 1, checker(&Player{Character: &clientModel.GGGCharacter{Equipment: &equipment}}))
 		assert.Equal(t, 0, checker(&Player{Character: nil}))
 	})
 
@@ -1350,7 +1350,7 @@ func TestGetPlayerChecker(t *testing.T) {
 			{Mutated: new(true)},
 			{},
 		}
-		assert.Equal(t, 2, checker(&Player{Character: &clientModel.Character{Equipment: &equipment}}))
+		assert.Equal(t, 2, checker(&Player{Character: &clientModel.GGGCharacter{Equipment: &equipment}}))
 	})
 
 	t.Run("gems equipped", func(t *testing.T) {
@@ -1362,7 +1362,7 @@ func TestGetPlayerChecker(t *testing.T) {
 		equipment := []clientModel.Item{
 			{SocketedItems: &socketed},
 		}
-		assert.Equal(t, 2, checker(&Player{Character: &clientModel.Character{Equipment: &equipment}}))
+		assert.Equal(t, 2, checker(&Player{Character: &clientModel.GGGCharacter{Equipment: &equipment}}))
 		assert.Equal(t, 0, checker(&Player{Character: nil}))
 	})
 
@@ -1378,7 +1378,7 @@ func TestGetPlayerChecker(t *testing.T) {
 		equipment := []clientModel.Item{
 			{SocketedItems: &socketed},
 		}
-		assert.Equal(t, 1, checker(&Player{Character: &clientModel.Character{Equipment: &equipment}}))
+		assert.Equal(t, 1, checker(&Player{Character: &clientModel.GGGCharacter{Equipment: &equipment}}))
 	})
 
 	t.Run("corrupted items equipped", func(t *testing.T) {
@@ -1391,7 +1391,7 @@ func TestGetPlayerChecker(t *testing.T) {
 			{Corrupted: new(true)},
 			{},
 		}
-		assert.Equal(t, 2, checker(&Player{Character: &clientModel.Character{Equipment: &equipment}}))
+		assert.Equal(t, 2, checker(&Player{Character: &clientModel.GGGCharacter{Equipment: &equipment}}))
 	})
 
 	t.Run("jewels with implicits", func(t *testing.T) {
@@ -1404,7 +1404,7 @@ func TestGetPlayerChecker(t *testing.T) {
 			{BaseType: "Crimson Jewel", ImplicitMods: &implicits},
 			{BaseType: "Crimson Jewel"},
 		}
-		assert.Equal(t, 1, checker(&Player{Character: &clientModel.Character{Jewels: &jewels}}))
+		assert.Equal(t, 1, checker(&Player{Character: &clientModel.GGGCharacter{Jewels: &jewels}}))
 	})
 
 	t.Run("atlas points subtracts node 65225", func(t *testing.T) {
@@ -1435,7 +1435,7 @@ func TestGetPlayerChecker(t *testing.T) {
 			{EnchantMods: &enchants},
 			{},
 		}
-		assert.Equal(t, 1, checker(&Player{Character: &clientModel.Character{Equipment: &equipment}}))
+		assert.Equal(t, 1, checker(&Player{Character: &clientModel.GGGCharacter{Equipment: &equipment}}))
 		assert.Equal(t, 0, checker(&Player{Character: nil}))
 	})
 
@@ -1444,9 +1444,9 @@ func TestGetPlayerChecker(t *testing.T) {
 		checker, err := GetPlayerChecker(obj)
 		require.NoError(t, err)
 
-		assert.Equal(t, 1, checker(&Player{Character: &clientModel.Character{Level: 95, Class: "Assassin"}}))
-		assert.Equal(t, 0, checker(&Player{Character: &clientModel.Character{Level: 95, Class: "Deadeye"}}))
-		assert.Equal(t, 0, checker(&Player{Character: &clientModel.Character{Level: 85, Class: "Assassin"}}))
+		assert.Equal(t, 1, checker(&Player{Character: &clientModel.GGGCharacter{Level: 95, Class: "Assassin"}}))
+		assert.Equal(t, 0, checker(&Player{Character: &clientModel.GGGCharacter{Level: 95, Class: "Deadeye"}}))
+		assert.Equal(t, 0, checker(&Player{Character: &clientModel.GGGCharacter{Level: 85, Class: "Assassin"}}))
 		assert.Equal(t, 0, checker(&Player{Character: nil}))
 	})
 
@@ -1455,10 +1455,10 @@ func TestGetPlayerChecker(t *testing.T) {
 		checker, err := GetPlayerChecker(obj)
 		require.NoError(t, err)
 
-		assert.Equal(t, 1, checker(&Player{Character: &clientModel.Character{
+		assert.Equal(t, 1, checker(&Player{Character: &clientModel.GGGCharacter{
 			Passives: clientModel.Passives{AlternateAscendancy: new("Warbringer")},
 		}}))
-		assert.Equal(t, 0, checker(&Player{Character: &clientModel.Character{}}))
+		assert.Equal(t, 0, checker(&Player{Character: &clientModel.GGGCharacter{}}))
 		assert.Equal(t, 0, checker(&Player{Character: nil}))
 	})
 
@@ -1479,28 +1479,28 @@ func TestPlayerScore(t *testing.T) {
 	})
 
 	t.Run("low level", func(t *testing.T) {
-		assert.Equal(t, 0, checker(&Player{Character: &clientModel.Character{Level: 30}}))
+		assert.Equal(t, 0, checker(&Player{Character: &clientModel.GGGCharacter{Level: 30}}))
 	})
 
 	t.Run("level 40 gives 1 point", func(t *testing.T) {
-		assert.Equal(t, 1, checker(&Player{Character: &clientModel.Character{Level: 40}}))
+		assert.Equal(t, 1, checker(&Player{Character: &clientModel.GGGCharacter{Level: 40}}))
 	})
 
 	t.Run("level 60 gives 2 points", func(t *testing.T) {
-		assert.Equal(t, 2, checker(&Player{Character: &clientModel.Character{Level: 60}}))
+		assert.Equal(t, 2, checker(&Player{Character: &clientModel.GGGCharacter{Level: 60}}))
 	})
 
 	t.Run("level 80 gives 3 points", func(t *testing.T) {
-		assert.Equal(t, 3, checker(&Player{Character: &clientModel.Character{Level: 80}}))
+		assert.Equal(t, 3, checker(&Player{Character: &clientModel.GGGCharacter{Level: 80}}))
 	})
 
 	t.Run("level 90 gives 6 points", func(t *testing.T) {
-		assert.Equal(t, 6, checker(&Player{Character: &clientModel.Character{Level: 90}}))
+		assert.Equal(t, 6, checker(&Player{Character: &clientModel.GGGCharacter{Level: 90}}))
 	})
 
 	t.Run("level 90 without ascendancy or pob gives 6", func(t *testing.T) {
 		p := &Player{
-			Character: &clientModel.Character{Level: 90},
+			Character: &clientModel.GGGCharacter{Level: 90},
 		}
 		assert.Equal(t, 6, checker(p))
 	})
@@ -1521,8 +1521,8 @@ func TestGetTeamChecker(t *testing.T) {
 		require.NoError(t, err)
 
 		players := []*Player{
-			{Character: &clientModel.Character{Level: 90, Name: "p1"}},
-			{Character: &clientModel.Character{Level: 85, Name: "p2"}},
+			{Character: &clientModel.GGGCharacter{Level: 90, Name: "p1"}},
+			{Character: &clientModel.GGGCharacter{Level: 85, Name: "p2"}},
 		}
 		assert.Equal(t, 175, checker(players))
 	})
@@ -1549,8 +1549,8 @@ func TestNewPlayerChecker(t *testing.T) {
 		require.NoError(t, err)
 
 		update := &PlayerUpdate{
-			Old: Player{Character: &clientModel.Character{Level: 80}},
-			New: Player{Character: &clientModel.Character{Level: 85}},
+			Old: Player{Character: &clientModel.GGGCharacter{Level: 80}},
+			New: Player{Character: &clientModel.GGGCharacter{Level: 85}},
 		}
 		results := checker.CheckForCompletions(update)
 		require.Len(t, results, 1)
@@ -1566,8 +1566,8 @@ func TestNewPlayerChecker(t *testing.T) {
 		require.NoError(t, err)
 
 		update := &PlayerUpdate{
-			Old: Player{Character: &clientModel.Character{Level: 80}},
-			New: Player{Character: &clientModel.Character{Level: 80}},
+			Old: Player{Character: &clientModel.GGGCharacter{Level: 80}},
+			New: Player{Character: &clientModel.GGGCharacter{Level: 80}},
 		}
 		results := checker.CheckForCompletions(update)
 		assert.Len(t, results, 0)
@@ -1596,12 +1596,12 @@ func TestNewTeamChecker(t *testing.T) {
 
 		updates := []*PlayerUpdate{
 			{
-				Old: Player{Character: &clientModel.Character{Level: 80, Name: "p1"}},
-				New: Player{Character: &clientModel.Character{Level: 85, Name: "p1"}},
+				Old: Player{Character: &clientModel.GGGCharacter{Level: 80, Name: "p1"}},
+				New: Player{Character: &clientModel.GGGCharacter{Level: 85, Name: "p1"}},
 			},
 			{
-				Old: Player{Character: &clientModel.Character{Level: 70, Name: "p2"}},
-				New: Player{Character: &clientModel.Character{Level: 70, Name: "p2"}},
+				Old: Player{Character: &clientModel.GGGCharacter{Level: 70, Name: "p2"}},
+				New: Player{Character: &clientModel.GGGCharacter{Level: 70, Name: "p2"}},
 			},
 		}
 		results := checker.CheckForCompletions(updates)
@@ -1619,8 +1619,8 @@ func TestNewTeamChecker(t *testing.T) {
 
 		updates := []*PlayerUpdate{
 			{
-				Old: Player{Character: &clientModel.Character{Level: 80, Name: "p1"}},
-				New: Player{Character: &clientModel.Character{Level: 80, Name: "p1"}},
+				Old: Player{Character: &clientModel.GGGCharacter{Level: 80, Name: "p1"}},
+				New: Player{Character: &clientModel.GGGCharacter{Level: 80, Name: "p1"}},
 			},
 		}
 		results := checker.CheckForCompletions(updates)
@@ -2090,7 +2090,7 @@ func TestShouldUpdateCharacterAdditional(t *testing.T) {
 		p := &PlayerUpdate{
 			Token:       "",
 			TokenExpiry: time.Now().Add(1 * time.Hour),
-			New:         Player{Character: &clientModel.Character{Name: "TestChar"}},
+			New:         Player{Character: &clientModel.GGGCharacter{Name: "TestChar"}},
 		}
 		assert.False(t, p.ShouldUpdateCharacter(timings))
 	})
@@ -2100,7 +2100,7 @@ func TestShouldUpdateCharacterAdditional(t *testing.T) {
 			Token:       "token",
 			TokenExpiry: time.Now().Add(1 * time.Hour),
 			LastActive:  time.Now(),
-			New: Player{Character: &clientModel.Character{
+			New: Player{Character: &clientModel.GGGCharacter{
 				Name:  "TestChar",
 				Level: 45,
 				// No pantheon - HasPantheon() returns false for empty Passives
@@ -2120,7 +2120,7 @@ func TestShouldUpdateCharacterAdditional(t *testing.T) {
 			Token:       "token",
 			TokenExpiry: time.Now().Add(1 * time.Hour),
 			LastActive:  time.Now(),
-			New: Player{Character: &clientModel.Character{
+			New: Player{Character: &clientModel.GGGCharacter{
 				Name:  "TestChar",
 				Level: 70,
 				// 0 ascendancy points (< 8)
@@ -2144,7 +2144,7 @@ func TestShouldUpdateCharacterAdditional(t *testing.T) {
 			Token:       "token",
 			TokenExpiry: time.Now().Add(1 * time.Hour),
 			LastActive:  time.Now(),
-			New: Player{Character: &clientModel.Character{
+			New: Player{Character: &clientModel.GGGCharacter{
 				Name:  "TestChar",
 				Level: 30,
 			}},
@@ -2169,7 +2169,7 @@ func TestShouldUpdateLeagueAccountAdditional(t *testing.T) {
 		p := &PlayerUpdate{
 			Token:       "",
 			TokenExpiry: time.Now().Add(1 * time.Hour),
-			New:         Player{Character: &clientModel.Character{Level: 60}},
+			New:         Player{Character: &clientModel.GGGCharacter{Level: 60}},
 		}
 		assert.False(t, p.ShouldUpdateLeagueAccount(timings))
 	})
@@ -2180,7 +2180,7 @@ func TestShouldUpdateLeagueAccountAdditional(t *testing.T) {
 			TokenExpiry: time.Now().Add(1 * time.Hour),
 			LastActive:  time.Now().Add(-2 * time.Hour), // inactive
 			New: Player{
-				Character:         &clientModel.Character{Level: 60},
+				Character:         &clientModel.GGGCharacter{Level: 60},
 				AtlasPassiveTrees: []clientModel.AtlasPassiveTree{{Hashes: make([]int, 50)}},
 			},
 		}
@@ -2199,7 +2199,7 @@ func TestShouldUpdateLeagueAccountAdditional(t *testing.T) {
 			TokenExpiry: time.Now().Add(1 * time.Hour),
 			LastActive:  time.Now(),
 			New: Player{
-				Character:         &clientModel.Character{Level: 60},
+				Character:         &clientModel.GGGCharacter{Level: 60},
 				AtlasPassiveTrees: []clientModel.AtlasPassiveTree{{Hashes: make([]int, 50)}},
 			},
 		}
@@ -2226,7 +2226,7 @@ func TestQuality(t *testing.T) {
 			{BaseType: "Glorious Plate", Properties: &props},
 		}
 		// Glorious Plate -> BodyArmours -> Armour superclass
-		result := checker(&Player{Character: &clientModel.Character{Equipment: &equipment}})
+		result := checker(&Player{Character: &clientModel.GGGCharacter{Equipment: &equipment}})
 		assert.Equal(t, 20, result)
 	})
 
@@ -2248,7 +2248,7 @@ func TestQuality(t *testing.T) {
 		obj := makePlayerObjective(1, dbModel.TrackedValueArmourQuality)
 		checker, err := GetPlayerChecker(obj)
 		require.NoError(t, err)
-		assert.Equal(t, 0, checker(&Player{Character: &clientModel.Character{Equipment: nil}}))
+		assert.Equal(t, 0, checker(&Player{Character: &clientModel.GGGCharacter{Equipment: nil}}))
 	})
 
 	t.Run("quality skips non-matching superclass", func(t *testing.T) {
@@ -2263,7 +2263,7 @@ func TestQuality(t *testing.T) {
 		equipment := []clientModel.Item{
 			{BaseType: "Glorious Plate", Properties: &props},
 		}
-		assert.Equal(t, 0, checker(&Player{Character: &clientModel.Character{Equipment: &equipment}}))
+		assert.Equal(t, 0, checker(&Player{Character: &clientModel.GGGCharacter{Equipment: &equipment}}))
 	})
 
 	t.Run("quality skips items without properties", func(t *testing.T) {
@@ -2274,7 +2274,7 @@ func TestQuality(t *testing.T) {
 		equipment := []clientModel.Item{
 			{BaseType: "Glorious Plate"}, // no properties
 		}
-		assert.Equal(t, 0, checker(&Player{Character: &clientModel.Character{Equipment: &equipment}}))
+		assert.Equal(t, 0, checker(&Player{Character: &clientModel.GGGCharacter{Equipment: &equipment}}))
 	})
 
 	t.Run("quality parse error", func(t *testing.T) {
@@ -2288,7 +2288,7 @@ func TestQuality(t *testing.T) {
 		equipment := []clientModel.Item{
 			{BaseType: "Glorious Plate", Properties: &props},
 		}
-		assert.Equal(t, 0, checker(&Player{Character: &clientModel.Character{Equipment: &equipment}}))
+		assert.Equal(t, 0, checker(&Player{Character: &clientModel.GGGCharacter{Equipment: &equipment}}))
 	})
 
 	t.Run("quality sums multiple items", func(t *testing.T) {
@@ -2306,6 +2306,6 @@ func TestQuality(t *testing.T) {
 			{BaseType: "Glorious Plate", Properties: &props1},
 			{BaseType: "Glorious Plate", Properties: &props2},
 		}
-		assert.Equal(t, 35, checker(&Player{Character: &clientModel.Character{Equipment: &equipment}}))
+		assert.Equal(t, 35, checker(&Player{Character: &clientModel.GGGCharacter{Equipment: &equipment}}))
 	})
 }

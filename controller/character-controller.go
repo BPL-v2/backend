@@ -54,7 +54,7 @@ func setupCharacterController(poeClient *client.PoEClient) []RouteInfo {
 // @Produce json
 // @Param user_id path int true "User ID"
 // @Param character_id path string true "Character ID"
-// @Success 200 {object} client.Character
+// @Success 200 {object} client.GGGCharacter
 // @Router /users/{user_id}/characters/{character_id} [patch]
 func (e *CharacterController) updateCharacterHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {

@@ -15,7 +15,7 @@ import (
 type Player struct {
 	AtlasPassiveTrees []client.AtlasPassiveTree
 	DelveDepth        int
-	Character         *client.Character
+	Character         *client.GGGCharacter
 	PoB               *repository.CharacterPob
 	VoidStones        utils.Set[string]
 }
@@ -621,7 +621,7 @@ func GetPlayerChecker(objective *repository.Objective) (PlayerObjectiveChecker, 
 	return parserForTrackedValue(objective.TrackedValue)
 }
 
-func quality(character *client.Character, superclass string) int {
+func quality(character *client.GGGCharacter, superclass string) int {
 	if character == nil || character.Equipment == nil {
 		return 0
 	}
@@ -643,7 +643,7 @@ func quality(character *client.Character, superclass string) int {
 	return totalQuality
 }
 
-func itemCount(character *client.Character, predicate func(item client.Item) bool) int {
+func itemCount(character *client.GGGCharacter, predicate func(item client.Item) bool) int {
 	if character == nil {
 		return 0
 	}

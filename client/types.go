@@ -699,7 +699,7 @@ type PvPCharacter struct {
 	Score  *int    `json:"score,omitempty"`
 }
 
-type Character struct {
+type GGGCharacter struct {
 	Id         string   `json:"id"`
 	Name       string   `json:"name"`
 	Realm      Realm    `json:"realm"`
@@ -720,7 +720,7 @@ type Character struct {
 	Metadata   Metadata `json:"metadata"`
 }
 
-func (c *Character) GetAllItems() []Item {
+func (c *GGGCharacter) GetAllItems() []Item {
 	if c == nil {
 		return []Item{}
 	}
@@ -739,7 +739,7 @@ func (c *Character) GetAllItems() []Item {
 	return items
 }
 
-func (c *Character) GetVoidStones() utils.Set[string] {
+func (c *GGGCharacter) GetVoidStones() utils.Set[string] {
 	voidStones := utils.Set[string]{}
 	if c.Inventory == nil {
 		return voidStones
@@ -752,7 +752,7 @@ func (c *Character) GetVoidStones() utils.Set[string] {
 	return voidStones
 }
 
-func (c *Character) GetNumberOfHighIlvlFlasks() int {
+func (c *GGGCharacter) GetNumberOfHighIlvlFlasks() int {
 	if c.Equipment == nil {
 		return 0
 	}
@@ -765,7 +765,7 @@ func (c *Character) GetNumberOfHighIlvlFlasks() int {
 	return count
 }
 
-func (c *Character) HasSameEquipment(other *Character) bool {
+func (c *GGGCharacter) HasSameEquipment(other *GGGCharacter) bool {
 	if other == nil {
 		return false
 	}
@@ -803,7 +803,7 @@ func (c *Character) HasSameEquipment(other *Character) bool {
 	return c.HasSameGems(other)
 }
 
-func (c *Character) HasSameGems(other *Character) bool {
+func (c *GGGCharacter) HasSameGems(other *GGGCharacter) bool {
 	if other == nil {
 		return false
 	}
@@ -889,7 +889,7 @@ type GetAccountProfileResponse struct {
 }
 
 type GetCharacterResponse struct {
-	Character *Character `json:"character"`
+	Character *GGGCharacter `json:"character"`
 }
 
 type ListAccountStashesResponse struct {

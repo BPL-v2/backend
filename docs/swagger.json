@@ -1,7 +1,7 @@
 {
     "components": {
         "schemas": {
-            "Character": {
+            "GGGCharacter": {
                 "properties": {
                     "class": {
                         "type": "string"
@@ -6957,7 +6957,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Character"
+                                    "$ref": "#/components/schemas/GGGCharacter"
                                 }
                             }
                         },

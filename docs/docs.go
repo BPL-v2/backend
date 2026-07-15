@@ -7,7 +7,7 @@ import "github.com/swaggo/swag/v2"
 const docTemplate = `{
     "components": {
         "schemas": {
-            "Character": {
+            "GGGCharacter": {
                 "properties": {
                     "class": {
                         "type": "string"
@@ -6963,7 +6963,7 @@ const docTemplate = `{
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Character"
+                                    "$ref": "#/components/schemas/GGGCharacter"
                                 }
                             }
                         },

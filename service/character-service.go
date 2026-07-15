@@ -24,7 +24,7 @@ type CharacterService interface {
 	GetTeamAtlasesForEvent(eventId int, teamId int) ([]*repository.AtlasTree, error)
 	GetPobForIdBeforeTimestamp(characterId string, timestamp time.Time) (*repository.CharacterPob, error)
 	GetPobs(characterId string) ([]*repository.CharacterPob, error)
-	UpdateCharacter(characterId string) (*client.Character, error)
+	UpdateCharacter(characterId string) (*client.GGGCharacter, error)
 	GetInfoForCharacter(characterId string) (*CharacterInfo, error)
 	UpdatePoB(pob *repository.CharacterPob) error
 	UpdateLatestPoBs() error
@@ -115,7 +115,7 @@ func (c *CharacterServiceImpl) GetPobs(characterId string) ([]*repository.Charac
 	return pob, nil
 }
 
-func (c *CharacterServiceImpl) UpdateCharacter(characterId string) (*client.Character, error) {
+func (c *CharacterServiceImpl) UpdateCharacter(characterId string) (*client.GGGCharacter, error) {
 	character, err := c.characterRepository.GetCharacterById(characterId)
 	if err != nil {
 		return nil, err
@@ -159,7 +159,7 @@ func (ci *CharacterInfo) ToPlayerUpdate() (*parser.PlayerUpdate, error) {
 				TokenExpiry: oauth.Expiry,
 				Mu:          sync.Mutex{},
 				New: parser.Player{
-					Character: &client.Character{
+					Character: &client.GGGCharacter{
 						Id:    ci.Character.Id,
 						Name:  ci.Character.Name,
 						Class: ci.Character.Ascendancy,
@@ -168,7 +168,7 @@ func (ci *CharacterInfo) ToPlayerUpdate() (*parser.PlayerUpdate, error) {
 					VoidStones: utils.ToSet(ci.Character.VoidStones),
 				},
 				Old: parser.Player{
-					Character: &client.Character{
+					Character: &client.GGGCharacter{
 						Id:    ci.Character.Id,
 						Name:  ci.Character.Name,
 						Class: ci.Character.Ascendancy,
