@@ -265,12 +265,12 @@ func (c *CharacterServiceImpl) UpdateLatestPoBs() error {
 			break
 		}
 		for _, characterPob := range pobs {
+			startId = characterPob.Id
 			if !slices.Contains(characterPob.Items, int32(doedres)) {
 				continue
 			}
 			fmt.Printf("Processing PoB ID %d\n", characterPob.Id)
 
-			startId = characterPob.Id
 			if characterPob.UpdatedAt.After(updateStart) {
 				continue
 			}
