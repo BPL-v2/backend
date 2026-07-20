@@ -308,12 +308,11 @@ type AchievementGrant struct {
 }
 
 type AchievementResponse struct {
-	Id           int    `json:"id"`
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	IsCustom     bool   `json:"is_custom"`
-	Icon         []byte `json:"icon,omitempty" swaggertype:"string" format:"byte"`
-	IconMimeType string `json:"icon_mime_type,omitempty"`
+	Id          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	IsCustom    bool   `json:"is_custom"`
+	IconUrl     string `json:"icon_url,omitempty"`
 }
 
 type UserAchievementResponse struct {
@@ -324,14 +323,16 @@ type UserAchievementResponse struct {
 }
 
 func toAchievementResponse(a *repository.Achievement) *AchievementResponse {
-	return &AchievementResponse{
-		Id:           a.Id,
-		Name:         a.Name,
-		Description:  a.Description,
-		IsCustom:     a.IsCustom,
-		Icon:         a.Icon,
-		IconMimeType: a.IconMimeType,
+	resp := &AchievementResponse{
+		Id:          a.Id,
+		Name:        a.Name,
+		Description: a.Description,
+		IsCustom:    a.IsCustom,
 	}
+	if len(a.Icon) > 0 {
+		resp.IconUrl = "/api/achievements/" + strconv.Itoa(a.Id) + "/icon"
+	}
+	return resp
 }
 
 func toAchievementResponses(achievements []*repository.Achievement) []*AchievementResponse {

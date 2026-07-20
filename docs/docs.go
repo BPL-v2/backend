@@ -1353,11 +1353,7 @@ const docTemplate = `{
                     "description": {
                         "type": "string"
                     },
-                    "icon": {
-                        "format": "byte",
-                        "type": "string"
-                    },
-                    "icon_mime_type": {
+                    "icon_url": {
                         "type": "string"
                     },
                     "id": {
