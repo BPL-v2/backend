@@ -275,6 +275,7 @@ func (c *AchievementController) getIcon() gin.HandlerFunc {
 			ctx.Status(404)
 			return
 		}
+		ctx.Header("Cache-Control", "public, max-age=86400")
 		ctx.Data(200, achievement.IconMimeType, achievement.Icon)
 	}
 }
