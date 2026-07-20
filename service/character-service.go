@@ -2,12 +2,12 @@ package service
 
 import (
 	"bpl/client"
-	"bpl/config"
 	"bpl/metrics"
 	"bpl/parser"
 	"bpl/repository"
 	"bpl/utils"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -241,9 +241,17 @@ func (c *CharacterServiceImpl) UpdatePoB(pob *repository.CharacterPob) error {
 }
 
 func (c *CharacterServiceImpl) UpdateLatestPoBs() error {
-	semaphore := make(chan struct{}, config.Env().NumberOfPoBReplicas)
+	semaphore := make(chan struct{}, 4)
 	updateStart := time.Date(2026, 01, 29, 12, 0, 0, 0, time.Local)
 	startId := 0
+	mappy, err := c.itemService.GetItemMap()
+	if err != nil {
+		return err
+	}
+	doedres := mappy[repository.ItemTypeUnique]["Foulborn Doedre's Scorn"]
+	if doedres == 0 {
+		return fmt.Errorf("Foulborn Doedre's Scorn not found in item map")
+	}
 
 	for {
 		fmt.Printf("Fetching PoBs starting from ID %d\n", startId)
@@ -257,7 +265,11 @@ func (c *CharacterServiceImpl) UpdateLatestPoBs() error {
 			break
 		}
 		for _, characterPob := range pobs {
+			if !slices.Contains(characterPob.Items, int32(doedres)) {
+				continue
+			}
 			fmt.Printf("Processing PoB ID %d\n", characterPob.Id)
+
 			startId = characterPob.Id
 			if characterPob.UpdatedAt.After(updateStart) {
 				continue
