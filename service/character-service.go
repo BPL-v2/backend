@@ -234,6 +234,7 @@ func (c *CharacterServiceImpl) UpdatePoB(pob *repository.CharacterPob) error {
 	pobDecoded, err := pob.Export.Decode()
 	if err == nil {
 		pob.UpdateStats(pobDecoded)
+		fmt.Printf("Updated PoB for character %s\n", pob.CharacterId)
 	} else {
 		fmt.Printf("Error decoding updated PoB for character %s: %v\n", pob.CharacterId, err)
 	}

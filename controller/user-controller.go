@@ -191,7 +191,7 @@ func (e *UserController) getUserByIdHandler() gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		user, err := e.userService.GetUserById(userId)
+		user, err := e.userService.GetUserById(userId, "OauthAccounts")
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				c.JSON(404, gin.H{"error": "User not found"})
