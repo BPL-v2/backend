@@ -243,7 +243,7 @@ func (c *CharacterServiceImpl) UpdatePoB(pob *repository.CharacterPob) error {
 
 func (c *CharacterServiceImpl) UpdateLatestPoBs() error {
 	semaphore := make(chan struct{}, 4)
-	updateStart := time.Date(2026, 07, 21, 16, 0, 0, 0, time.Local)
+	updateStart := time.Date(2026, 07, 21, 20, 0, 0, 0, time.Local)
 	startId := 0
 	mappy, err := c.itemService.GetItemMap()
 	if err != nil {
