@@ -9,19 +9,77 @@ import (
 	"bpl/service"
 	"bpl/utils"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"sync"
 	"time"
 
 	"github.com/lib/pq"
+	"github.com/segmentio/kafka-go"
 )
 
 var (
-	charQueue      = make(chan *client.GGGCharacter, 2000)
 	pobQueue       = make(chan *repository.CharacterPob, 2000)
 	activeServices sync.Map // eventId int -> *PlayerFetchingService
+
+	pobWriterOnce sync.Once
+	pobWriter     *kafka.Writer
 )
+
+// pobRequestMessage is published to the pob-requests Kafka topic.
+type pobRequestMessage struct {
+	CharacterID string          `json:"character_id"`
+	Game        string          `json:"game"`
+	Character   json.RawMessage `json:"character"`
+}
+
+// pobResultMessage is consumed from the pob-results Kafka topic.
+type pobResultMessage struct {
+	CharacterID string          `json:"character_id"`
+	Character   json.RawMessage `json:"character"`
+	Export      string          `json:"export"`
+	Error       string          `json:"error,omitempty"`
+}
+
+func getPoBRequestWriter() *kafka.Writer {
+	pobWriterOnce.Do(func() {
+		pobWriter = config.GetPoBRequestWriter()
+	})
+	return pobWriter
+}
+
+// publishPoBRequest serialises a GGGCharacter and publishes it to the
+// pob-requests Kafka topic for async PoB export processing.
+func publishPoBRequest(character *client.GGGCharacter) {
+	game := "poe1"
+	if character.Realm == client.PoE2 {
+		game = "poe2"
+	}
+	charJSON, err := json.Marshal(character)
+	if err != nil {
+		log.Printf("failed to marshal character %s for PoB request: %v", character.Id, err)
+		return
+	}
+	msg := pobRequestMessage{
+		CharacterID: character.Id,
+		Game:        game,
+		Character:   charJSON,
+	}
+	msgJSON, err := json.Marshal(msg)
+	if err != nil {
+		log.Printf("failed to marshal PoB request for character %s: %v", character.Id, err)
+		return
+	}
+	publishCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := getPoBRequestWriter().WriteMessages(publishCtx, kafka.Message{
+		Key:   []byte(character.Id),
+		Value: msgJSON,
+	}); err != nil {
+		log.Printf("failed to publish PoB request for character %s: %v", character.Id, err)
+	}
+}
 
 func GetActiveServiceForEvent(eventId int) (*PlayerFetchingService, bool) {
 	v, ok := activeServices.Load(eventId)
@@ -149,7 +207,7 @@ func (s *PlayerFetchingService) UpdateCharacter(player *parser.PlayerUpdate, eve
 	}
 	if !player.New.Character.HasSameEquipment(player.Old.Character) {
 		log.Printf("Character equipment changed for player %d, queuing for PoB processing", player.UserId)
-		charQueue <- characterResponse.Character
+		publishPoBRequest(characterResponse.Character)
 		player.LastUpdateTimes.PoB = time.Now()
 	}
 	player.New.VoidStones = player.Old.VoidStones.Union(player.New.Character.GetVoidStones())
@@ -346,23 +404,25 @@ func (service *PlayerFetchingService) UpdatePlayerTokens(players []*parser.Playe
 	return players
 }
 
-func updateStats(character *client.GGGCharacter, characterRepo repository.CharacterRepository, itemService service.ItemService) {
-	pob, export, err := client.GetPoBExport(character)
+// processPoBResult handles a PoB export result: decodes the export, builds the
+// CharacterPob entity, feeds it into pobQueue for the player loop, and persists
+// it if the stats changed.
+func processPoBResult(character *client.GGGCharacter, export string, characterRepo repository.CharacterRepository, itemService service.ItemService) {
+	pob, err := client.DecodePoBExport(export)
 	if err != nil {
 		metrics.PobsCalculatedErrorCounter.Inc()
-		fmt.Printf("Error fetching PoB export for character %s: %v\n", character.Name, err)
+		log.Printf("Error decoding PoB export for character %s: %v", character.Name, err)
 		return
 	}
 	metrics.PobsCalculatedCounter.Inc()
 	p := repository.PoBExport{}
-	err = p.FromString(export)
-	if err != nil {
-		fmt.Printf("Error parsing PoB export for character %s: %v\n", character.Name, err)
+	if err = p.FromString(export); err != nil {
+		log.Printf("Error parsing PoB export for character %s: %v", character.Name, err)
 		return
 	}
 	itemIds, err := itemService.GetItemIds(character)
 	if err != nil {
-		fmt.Printf("Error getting item ids for character %s: %v\n", character.Name, err)
+		log.Printf("Error getting item ids for character %s: %v", character.Name, err)
 	}
 	pobEntity := &repository.CharacterPob{
 		CreatedAt:        time.Now(),
@@ -383,35 +443,53 @@ func updateStats(character *client.GGGCharacter, characterRepo repository.Charac
 		return
 	}
 	metrics.PobsSavedCounter.Inc()
-	err = characterRepo.SavePoB(pobEntity)
-	if err != nil {
+	if err = characterRepo.SavePoB(pobEntity); err != nil {
 		log.Printf("Error saving character stats for %s: %v", character.Name, err)
 	}
 }
 
+// PlayerStatsLoop consumes PoB export results from the pob-results Kafka topic
+// and persists them to the database, feeding the pobQueue used by PlayerFetchLoop.
 func PlayerStatsLoop(ctx context.Context) {
 	characterRepo := repository.NewCharacterRepository()
 	itemService := service.NewItemService()
 
-	// make sure that only 4 goroutines are running at the same time
-	semaphore := make(chan struct{}, config.Env().NumberOfPoBReplicas)
+	reader := config.GetPoBResultReader()
+	defer reader.Close()
+
+	log.Print("PoB result consumer started")
 	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			entry, ok := <-charQueue
-			metrics.PobQueueGauge.Set(float64(len(charQueue)))
-			if !ok {
-				log.Println("PoB queue closed, stopping player stats loop")
+		msg, err := reader.FetchMessage(ctx)
+		if err != nil {
+			if ctx.Err() != nil {
 				return
 			}
-			semaphore <- struct{}{}
-			go func(character *client.GGGCharacter) {
-				defer func() { <-semaphore }() // Release the slot when done
-				updateStats(character, characterRepo, itemService)
-			}(entry)
+			log.Printf("PoB result consumer fetch error: %v", err)
+			time.Sleep(time.Second)
+			continue
 		}
+		metrics.PobQueueGauge.Set(float64(reader.Stats().Lag))
+
+		var result pobResultMessage
+		if err := json.Unmarshal(msg.Value, &result); err != nil {
+			log.Printf("Failed to unmarshal PoB result: %v", err)
+			reader.CommitMessages(ctx, msg)
+			continue
+		}
+		if result.Error != "" {
+			metrics.PobsCalculatedErrorCounter.Inc()
+			log.Printf("PoB error for character %s: %s", result.CharacterID, result.Error)
+			reader.CommitMessages(ctx, msg)
+			continue
+		}
+		var character client.GGGCharacter
+		if err := json.Unmarshal(result.Character, &character); err != nil {
+			log.Printf("Failed to unmarshal character from PoB result %s: %v", result.CharacterID, err)
+			reader.CommitMessages(ctx, msg)
+			continue
+		}
+		processPoBResult(&character, result.Export, characterRepo, itemService)
+		reader.CommitMessages(ctx, msg)
 	}
 }
 func drainStatQueue() map[string]*repository.CharacterPob {

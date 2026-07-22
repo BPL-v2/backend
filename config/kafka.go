@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -92,5 +93,32 @@ func GetReader(eventId int, consumerId int) (*kafka.Reader, error) {
 		MaxBytes:    1e8,               // 100MB
 		StartOffset: kafka.FirstOffset, // Start from the beginning
 	}), nil
+}
 
+const (
+	PoBRequestsTopic = "pob-requests"
+	PoBResultsTopic  = "pob-results"
+)
+
+// GetPoBRequestWriter returns a Kafka writer for publishing character data to
+// the pob-server for asynchronous PoB export calculation.
+func GetPoBRequestWriter() *kafka.Writer {
+	return &kafka.Writer{
+		Addr:                   kafka.TCP(Env().KafkaBroker),
+		Topic:                  PoBRequestsTopic,
+		Balancer:               &kafka.LeastBytes{},
+		AllowAutoTopicCreation: true,
+	}
+}
+
+// GetPoBResultReader returns a Kafka reader for consuming PoB export results
+// produced by the pob-server.
+func GetPoBResultReader() *kafka.Reader {
+	return kafka.NewReader(kafka.ReaderConfig{
+		Brokers:        []string{Env().KafkaBroker},
+		Topic:          PoBResultsTopic,
+		GroupID:        "backend-pob-results",
+		MaxBytes:       10 << 20, // 10 MB
+		CommitInterval: time.Second,
+	})
 }
