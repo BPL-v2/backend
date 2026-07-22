@@ -32,6 +32,7 @@ type pobRequestMessage struct {
 	CharacterID string          `json:"character_id"`
 	Game        string          `json:"game"`
 	Character   json.RawMessage `json:"character"`
+	QueuedAt    time.Time       `json:"queued_at"`
 }
 
 // pobResultMessage is consumed from the pob-results Kafka topic.
@@ -40,6 +41,7 @@ type pobResultMessage struct {
 	Character   json.RawMessage `json:"character"`
 	Export      string          `json:"export"`
 	Error       string          `json:"error,omitempty"`
+	QueuedAt    time.Time       `json:"queued_at"`
 }
 
 func getPoBRequestWriter() *kafka.Writer {
@@ -65,6 +67,7 @@ func publishPoBRequest(character *client.GGGCharacter) {
 		CharacterID: character.Id,
 		Game:        game,
 		Character:   charJSON,
+		QueuedAt:    time.Now(),
 	}
 	msgJSON, err := json.Marshal(msg)
 	if err != nil {
@@ -407,7 +410,7 @@ func (service *PlayerFetchingService) UpdatePlayerTokens(players []*parser.Playe
 // processPoBResult handles a PoB export result: decodes the export, builds the
 // CharacterPob entity, feeds it into pobQueue for the player loop, and persists
 // it if the stats changed.
-func processPoBResult(character *client.GGGCharacter, export string, characterRepo repository.CharacterRepository, itemService service.ItemService) {
+func processPoBResult(character *client.GGGCharacter, export string, queuedAt time.Time, characterRepo repository.CharacterRepository, itemService service.ItemService) {
 	pob, err := client.DecodePoBExport(export)
 	if err != nil {
 		metrics.PobsCalculatedErrorCounter.Inc()
@@ -425,8 +428,8 @@ func processPoBResult(character *client.GGGCharacter, export string, characterRe
 		log.Printf("Error getting item ids for character %s: %v", character.Name, err)
 	}
 	pobEntity := &repository.CharacterPob{
-		CreatedAt:        time.Now(),
-		UpdatedAt:        time.Now(),
+		CreatedAt:        queuedAt,
+		UpdatedAt:        queuedAt,
 		CharacterId:      character.Id,
 		Level:            character.Level,
 		Ascendancy:       character.Class,
@@ -488,7 +491,7 @@ func PlayerStatsLoop(ctx context.Context) {
 			reader.CommitMessages(ctx, msg)
 			continue
 		}
-		processPoBResult(&character, result.Export, characterRepo, itemService)
+		processPoBResult(&character, result.Export, result.QueuedAt, characterRepo, itemService)
 		reader.CommitMessages(ctx, msg)
 	}
 }
