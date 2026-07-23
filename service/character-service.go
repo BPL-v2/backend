@@ -243,15 +243,19 @@ func (c *CharacterServiceImpl) UpdatePoB(pob *repository.CharacterPob) error {
 
 func (c *CharacterServiceImpl) UpdateLatestPoBs() error {
 	semaphore := make(chan struct{}, 4)
-	updateStart := time.Date(2026, 07, 21, 20, 0, 0, 0, time.Local)
+	updateStart := time.Date(2026, 07, 23, 8, 0, 0, 0, time.Local)
 	startId := 0
 	mappy, err := c.itemService.GetItemMap()
 	if err != nil {
 		return err
 	}
-	doedres := mappy[repository.ItemTypeUnique]["Foulborn Doedre's Scorn"]
-	if doedres == 0 {
-		return fmt.Errorf("Foulborn Doedre's Scorn not found in item map")
+	rageVortex := mappy[repository.ItemTypeGem]["Rage Vortex"]
+	if rageVortex == 0 {
+		return fmt.Errorf("Rage Vortex not found in item map")
+	}
+	rageVortexOfBerserking := mappy[repository.ItemTypeGem]["Rage Vortex of Berserking"]
+	if rageVortexOfBerserking == 0 {
+		return fmt.Errorf("Rage Vortex of Berserking not found in item map")
 	}
 
 	for {
@@ -267,7 +271,7 @@ func (c *CharacterServiceImpl) UpdateLatestPoBs() error {
 		}
 		for _, characterPob := range pobs {
 			startId = characterPob.Id
-			if !slices.Contains(characterPob.Items, int32(doedres)) {
+			if !slices.Contains(characterPob.Items, int32(rageVortex)) && !slices.Contains(characterPob.Items, int32(rageVortexOfBerserking)) {
 				continue
 			}
 			fmt.Printf("Processing PoB ID %d\n", characterPob.Id)
