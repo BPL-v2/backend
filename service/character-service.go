@@ -7,7 +7,6 @@ import (
 	"bpl/repository"
 	"bpl/utils"
 	"fmt"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -245,18 +244,18 @@ func (c *CharacterServiceImpl) UpdateLatestPoBs() error {
 	semaphore := make(chan struct{}, 4)
 	updateStart := time.Date(2026, 07, 23, 8, 0, 0, 0, time.Local)
 	startId := 0
-	mappy, err := c.itemService.GetItemMap()
-	if err != nil {
-		return err
-	}
-	rageVortex := mappy[repository.ItemTypeGem]["Rage Vortex"]
-	if rageVortex == 0 {
-		return fmt.Errorf("Rage Vortex not found in item map")
-	}
-	rageVortexOfBerserking := mappy[repository.ItemTypeGem]["Rage Vortex of Berserking"]
-	if rageVortexOfBerserking == 0 {
-		return fmt.Errorf("Rage Vortex of Berserking not found in item map")
-	}
+	// mappy, err := c.itemService.GetItemMap()
+	// if err != nil {
+	// 	return err
+	// }
+	// rageVortex := mappy[repository.ItemTypeGem]["Rage Vortex"]
+	// if rageVortex == 0 {
+	// 	return fmt.Errorf("Rage Vortex not found in item map")
+	// }
+	// rageVortexOfBerserking := mappy[repository.ItemTypeGem]["Rage Vortex of Berserking"]
+	// if rageVortexOfBerserking == 0 {
+	// 	return fmt.Errorf("Rage Vortex of Berserking not found in item map")
+	// }
 
 	for {
 		fmt.Printf("Fetching PoBs starting from ID %d\n", startId)
@@ -271,7 +270,10 @@ func (c *CharacterServiceImpl) UpdateLatestPoBs() error {
 		}
 		for _, characterPob := range pobs {
 			startId = characterPob.Id
-			if !slices.Contains(characterPob.Items, int32(rageVortex)) && !slices.Contains(characterPob.Items, int32(rageVortexOfBerserking)) {
+			// if !slices.Contains(characterPob.Items, int32(rageVortex)) && !slices.Contains(characterPob.Items, int32(rageVortexOfBerserking)) {
+			// 	continue
+			// }
+			if characterPob.EHP < 2147483647 {
 				continue
 			}
 			fmt.Printf("Processing PoB ID %d\n", characterPob.Id)
