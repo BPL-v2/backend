@@ -24,7 +24,7 @@ type CharacterController struct {
 
 func NewCharacterController(poeClient *client.PoEClient) *CharacterController {
 	charService := service.NewCharacterService(poeClient)
-	go charService.UpdateLatestPoBs()
+	// go charService.UpdateLatestPoBs()
 	return &CharacterController{
 		characterService:      charService,
 		eventService:          service.NewEventService(),
