@@ -160,8 +160,30 @@ func (e *OauthServiceImpl) GetOauthConfig(provider repository.Provider) *oauth2.
 	return e.Config[provider]
 }
 
+// sanitizeLastUrl makes sure a lastUrl coming from an oauth redirect request
+// can only ever send the user (and their fresh auth token) to an origin we
+// recognize. GGG (and the other providers) only allow us to register a
+// single redirect_uri (https://bpl-poe.com/...), so to support logging in
+// while testing against localhost or another approved test domain, the
+// frontend running on bpl-poe.com hands the user off to that origin once the
+// oauth callback completes there. Anything we don't recognize is dropped in
+// favor of a same-origin default so we never redirect (and leak an auth
+// token) to an arbitrary domain.
+func sanitizeLastUrl(lastUrl string) string {
+	parsed, err := url.Parse(lastUrl)
+	if err != nil || parsed.Host == "" {
+		// relative path, always same-origin and therefore safe
+		return lastUrl
+	}
+	if config.IsApprovedOrigin(parsed.Scheme + "://" + parsed.Host) {
+		return lastUrl
+	}
+	fmt.Printf("Rejected oauth last_url with unapproved origin: %s\n", parsed.Scheme+"://"+parsed.Host)
+	return "/"
+}
+
 func (e *OauthServiceImpl) GetOauthProviderUrl(user *repository.User, provider repository.Provider, lastUrl string) string {
-	state, verifier := e.GetNewVerifier(user, lastUrl)
+	state, verifier := e.GetNewVerifier(user, sanitizeLastUrl(lastUrl))
 	config := e.Config[provider]
 	return config.AuthCodeURL(
 		state,

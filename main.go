@@ -99,13 +99,7 @@ func setCors(r *gin.Engine) {
 		MaxAge:           12 * time.Hour,
 	}
 	corsConfigOtherMethods := cors.Config{
-		AllowOrigins: []string{
-			"https://bpl-poe.com",
-			"https://bpl-2.netlify.app",
-			"https://v2202503259898322516.goodsrv.de",
-			"http://localhost",
-			"http://localhost:3000",
-		},
+		AllowOriginFunc:  config.IsApprovedOrigin,
 		AllowMethods:     []string{"POST", "PUT", "PATCH", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		AllowCredentials: true,
