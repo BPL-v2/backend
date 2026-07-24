@@ -112,16 +112,16 @@ func (p PoBExport) Value() (driver.Value, error) {
 }
 
 type CharacterPob struct {
-	Id               int           `gorm:"not null;primaryKey"`
-	CharacterId      string        `gorm:"not null;index"`
-	Level            int           `gorm:"not null"`
-	MainSkill        string        `gorm:"not null"`
-	Ascendancy       string        `gorm:"not null"`
-	Export           PoBExport     `gorm:"not null;type:bytea"`
-	CreatedAt        time.Time     `gorm:"not null;index"`
-	UpdatedAt        time.Time     `gorm:"not null"`
-	Items            pq.Int32Array `gorm:"not null;type:int2[]"`
-	HighIlevelFlasks int8          `gorm:"not null"`
+	Id                int           `gorm:"not null;primaryKey"`
+	CharacterId       string        `gorm:"not null;index"`
+	Level             int           `gorm:"not null"`
+	MainSkill         string        `gorm:"not null"`
+	Ascendancy        string        `gorm:"not null"`
+	Export            PoBExport     `gorm:"not null;type:bytea"`
+	CreatedAt         time.Time     `gorm:"not null;index"`
+	UpdatedAt         time.Time     `gorm:"not null"`
+	Items             pq.Int32Array `gorm:"not null;type:int2[]"`
+	HighIlevelFlasks  int8          `gorm:"not null"`
 
 	DPS           int64 `gorm:"not null"`
 	EHP           int32 `gorm:"not null"`
@@ -209,6 +209,8 @@ type CharacterRepository interface {
 	GetHighestCharacterLevelForEventsForUsers(userIds []int) (map[int]map[int]int, error)
 	DeletePoB(pobId int) error
 	GetPoBById(pobId int) (*CharacterPob, error)
+	GetPobsOrderedByCharacterAndTime(offset int, limit int) ([]*CharacterPob, error)
+	DeletePoBs(ids []int) error
 }
 
 type CharacterRepositoryImpl struct {
@@ -437,6 +439,22 @@ func (r *CharacterRepositoryImpl) GetHighestCharacterLevelForEventsForUsers(user
 
 func (r *CharacterRepositoryImpl) DeletePoB(pobId int) error {
 	return r.DB.Delete(&CharacterPob{}, pobId).Error
+}
+
+func (r *CharacterRepositoryImpl) GetPobsOrderedByCharacterAndTime(offset int, limit int) ([]*CharacterPob, error) {
+	charData := []*CharacterPob{}
+	err := r.DB.Order("character_id ASC, created_at ASC").Offset(offset).Limit(limit).Find(&charData).Error
+	if err != nil {
+		return nil, fmt.Errorf("error getting PoBs ordered by character and time (offset %d, limit %d): %w", offset, limit, err)
+	}
+	return charData, nil
+}
+
+func (r *CharacterRepositoryImpl) DeletePoBs(ids []int) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	return r.DB.Delete(&CharacterPob{}, ids).Error
 }
 
 func (r *CharacterRepositoryImpl) GetPoBById(pobId int) (*CharacterPob, error) {

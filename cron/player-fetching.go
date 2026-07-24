@@ -445,6 +445,18 @@ func processPoBResult(character *client.GGGCharacter, export string, queuedAt ti
 		log.Printf("No changes in stats for character %s, skipping save", character.Name)
 		return
 	}
+	if oldPob != nil {
+		if oldPobDecoded, decodeErr := oldPob.Export.Decode(); decodeErr == nil {
+			if pob.NumEquipmentPieces() < oldPobDecoded.NumEquipmentPieces() {
+				log.Printf("PoB for character %s has fewer equipped items than previous, skipping save", character.Name)
+				return
+			}
+			if pob.SwappedWeaponsAndLostDps(oldPobDecoded) {
+				log.Printf("PoB for character %s swapped weapons and lost dps, skipping save", character.Name)
+				return
+			}
+		}
+	}
 	metrics.PobsSavedCounter.Inc()
 	if err = characterRepo.SavePoB(pobEntity); err != nil {
 		log.Printf("Error saving character stats for %s: %v", character.Name, err)

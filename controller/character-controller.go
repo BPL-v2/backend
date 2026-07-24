@@ -25,6 +25,7 @@ type CharacterController struct {
 func NewCharacterController(poeClient *client.PoEClient) *CharacterController {
 	charService := service.NewCharacterService(poeClient)
 	// go charService.UpdateLatestPoBs()
+	go charService.DeleteInvalidPoBs()
 	return &CharacterController{
 		characterService:      charService,
 		eventService:          service.NewEventService(),
@@ -244,23 +245,23 @@ func toPoBResponse(pob *repository.CharacterPob) *PoB {
 		return nil
 	}
 	return &PoB{
-		Id:            pob.Id,
-		ExportString:  pob.Export.ToString(),
-		Level:         pob.Level,
-		Ascendancy:    pob.Ascendancy,
-		Mainskill:     pob.MainSkill,
-		Timestamp:     pob.CreatedAt,
-		DPS:           pob.DPS,
-		EHP:           pob.EHP,
-		PhysMaxHit:    pob.PhysMaxHit,
-		EleMaxHit:     pob.EleMaxHit,
-		HP:            pob.HP,
-		Mana:          pob.Mana,
-		ES:            pob.ES,
-		Armour:        pob.Armour,
-		Evasion:       pob.Evasion,
-		XP:            pob.XP,
-		MovementSpeed: pob.MovementSpeed,
+		Id:                pob.Id,
+		ExportString:      pob.Export.ToString(),
+		Level:             pob.Level,
+		Ascendancy:        pob.Ascendancy,
+		Mainskill:         pob.MainSkill,
+		Timestamp:         pob.CreatedAt,
+		DPS:               pob.DPS,
+		EHP:               pob.EHP,
+		PhysMaxHit:        pob.PhysMaxHit,
+		EleMaxHit:         pob.EleMaxHit,
+		HP:                pob.HP,
+		Mana:              pob.Mana,
+		ES:                pob.ES,
+		Armour:            pob.Armour,
+		Evasion:           pob.Evasion,
+		XP:                pob.XP,
+		MovementSpeed:     pob.MovementSpeed,
 	}
 }
 

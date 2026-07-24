@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -67,11 +68,74 @@ func (p *PoBItem) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 	return nil
 }
 
+type Slot struct {
+	ItemId int    `xml:"itemId,attr"`
+	Name   string `xml:"name,attr"`
+}
+
 type PathOfBuilding struct {
 	Build  Build     `xml:"Build"`
 	Skills Skills    `xml:"Skills"`
 	Tree   Tree      `xml:"Tree"`
 	Items  []PoBItem `xml:"Items>Item"`
+	Slots  []Slot    `xml:"Items>ItemSet>Slot"`
+}
+
+func (p *PathOfBuilding) NumEquipmentPieces() int {
+	requiredSlots := []string{
+		"Flask 1",
+		"Flask 2",
+		"Flask 3",
+		"Flask 4",
+		"Flask 5",
+		"Belt",
+		"Amulet",
+		"Ring 1",
+		"Ring 2",
+		"Boots",
+		"Gloves",
+		"Body Armour",
+		"Helmet",
+	}
+	if strings.Contains(p.GetMainSkill(), "Concoction") {
+		requiredSlots = append(requiredSlots, "Weapon 2")
+	} else {
+		requiredSlots = append(requiredSlots, "Weapon 1")
+	}
+	count := 0
+	for _, slot := range p.Slots {
+		if slices.Contains(requiredSlots, slot.Name) && slot.ItemId != 0 {
+			count++
+		}
+	}
+	return count
+}
+
+func (current *PathOfBuilding) SwappedWeaponsAndLostDps(previous *PathOfBuilding) bool {
+	if current.Build.PlayerStats.FullDPS > previous.Build.PlayerStats.FullDPS {
+		return false
+	}
+	currentW1 := ""
+	currentW2 := ""
+	previousW1Swap := ""
+	previousW2Swap := ""
+	for _, slot := range current.Slots {
+		if slot.Name == "Weapon 1" && slot.ItemId != 0 {
+			currentW1 = current.Items[slot.ItemId-1].Name + current.Items[slot.ItemId-1].BaseType
+		}
+		if slot.Name == "Weapon 2" && slot.ItemId != 0 {
+			currentW2 = current.Items[slot.ItemId-1].Name + current.Items[slot.ItemId-1].BaseType
+		}
+	}
+	for _, slot := range previous.Slots {
+		if slot.Name == "Weapon 1 Swap" && slot.ItemId != 0 {
+			previousW1Swap = previous.Items[slot.ItemId-1].Name + previous.Items[slot.ItemId-1].BaseType
+		}
+		if slot.Name == "Weapon 2 Swap" && slot.ItemId != 0 {
+			previousW2Swap = previous.Items[slot.ItemId-1].Name + previous.Items[slot.ItemId-1].BaseType
+		}
+	}
+	return currentW1 == previousW1Swap && currentW2 == previousW2Swap
 }
 
 func (p *PathOfBuilding) GetMainSkill() string {

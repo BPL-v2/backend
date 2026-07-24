@@ -30,6 +30,7 @@ type CharacterService interface {
 	UpdatePoBStats() error
 	GetPoBById(pobId int) (*repository.CharacterPob, error)
 	DeletePoB(pobId int) error
+	DeleteInvalidPoBs() error
 }
 
 type CharacterServiceImpl struct {
@@ -369,4 +370,52 @@ func (c *CharacterServiceImpl) GetPoBById(pobId int) (*repository.CharacterPob, 
 
 func (c *CharacterServiceImpl) DeletePoB(pobId int) error {
 	return c.characterRepository.DeletePoB(pobId)
+}
+
+// DeleteInvalidPoBs walks all PoB snapshots ordered by character and time,
+// deleting a snapshot whenever it has fewer equipped items than the previous
+// snapshot for the same character.
+func (c *CharacterServiceImpl) DeleteInvalidPoBs() error {
+	fmt.Println("Starting to delete invalid PoBs...")
+	offset := 0
+	limit := 1000
+	lastEquipmentCount := make(map[string]int)
+	lastPoB := make(map[string]*client.PathOfBuilding)
+
+	for {
+		pobs, err := c.characterRepository.GetPobsOrderedByCharacterAndTime(offset, limit)
+		if err != nil {
+			return err
+		}
+		if len(pobs) == 0 {
+			break
+		}
+		offset += len(pobs)
+		idsToDelete := []int{}
+		for _, characterPob := range pobs {
+			pob, err := characterPob.Export.Decode()
+			if err != nil {
+				fmt.Printf("Error decoding PoB %d for character %s: %v\n", characterPob.Id, characterPob.CharacterId, err)
+				continue
+			}
+			count := pob.NumEquipmentPieces()
+			if previous, ok := lastEquipmentCount[characterPob.CharacterId]; ok && count < previous {
+				idsToDelete = append(idsToDelete, characterPob.Id)
+			} else {
+				lastEquipmentCount[characterPob.CharacterId] = count
+			}
+			if _, ok := lastPoB[characterPob.CharacterId]; ok && pob.SwappedWeaponsAndLostDps(lastPoB[characterPob.CharacterId]) {
+				idsToDelete = append(idsToDelete, characterPob.Id)
+
+			}
+			lastPoB[characterPob.CharacterId] = pob
+
+		}
+		if err := c.characterRepository.DeletePoBs(idsToDelete); err != nil {
+			fmt.Printf("Error deleting invalid PoBs: %v\n", err)
+			return err
+		}
+		fmt.Printf("Processed PoBs up to offset %d, deleted %d invalid\n", offset, len(idsToDelete))
+	}
+	return nil
 }
