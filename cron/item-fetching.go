@@ -105,7 +105,7 @@ func (f *FetchingService) FetchStashChanges() error {
 			}
 			consecutiveErrors = 0
 			select {
-			case f.stashChannel <- repository.StashChangeMessage{ChangeId: changeId, NextChangeId: response.NextChangeId, Stashes: response.Stashes}:
+			case f.stashChannel <- repository.StashChangeMessage{ChangeId: changeId, NextChangeId: response.NextChangeId, Stashes: repository.ToTeamStashChanges(response.Stashes, 0)}:
 			case <-f.ctx.Done():
 				return nil
 			}
@@ -194,21 +194,21 @@ func (f *FetchingService) FilterStashChanges() error {
 		case <-f.ctx.Done():
 			return fmt.Errorf("context canceled")
 		default:
-			stashes := make([]client.PublicStashChange, 0)
+			stashes := make([]repository.TeamStashChange, 0)
 			now := time.Now()
 			for _, stash := range stashChange.Stashes {
 				metrics.StashCounterTotal.Inc()
-				if stash.League != nil && *stash.League == f.event.Name {
+				if stash.StashChange.League != nil && *stash.StashChange.League == f.event.Name {
 					stashes = append(stashes, stash)
 					metrics.StashCounterFiltered.Inc()
-					if stash.AccountName != nil && userMap[*stash.AccountName] != 0 {
+					if stash.StashChange.AccountName != nil && userMap[*stash.StashChange.AccountName] != 0 {
 						err = f.activityRepository.SaveActivity(&repository.Activity{
 							Time:    now.Add(-5 * time.Minute),
-							UserId:  userMap[*stash.AccountName],
+							UserId:  userMap[*stash.StashChange.AccountName],
 							EventId: f.event.Id,
 						})
 						if err != nil {
-							log.Printf("Failed to save activity for user %s: %v", *stash.AccountName, err)
+							log.Printf("Failed to save activity for user %s: %v", *stash.StashChange.AccountName, err)
 						}
 					}
 				}
@@ -315,7 +315,7 @@ func (f *FetchingService) DetermineStashAccess() error {
 		return err
 	}
 	stashToUsers := make(map[string]pq.Int32Array)
-	stashMap := make(map[string]client.GuildStashTabGGG)
+	stashMap := make(map[string]client.StashTab)
 	userMap := make(map[int]*repository.TeamUserWithPoEToken)
 	for _, user := range users {
 		userMap[user.UserId] = user
@@ -323,7 +323,7 @@ func (f *FetchingService) DetermineStashAccess() error {
 
 	type stashResult struct {
 		userId  int
-		stashes []client.GuildStashTabGGG
+		stashes []client.StashTab
 	}
 	ch := make(chan stashResult, len(users))
 	wg := sync.WaitGroup{}
@@ -399,7 +399,7 @@ func (f *FetchingService) DetermineStashAccess() error {
 	return nil
 }
 
-func (f *FetchingService) GetAvailableStashes(user *repository.TeamUserWithPoEToken) (*[]client.GuildStashTabGGG, error) {
+func (f *FetchingService) GetAvailableStashes(user *repository.TeamUserWithPoEToken) (*[]client.StashTab, error) {
 	if user.TokenExpiry.Before(time.Now()) {
 		return nil, fmt.Errorf("token expired")
 	}
@@ -487,9 +487,9 @@ func (f *FetchingService) updateGuildStash(stash *repository.GuildStashTab, fetc
 	return f.guildStashRepository.Save(stash)
 }
 
-func (f *FetchingService) updateStashItems(stash *repository.GuildStashTab, response *client.GetGuildStashResponse, kafkaWriter *kafka.Writer) error {
+func (f *FetchingService) updateStashItems(stash *repository.GuildStashTab, response *client.GetStashResponse, kafkaWriter *kafka.Writer) error {
 	if stash.Raw != "" && stash.Raw != "{}" {
-		var existingStash client.GuildStashTabGGG
+		var existingStash client.StashTab
 		err := json.Unmarshal([]byte(stash.Raw), &existingStash)
 		if err != nil {
 			return fmt.Errorf("failed to unmarshal existing stash data for stash %s: %v", stash.Id, err)
@@ -512,22 +512,21 @@ func (f *FetchingService) updateStashItems(stash *repository.GuildStashTab, resp
 		Id:        stash.Id,
 		Public:    true,
 		League:    &f.event.Name,
-		TeamId:    stash.TeamId,
 		Items:     items,
 		StashType: stash.Type,
 	}
-	err = addGuildStashesToQueue(kafkaWriter, newStashChange)
+	err = addGuildStashesToQueue(kafkaWriter, newStashChange, stash.TeamId)
 	if err != nil {
 		return fmt.Errorf("failed to add stash change to queue for stash %s: %w", stash.Id, err)
 	}
 	return nil
 }
 
-func addGuildStashesToQueue(kafkaWriter *kafka.Writer, change *client.PublicStashChange) error {
+func addGuildStashesToQueue(kafkaWriter *kafka.Writer, change *client.PublicStashChange, teamId int) error {
 	message, err := json.Marshal(repository.StashChangeMessage{
 		ChangeId:     "",
 		NextChangeId: "",
-		Stashes:      []client.PublicStashChange{*change},
+		Stashes:      []repository.TeamStashChange{{StashChange: *change, TeamId: teamId}},
 		Timestamp:    time.Now(),
 		Source:       repository.UniqueItemSourceGuildStash,
 	})

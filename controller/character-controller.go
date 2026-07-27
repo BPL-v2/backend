@@ -25,7 +25,7 @@ type CharacterController struct {
 func NewCharacterController(poeClient *client.PoEClient) *CharacterController {
 	charService := service.NewCharacterService(poeClient)
 	// go charService.UpdateLatestPoBs()
-	go charService.DeleteInvalidPoBs()
+	// go charService.DeleteInvalidPoBs()
 	return &CharacterController{
 		characterService:      charService,
 		eventService:          service.NewEventService(),
@@ -57,7 +57,7 @@ func setupCharacterController(poeClient *client.PoEClient) []RouteInfo {
 // @Produce json
 // @Param user_id path int true "User ID"
 // @Param character_id path string true "Character ID"
-// @Success 200 {object} client.GGGCharacter
+// @Success 200 {object} client.Character
 // @Router /users/{user_id}/characters/{character_id} [patch]
 func (e *CharacterController) updateCharacterHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -120,7 +120,7 @@ func (e *CharacterController) getPoBExportHandler() gin.HandlerFunc {
 // @Tags characters
 // @Produce json
 // @Param user_id path int true "User Id"
-// @Success 200 {array} Character
+// @Success 200 {array} BplCharacter
 // @Router /users/{user_id}/characters [get]
 func (e *CharacterController) getUserCharactersHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -206,7 +206,7 @@ func (c *CharacterController) deletePoBExportHandler() gin.HandlerFunc {
 	}
 }
 
-type Character struct {
+type BplCharacter struct {
 	Id               string `json:"id" binding:"required"`
 	UserId           *int   `json:"user_id"`
 	EventId          int    `json:"event_id" binding:"required"`
@@ -245,23 +245,23 @@ func toPoBResponse(pob *repository.CharacterPob) *PoB {
 		return nil
 	}
 	return &PoB{
-		Id:                pob.Id,
-		ExportString:      pob.Export.ToString(),
-		Level:             pob.Level,
-		Ascendancy:        pob.Ascendancy,
-		Mainskill:         pob.MainSkill,
-		Timestamp:         pob.CreatedAt,
-		DPS:               pob.DPS,
-		EHP:               pob.EHP,
-		PhysMaxHit:        pob.PhysMaxHit,
-		EleMaxHit:         pob.EleMaxHit,
-		HP:                pob.HP,
-		Mana:              pob.Mana,
-		ES:                pob.ES,
-		Armour:            pob.Armour,
-		Evasion:           pob.Evasion,
-		XP:                pob.XP,
-		MovementSpeed:     pob.MovementSpeed,
+		Id:            pob.Id,
+		ExportString:  pob.Export.ToString(),
+		Level:         pob.Level,
+		Ascendancy:    pob.Ascendancy,
+		Mainskill:     pob.MainSkill,
+		Timestamp:     pob.CreatedAt,
+		DPS:           pob.DPS,
+		EHP:           pob.EHP,
+		PhysMaxHit:    pob.PhysMaxHit,
+		EleMaxHit:     pob.EleMaxHit,
+		HP:            pob.HP,
+		Mana:          pob.Mana,
+		ES:            pob.ES,
+		Armour:        pob.Armour,
+		Evasion:       pob.Evasion,
+		XP:            pob.XP,
+		MovementSpeed: pob.MovementSpeed,
 	}
 }
 
@@ -286,11 +286,11 @@ type CharacterStat struct {
 	ItemIndexes     []int32 `json:"item_indexes" binding:"required"`
 }
 
-func toCharacterResponse(character *repository.Character) *Character {
+func toCharacterResponse(character *repository.Character) *BplCharacter {
 	if character == nil {
 		return nil
 	}
-	return &Character{
+	return &BplCharacter{
 		Id:               character.Id,
 		UserId:           character.UserId,
 		EventId:          character.EventId,

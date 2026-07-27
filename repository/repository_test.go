@@ -1345,15 +1345,13 @@ func TestGuildStashTab_AddChildren(t *testing.T) {
 
 	idx := 0
 	colour := "#ff0000"
-	children := []client.GuildStashTabGGG{
+	children := []client.StashTab{
 		{
-			StashTab: &client.StashTab{
-				Id:       "child-1",
-				Name:     "Child Tab 1",
-				Type:     "NormalStash",
-				Index:    &idx,
-				Metadata: client.StashTabMetadata{Colour: &colour},
-			},
+			Id:       "child-1",
+			Name:     "Child Tab 1",
+			Type:     "NormalStash",
+			Index:    &idx,
+			Metadata: client.StashTabMetadata{Colour: &colour},
 		},
 	}
 
@@ -1386,16 +1384,12 @@ func TestGuildStashTab_AddChildren_ReusesExisting(t *testing.T) {
 		Children: []*GuildStashTab{existingChild},
 	}
 
-	children := []client.GuildStashTabGGG{
-		{
-			StashTab: &client.StashTab{
-				Id:       "child-1",
-				Name:     "Updated Name",
-				Type:     "QuadStash",
-				Metadata: client.StashTabMetadata{},
-			},
-		},
-	}
+	children := []client.StashTab{{
+		Id:       "child-1",
+		Name:     "Updated Name",
+		Type:     "QuadStash",
+		Metadata: client.StashTabMetadata{},
+	}}
 
 	parent.AddChildren(children)
 	// Should have original + appended = 2 entries, but the second reuses the existing child object

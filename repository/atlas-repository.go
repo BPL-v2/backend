@@ -67,7 +67,7 @@ func (t *PassiveNodes) Scan(value any) error {
 	}
 	tree := make([]int, len(array))
 	for i, v := range array {
-		tree[i] = int(v) + (1 << 15)
+		tree[i] = int(int32(v) + (1 << 15))
 	}
 	*t = PassiveNodes(tree)
 	return nil

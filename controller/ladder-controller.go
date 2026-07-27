@@ -103,7 +103,7 @@ func (c *LadderController) getLadderHandler() gin.HandlerFunc {
 // @Tags characters
 // @Produce json
 // @Param event_id path int true "Event ID"
-// @Success 200 {array} Character
+// @Success 200 {array} BplCharacter
 // @Router /events/{event_id}/characters [get]
 func (c *LadderController) GetCharactersForEvent() gin.HandlerFunc {
 	return func(ctx *gin.Context) {

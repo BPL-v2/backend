@@ -1,6 +1,14 @@
 package client
 
-import "bpl/utils"
+import (
+	"bpl/utils"
+	"crypto/sha256"
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strings"
+)
 
 // regular nodes
 var ascendancyNodesPoE1 = utils.ToSet([]int{193, 258, 607, 662, 699, 758, 869, 922, 982, 1105, 1675, 1697, 1729, 1731, 1734, 1945, 1953, 2060, 2336, 2521, 2598, 2768, 2872, 3184, 3458, 3554, 3651, 3872, 4194, 4242, 4245, 4494, 4849, 4917, 5082, 5087, 5220, 5415, 5443, 5452, 5643, 5819, 5865, 5926, 5929, 6028, 6038, 6052, 6064, 6344, 6728, 6778, 6982, 7403, 7442, 7618, 8066, 8081, 8138, 8243, 8281, 8419, 8592, 8638, 8656, 8967, 8982, 9014, 9258, 9271, 9327, 9437, 9971, 10099, 10143, 10238, 10538, 10539, 10635, 10916, 11046, 11412, 11490, 11597, 12146, 12354, 12475, 12542, 12597, 12738, 12850, 12860, 13219, 13374, 13851, 13988, 14103, 14156, 14190, 14603, 14726, 14870, 14996, 15286, 15544, 15550, 15616, 16093, 16212, 16306, 16350, 16633, 16745, 16848, 16940, 16994, 17018, 17309, 17315, 17386, 17445, 17570, 17988, 18147, 18309, 18335, 18519, 18574, 19083, 19417, 19488, 19587, 19595, 19598, 19641, 19689, 20050, 20160, 20480, 20772, 20931, 20954, 21192, 21264, 21785, 22174, 22441, 22551, 22628, 22637, 22852, 23024, 23155, 23169, 23225, 23509, 23572, 23972, 24214, 24432, 24462, 24528, 24538, 24755, 24764, 24848, 24924, 25111, 25167, 25187, 25309, 25651, 25795, 26055, 26067, 26298, 26446, 26596, 26714, 27038, 27054, 27055, 27096, 27121, 27536, 27604, 27737, 27864, 27869, 28535, 28601, 28782, 28884, 28995, 29026, 29212, 29259, 29630, 29662, 29825, 29844, 29994, 30061, 30271, 30632, 30690, 30919, 31316, 31344, 31364, 31598, 31667, 31700, 31878, 31984, 32115, 32216, 32249, 32251, 32265, 32364, 32417, 32605, 32640, 32662, 32740, 32816, 32947, 32992, 33167, 33179, 33467, 33645, 33670, 33875, 33897, 33940, 33954, 34215, 34229, 34434, 34442, 34484, 34567, 34637, 34774, 34814, 34952, 35011, 35069, 35185, 35448, 35598, 35750, 35936, 36017, 36020, 36072, 36242, 36393, 36958, 37114, 37127, 37191, 37303, 37419, 37486, 37492, 37623, 37670, 38180, 38387, 38689, 38740, 38886, 38918, 38999, 39142, 39486, 39598, 39728, 39790, 39818, 39834, 40010, 40059, 40104, 40276, 40510, 40631, 40810, 40813, 40953, 41081, 41387, 41433, 41464, 41534, 41891, 41996, 42144, 42264, 42293, 42546, 42659, 42671, 42861, 43122, 43193, 43195, 43215, 43242, 43336, 43376, 43660, 43725, 43857, 43902, 43962, 44297, 44482, 44797, 44848, 44903, 45313, 45403, 45696, 45727, 46649, 46704, 46952, 47058, 47366, 47486, 47531, 47543, 47630, 47767, 47778, 47873, 48040, 48124, 48214, 48239, 48251, 48406, 48410, 48480, 48606, 48711, 48719, 48760, 48816, 48836, 48904, 48999, 49153, 49785, 50024, 50692, 50845, 51101, 51402, 51462, 51492, 51998, 52094, 52349, 52408, 52417, 52553, 52575, 52780, 52855, 53086, 53095, 53123, 53398, 53414, 53421, 53816, 53884, 53992, 54139, 54159, 54279, 54569, 54877, 54928, 55146, 55509, 55646, 55686, 55867, 55985, 56134, 56461, 56722, 56789, 56940, 56967, 57052, 57175, 57197, 57222, 57429, 57560, 58029, 58281, 58454, 58650, 58827, 58998, 59067, 59800, 59826, 59837, 59920, 60118, 60462, 60508, 60511, 60547, 60582, 60686, 60769, 61072, 61092, 61259, 61355, 61372, 61393, 61478, 61627, 61761, 61805, 62067, 62136, 62162, 62349, 62504, 62595, 62817, 63020, 63135, 63293, 63357, 63362, 63417, 63490, 63583, 63623, 63673, 63834, 63908, 63940, 64028, 64768, 64785, 64842, 65085, 65153, 65296})
@@ -12,17 +20,17 @@ var bloodlineNodes = utils.ToSet([]int{699, 3872, 4245, 5220, 5452, 6344, 7403, 
 
 var ascendancyNodesPoE2 = utils.ToSet([]int{16, 30, 40, 59, 74, 110, 528, 664, 762, 770, 1347, 1442, 1579, 1583, 1988, 1994, 2516, 2702, 2857, 2877, 2995, 3065, 3084, 3165, 3704, 3762, 3781, 3987, 4245, 4495, 4891, 5386, 5563, 5817, 5852, 6109, 6127, 6935, 7120, 7246, 7621, 7656, 7793, 7979, 7998, 8143, 8272, 8415, 8525, 8611, 8854, 8867, 9294, 9798, 9988, 9994, 9997, 10072, 10371, 10694, 10731, 10987, 11641, 11771, 11776, 12000, 12054, 12183, 12488, 12795, 12876, 12882, 13065, 13174, 13673, 13675, 13715, 13772, 14429, 14508, 14960, 15044, 16100, 16249, 16276, 16433, 17058, 17268, 17646, 17754, 17788, 17923, 18146, 18158, 18348, 18585, 18678, 18826, 18849, 19233, 19424, 19482, 20195, 20772, 20830, 20895, 22147, 22541, 22661, 22908, 23005, 23352, 23415, 23416, 23508, 23710, 23880, 24039, 24135, 24226, 24295, 24475, 24807, 24868, 25172, 25239, 25434, 25438, 25618, 25779, 25781, 25885, 25935, 26085, 26282, 26638, 27418, 27667, 27686, 27990, 28153, 28431, 29074, 29162, 29323, 29398, 29645, 29871, 30071, 30115, 30151, 30233, 30996, 31116, 31223, 32534, 32559, 32560, 32637, 32699, 32771, 32952, 33141, 33570, 33736, 33812, 34419, 34501, 34817, 34882, 35033, 35187, 35453, 35801, 36252, 36365, 36564, 36659, 36676, 36696, 36728, 36788, 36822, 37046, 37078, 37336, 37397, 37523, 38014, 38578, 38601, 38769, 39204, 39241, 39292, 39365, 39411, 39470, 39640, 39723, 40719, 40721, 40915, 41008, 41076, 41619, 41736, 42017, 42035, 42275, 42416, 42441, 42522, 42845, 43095, 43128, 43131, 44357, 44371, 44484, 44746, 45248, 46016, 46071, 46454, 46522, 46535, 46644, 46990, 47097, 47184, 47236, 47312, 47344, 47442, 48537, 48682, 49049, 49165, 49189, 49340, 49380, 49503, 49759, 50098, 50192, 50219, 51142, 51690, 51737, 52068, 52448, 53108, 53762, 54194, 54838, 54892, 55536, 55582, 55611, 55796, 56162, 56842, 57141, 57181, 57253, 57819, 57959, 58149, 58574, 58591, 58704, 58747, 58751, 58932, 59342, 59372, 59540, 59759, 59822, 59913, 60287, 60298, 60634, 60662, 60859, 60913, 61039, 61267, 61461, 61804, 61897, 61973, 61985, 61991, 62388, 62797, 62804, 63002, 63236, 63254, 63259, 63401, 63484, 63713, 63894, 64031, 64117, 64379, 64789, 64962, 65173, 65413, 65518})
 
-func (c *GGGCharacter) GetMainSkill() string {
+func (c *Character) GetMainSkill() string {
 	mainSkill := ""
 	maxLinks := 0
-	if c.Realm == PoE2 {
+	if c.Realm == Poe2 {
 		for _, skillGem := range *c.Skills {
 			links := 0
 			if (skillGem.Support == nil || *skillGem.Support) || skillGem.Sockets == nil {
 				continue
 			}
 			for _, socket := range *skillGem.Sockets {
-				if socket.Item != nil && *socket.Item == ItemSocketItemSupportGem {
+				if socket.Item != nil && *socket.Item == ItemSocketItemSupportgem {
 					links++
 				}
 			}
@@ -65,20 +73,224 @@ func (c *GGGCharacter) GetMainSkill() string {
 	}
 	return mainSkill
 }
-func (c *GGGCharacter) GetAscendancyPoints() int {
-	if c.Realm == PoE2 {
+func (c *Character) GetAscendancyPoints() int {
+	if c.Passives == nil {
+		return 0
+	}
+	if c.Realm == Poe2 {
 		return len(ascendancyNodesPoE2.Intersection(utils.ToSet(c.Passives.Hashes)))
 	}
 	return len(ascendancyNodesPoE1.Intersection(utils.ToSet(c.Passives.Hashes)))
 }
 
-func (c *GGGCharacter) GetBloodlinePoints() int {
+func (c *Character) GetBloodlinePoints() int {
+	if c.Passives == nil {
+		return 0
+	}
 	return len(bloodlineNodes.Intersection(utils.ToSet(c.Passives.Hashes)))
 }
 
-func (c *GGGCharacter) HasPantheon() bool {
-	if c.Realm != PoE2 {
+func (c *Character) HasPantheon() bool {
+	if c.Realm != Poe2 && c.Passives != nil {
 		return c.Passives.PantheonMajor != nil && c.Passives.PantheonMinor != nil
 	}
 	return false
+}
+
+type ItemValue []any
+
+func (v ItemValue) Name() string {
+	return v[0].(string)
+}
+
+func (v ItemValue) Id() int {
+	return v[1].(int)
+}
+
+type ClientCredentialsGrantResponse struct {
+	AccessToken string `json:"access_token"`
+	ExpiresIn   *int   `json:"expires_in"`
+	TokenType   string `json:"token_type"`
+	Username    string `json:"username"`
+	Sub         string `json:"sub"`
+	Scope       string `json:"scope"`
+}
+type AccessTokenGrantResponse struct {
+	AccessToken  string `json:"access_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	TokenType    string `json:"token_type"`
+	Username     string `json:"username"`
+	Sub          string `json:"sub"`
+	Scope        string `json:"scope"`
+	RefreshToken string `json:"refresh_token"`
+}
+
+func (g *StashTab) FlatMap() []*StashTab {
+	var result []*StashTab
+	result = append(result, g)
+	if g.Children != nil {
+		for _, child := range *g.Children {
+			result = append(result, child.FlatMap()...)
+		}
+	}
+	return result
+}
+
+func (g *StashTab) GetHash() [32]byte {
+	var idAggregate strings.Builder
+	idAggregate.WriteString(g.Id)
+	for _, item := range utils.Deref(g.Items) {
+		idAggregate.WriteString(*item.Id)
+		if item.StackSize != nil {
+			idAggregate.WriteString(fmt.Sprint(*item.StackSize))
+		}
+	}
+	return sha256.Sum256([]byte(idAggregate.String()))
+}
+func (c *Character) GetAllItems() []Item {
+	if c == nil {
+		return []Item{}
+	}
+	items := make([]Item, 0)
+	if c.Equipment != nil {
+		for _, item := range *c.Equipment {
+			items = append(items, item)
+			if item.SocketedItems != nil {
+				items = append(items, *item.SocketedItems...)
+			}
+		}
+	}
+	if c.Jewels != nil {
+		items = append(items, *c.Jewels...)
+	}
+	return items
+}
+
+func (c *Character) GetVoidStones() utils.Set[string] {
+	voidStones := utils.Set[string]{}
+	if c.Inventory == nil {
+		return voidStones
+	}
+	for _, item := range *c.Inventory {
+		if strings.Contains(item.BaseType, "Voidstone") {
+			voidStones.Add(item.BaseType)
+		}
+	}
+	return voidStones
+}
+
+func (c *Character) GetNumberOfHighIlvlFlasks() int {
+	if c.Equipment == nil {
+		return 0
+	}
+	count := 0
+	for _, item := range *c.Equipment {
+		if strings.Contains(item.BaseType, "Flask") && item.Ilvl >= 84 {
+			count++
+		}
+	}
+	return count
+}
+
+func (c *Character) HasSameEquipment(other *Character) bool {
+	if other == nil {
+		return false
+	}
+	if (c.Equipment == nil && other.Equipment == nil) && (c.Jewels == nil && other.Jewels == nil) {
+		return true
+	}
+	if (c.Equipment == nil && other.Equipment != nil) || (c.Equipment != nil && other.Equipment == nil) {
+		return false
+	}
+	if (c.Jewels == nil && other.Jewels != nil) || (c.Jewels != nil && other.Jewels == nil) {
+		return false
+	}
+	if len(*c.Equipment) != len(*other.Equipment) || len(*c.Jewels) != len(*other.Jewels) {
+		return false
+	}
+	itemMap := make(map[string]Item)
+	for _, item := range *c.Equipment {
+		itemMap[item.GetPositionIndex()] = item
+	}
+	for _, item := range *c.Jewels {
+		itemMap[item.GetPositionIndex()] = item
+	}
+	for _, item := range *other.Equipment {
+		otherItem, exists := itemMap[item.GetPositionIndex()]
+		if !exists || !item.Equals(otherItem) {
+			return false
+		}
+	}
+	for _, item := range *other.Jewels {
+		otherItem, exists := itemMap[item.GetPositionIndex()]
+		if !exists || !item.Equals(otherItem) {
+			return false
+		}
+	}
+	return c.HasSameGems(other)
+}
+
+func (c *Character) HasSameGems(other *Character) bool {
+	if other == nil {
+		return false
+	}
+	gems := utils.Set[string]{}
+	for _, item := range utils.Deref(c.Equipment) {
+		for _, socketedItem := range utils.Deref(item.SocketedItems) {
+			gems[socketedItem.TypeLine] = true
+		}
+	}
+	otherGems := utils.Set[string]{}
+	for _, item := range utils.Deref(other.Equipment) {
+		for _, socketedItem := range utils.Deref(item.SocketedItems) {
+			otherGems[socketedItem.TypeLine] = true
+		}
+	}
+	return len(gems.Difference(otherGems)) == 0
+}
+
+func (i *Item) GetPositionIndex() string {
+	return fmt.Sprintf("%s-%d-%d", utils.Deref(i.InventoryId), utils.Deref(i.X), utils.Deref(i.Y))
+}
+
+func (i *Item) Equals(other Item) bool {
+	if i.Name != other.Name || i.TypeLine != other.TypeLine || i.BaseType != other.BaseType {
+		return false
+	}
+	return modsEqual(i.ImplicitMods, other.ImplicitMods) &&
+		modsEqual(i.ExplicitMods, other.ExplicitMods)
+}
+
+func modsEqual(a, b *[]ItemMod) bool {
+	if (a != nil && b == nil) || (a == nil && b != nil) {
+		return false
+	}
+	return (a == nil && b == nil) || utils.ArrayEqualsUnordered(*a, *b)
+}
+
+// UnmarshalJSON handles the PoE API quirk of sending "flags": [] instead of
+// an object when a mod has no flags set.
+func (f *ItemModFlags) UnmarshalJSON(data []byte) error {
+	if string(data) == "[]" {
+		*f = ItemModFlags{}
+		return nil
+	}
+	type itemModFlagsAlias ItemModFlags
+	return json.Unmarshal(data, (*itemModFlagsAlias)(f))
+}
+
+func (i *Item) Scan(value any) error {
+	if value == nil {
+		return nil
+	}
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to unmarshal JSONB value: not a byte slice")
+	}
+	return json.Unmarshal(bytes, i)
+}
+
+// Value implements the driver.Valuer interface for Item
+func (i Item) Value() (driver.Value, error) {
+	return json.Marshal(i)
 }

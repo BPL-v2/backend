@@ -22,13 +22,13 @@ var httpClient = &http.Client{
 	Timeout: 30 * time.Second,
 }
 
-func GetPoBExport(characterData *GGGCharacter) (*PathOfBuilding, string, error) {
+func GetPoBExport(characterData *Character) (*PathOfBuilding, string, error) {
 	jsonData, err := json.Marshal(characterData)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to marshal character data: %v", err)
 	}
 	gameVersion := "poe1"
-	if characterData.Realm == PoE2 {
+	if characterData.Realm == Poe2 {
 		gameVersion = "poe2"
 	}
 	request, err := http.NewRequest("POST", config.Env().POBServerURL+"/"+gameVersion+"/import-character", bytes.NewReader(jsonData))

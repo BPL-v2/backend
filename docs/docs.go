@@ -7,15 +7,17 @@ import "github.com/swaggo/swag/v2"
 const docTemplate = `{
     "components": {
         "schemas": {
-            "GGGCharacter": {
+            "Character": {
                 "properties": {
                     "class": {
                         "type": "string"
                     },
                     "current": {
+                        "description": "Current always true if present",
                         "type": "boolean"
                     },
                     "deleted": {
+                        "description": "Deleted always true if present",
                         "type": "boolean"
                     },
                     "equipment": {
@@ -29,12 +31,23 @@ const docTemplate = `{
                         "type": "integer"
                     },
                     "expired": {
+                        "description": "Expired always true if present",
                         "type": "boolean"
                     },
+                    "guardian": {
+                        "description": "Guardian PoE1 only",
+                        "items": {
+                            "$ref": "#/components/schemas/Item"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
                     "id": {
+                        "description": "Id a unique 64 digit hexadecimal string",
                         "type": "string"
                     },
                     "inventory": {
+                        "description": "Inventory PoE1 only",
                         "items": {
                             "$ref": "#/components/schemas/Item"
                         },
@@ -55,18 +68,19 @@ const docTemplate = `{
                         "type": "integer"
                     },
                     "metadata": {
-                        "$ref": "#/components/schemas/Metadata"
+                        "$ref": "#/components/schemas/CharacterMetadata"
                     },
                     "name": {
                         "type": "string"
                     },
                     "passives": {
-                        "$ref": "#/components/schemas/Passives"
+                        "$ref": "#/components/schemas/CharacterPassives"
                     },
                     "realm": {
                         "$ref": "#/components/schemas/Realm"
                     },
                     "rucksack": {
+                        "description": "Rucksack PoE1 only",
                         "items": {
                             "$ref": "#/components/schemas/Item"
                         },
@@ -74,10 +88,11 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "ruthless": {
+                        "description": "Ruthless PoE1 only; always true if present",
                         "type": "boolean"
                     },
                     "skills": {
-                        "description": "PoE2 only",
+                        "description": "Skills PoE2 only",
                         "items": {
                             "$ref": "#/components/schemas/Item"
                         },
@@ -85,7 +100,262 @@ const docTemplate = `{
                         "uniqueItems": false
                     }
                 },
+                "required": [
+                    "class",
+                    "experience",
+                    "id",
+                    "level",
+                    "name",
+                    "realm"
+                ],
                 "type": "object"
+            },
+            "CharacterMetadata": {
+                "properties": {
+                    "version": {
+                        "description": "Version game version for the character's realm",
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "CharacterPassives": {
+                "properties": {
+                    "alternate_ascendancy": {
+                        "description": "AlternateAscendancy PoE1 only; Bloodline class name",
+                        "type": "string"
+                    },
+                    "bandit_choice": {
+                        "$ref": "#/components/schemas/CharacterPassivesBanditChoice"
+                    },
+                    "hashes": {
+                        "items": {
+                            "type": "integer"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "hashes_ex": {
+                        "description": "HashesEx PoE1 only",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "jewel_data": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/ItemJewelData"
+                        },
+                        "description": "JewelData the key is the string value of the x property of an item from the jewels array in this request",
+                        "type": "object"
+                    },
+                    "mastery_effects": {
+                        "additionalProperties": {
+                            "type": "integer"
+                        },
+                        "description": "MasteryEffects PoE1 only; the key is the string value of the mastery node skill hash and the value is the selected effect hash",
+                        "type": "object"
+                    },
+                    "pantheon_major": {
+                        "$ref": "#/components/schemas/CharacterPassivesPantheonMajor"
+                    },
+                    "pantheon_minor": {
+                        "$ref": "#/components/schemas/CharacterPassivesPantheonMinor"
+                    },
+                    "quest_stats": {
+                        "description": "QuestStats PoE2 only; passives granted via quests",
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "skill_overrides": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/PassiveNode"
+                        },
+                        "description": "SkillOverrides the key is the string value of the node identifier being replaced",
+                        "type": "object"
+                    },
+                    "specialisations": {
+                        "additionalProperties": {
+                            "items": {
+                                "type": "integer"
+                            },
+                            "type": "array"
+                        },
+                        "description": "Specialisations PoE2 only; the keys are set1, set2, and set3",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "hashes",
+                    "hashes_ex",
+                    "jewel_data",
+                    "mastery_effects",
+                    "skill_overrides",
+                    "specialisations"
+                ],
+                "type": "object"
+            },
+            "CharacterPassivesBanditChoice": {
+                "description": "BanditChoice PoE1 only; one of Kraityn, Alira, Oak, or Eramir",
+                "enum": [
+                    "Alira",
+                    "Eramir",
+                    "Kraityn",
+                    "Oak"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "Alira",
+                    "Eramir",
+                    "Kraityn",
+                    "Oak"
+                ]
+            },
+            "CharacterPassivesPantheonMajor": {
+                "description": "PantheonMajor PoE1 only; one of TheBrineKing, Arakaali, Solaris, or Lunaris",
+                "enum": [
+                    "Arakaali",
+                    "Lunaris",
+                    "Solaris",
+                    "TheBrineKing"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "Arakaali",
+                    "Lunaris",
+                    "Solaris",
+                    "TheBrineKing"
+                ]
+            },
+            "CharacterPassivesPantheonMinor": {
+                "description": "PantheonMinor PoE1 only; one of Abberath, Gruthkul, Yugul, Shakari, Tukohama, Ralakesh, Garukhan, or Ryslatha",
+                "enum": [
+                    "Abberath",
+                    "Garukhan",
+                    "Gruthkul",
+                    "Ralakesh",
+                    "Ryslatha",
+                    "Shakari",
+                    "Tukohama",
+                    "Yugul"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "Abberath",
+                    "Garukhan",
+                    "Gruthkul",
+                    "Ralakesh",
+                    "Ryslatha",
+                    "Shakari",
+                    "Tukohama",
+                    "Yugul"
+                ]
+            },
+            "CrucibleNode": {
+                "properties": {
+                    "allocated": {
+                        "description": "Allocated always true if present",
+                        "type": "boolean"
+                    },
+                    "icon": {
+                        "type": "string"
+                    },
+                    "in": {
+                        "description": "In node identifiers of nodes connected to this one",
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "isNotable": {
+                        "description": "IsNotable always true if present",
+                        "type": "boolean"
+                    },
+                    "isReward": {
+                        "description": "IsReward always true if present",
+                        "type": "boolean"
+                    },
+                    "orbit": {
+                        "description": "Orbit the column this node occupies",
+                        "type": "integer"
+                    },
+                    "orbitIndex": {
+                        "description": "OrbitIndex the node's position within the column",
+                        "type": "integer"
+                    },
+                    "out": {
+                        "description": "Out node identifiers of nodes this one connects to",
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "reminderText": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "skill": {
+                        "description": "Skill mod hash",
+                        "type": "integer"
+                    },
+                    "stats": {
+                        "description": "Stats stat descriptions",
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "tier": {
+                        "description": "Tier mod tier",
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "in",
+                    "out"
+                ],
+                "type": "object"
+            },
+            "Faction": {
+                "properties": {
+                    "id": {
+                        "$ref": "#/components/schemas/FactionId"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "name"
+                ],
+                "type": "object"
+            },
+            "FactionId": {
+                "description": "Id Faction1, Faction2, Faction3, or Faction4",
+                "enum": [
+                    "Faction1",
+                    "Faction2",
+                    "Faction3",
+                    "Faction4"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "Faction1",
+                    "Faction2",
+                    "Faction3",
+                    "Faction4"
+                ]
             },
             "GemPage": {
                 "properties": {
@@ -112,15 +382,6 @@ const docTemplate = `{
                 },
                 "type": "object"
             },
-            "GemSocket": {
-                "enum": [
-                    "W"
-                ],
-                "type": "string",
-                "x-enum-varnames": [
-                    "W"
-                ]
-            },
             "GemTab": {
                 "properties": {
                     "name": {
@@ -134,48 +395,15 @@ const docTemplate = `{
                         "uniqueItems": false
                     }
                 },
-                "type": "object"
-            },
-            "GuildStashTabGGG": {
-                "properties": {
-                    "children": {
-                        "items": {
-                            "$ref": "#/components/schemas/GuildStashTabGGG"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
-                    },
-                    "id": {
-                        "type": "string"
-                    },
-                    "index": {
-                        "type": "integer"
-                    },
-                    "items": {
-                        "items": {
-                            "$ref": "#/components/schemas/Item"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
-                    },
-                    "metadata": {
-                        "$ref": "#/components/schemas/StashTabMetadata"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "parent": {
-                        "type": "string"
-                    },
-                    "type": {
-                        "type": "string"
-                    }
-                },
+                "required": [
+                    "pages"
+                ],
                 "type": "object"
             },
             "Item": {
                 "properties": {
                     "abyssJewel": {
+                        "description": "AbyssJewel always true if present",
                         "type": "boolean"
                     },
                     "additionalProperties": {
@@ -192,7 +420,7 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "bondedMods": {
-                        "description": "PoE2 only",
+                        "description": "BondedMods PoE2 only",
                         "items": {
                             "type": "string"
                         },
@@ -200,16 +428,18 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "builtInSupport": {
-                        "description": "PoE1 only; Supported by level 1 x",
+                        "description": "BuiltInSupport PoE1 only; Supported by level 1 x",
                         "type": "string"
                     },
                     "cisRaceReward": {
+                        "description": "CisRaceReward always true if present",
                         "type": "boolean"
                     },
                     "colour": {
-                        "type": "string"
+                        "$ref": "#/components/schemas/ItemColour"
                     },
                     "corrupted": {
+                        "description": "Corrupted always true if present",
                         "type": "boolean"
                     },
                     "cosmeticMods": {
@@ -219,7 +449,11 @@ const docTemplate = `{
                         "type": "array",
                         "uniqueItems": false
                     },
-                    "craftedMods": {
+                    "crucible": {
+                        "$ref": "#/components/schemas/ItemCrucible"
+                    },
+                    "crucibleMods": {
+                        "description": "CrucibleMods only allocated mods are included",
                         "items": {
                             "type": "string"
                         },
@@ -227,31 +461,26 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "delve": {
+                        "description": "Delve always true if present",
                         "type": "boolean"
                     },
                     "descrText": {
                         "type": "string"
                     },
                     "desecrated": {
-                        "description": "PoE2 only",
+                        "description": "Desecrated PoE2 only; always true if present",
                         "type": "boolean"
                     },
-                    "desecratedMods": {
-                        "description": "PoE2 only",
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
-                    },
                     "doubleCorrupted": {
-                        "description": "PoE2 only",
+                        "description": "DoubleCorrupted PoE2 only; always true if present",
                         "type": "boolean"
                     },
                     "duplicated": {
+                        "description": "Duplicated always true if present",
                         "type": "boolean"
                     },
                     "elder": {
+                        "description": "Elder always true if present",
                         "type": "boolean"
                     },
                     "enchantMods": {
@@ -261,9 +490,12 @@ const docTemplate = `{
                         "type": "array",
                         "uniqueItems": false
                     },
+                    "enshrouded": {
+                        "$ref": "#/components/schemas/ItemEnshrouded"
+                    },
                     "explicitMods": {
                         "items": {
-                            "type": "string"
+                            "$ref": "#/components/schemas/ItemMod"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -279,55 +511,49 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "flavourTextNote": {
+                        "description": "FlavourTextNote user-generated text",
                         "type": "string"
-                    },
-                    "flavourTextParsed": {
-                        "items": {},
-                        "type": "array",
-                        "uniqueItems": false
                     },
                     "foilVariation": {
                         "type": "integer"
                     },
                     "foreseeing": {
+                        "description": "Foreseeing always true if present",
                         "type": "boolean"
                     },
                     "forum_note": {
+                        "description": "ForumNote user-generated text",
                         "type": "string"
                     },
                     "fractured": {
+                        "description": "Fractured always true if present",
                         "type": "boolean"
                     },
-                    "fracturedMods": {
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
-                    },
                     "frameType": {
+                        "description": "FrameType deprecated; use frameTypeId",
                         "type": "integer"
                     },
                     "frameTypeId": {
                         "type": "string"
                     },
                     "gemBackground": {
-                        "description": "PoE2 only",
+                        "description": "GemBackground PoE2 only",
                         "type": "string"
                     },
                     "gemSkill": {
-                        "description": "PoE2 only",
+                        "description": "GemSkill PoE2 only",
                         "type": "string"
                     },
                     "gemSockets": {
+                        "description": "GemSockets PoE2 only; string is always W",
                         "items": {
-                            "$ref": "#/components/schemas/GemSocket"
+                            "type": "string"
                         },
                         "type": "array",
                         "uniqueItems": false
                     },
                     "gemTabs": {
-                        "description": "PoE2 only",
+                        "description": "GemTabs PoE2 only",
                         "items": {
                             "$ref": "#/components/schemas/GemTab"
                         },
@@ -335,7 +561,7 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "grantedSkills": {
-                        "description": "PoE2 only",
+                        "description": "GrantedSkills PoE2 only",
                         "items": {
                             "$ref": "#/components/schemas/ItemProperty"
                         },
@@ -351,11 +577,16 @@ const docTemplate = `{
                     "icon": {
                         "type": "string"
                     },
+                    "iconStackLevel": {
+                        "description": "IconStackLevel describes the level of a stack of items",
+                        "type": "string"
+                    },
                     "iconTierText": {
-                        "description": "usually roman numerals",
+                        "description": "IconTierText usually roman numerals",
                         "type": "string"
                     },
                     "id": {
+                        "description": "Id a unique 64 digit hexadecimal string",
                         "type": "string"
                     },
                     "identified": {
@@ -366,7 +597,7 @@ const docTemplate = `{
                     },
                     "implicitMods": {
                         "items": {
-                            "type": "string"
+                            "$ref": "#/components/schemas/ItemMod"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -375,27 +606,29 @@ const docTemplate = `{
                         "$ref": "#/components/schemas/ItemIncubatedItem"
                     },
                     "influences": {
-                        "additionalProperties": {
-                            "type": "boolean"
-                        },
+                        "additionalProperties": {},
                         "type": "object"
                     },
                     "inventoryId": {
                         "type": "string"
                     },
                     "isRelic": {
+                        "description": "IsRelic always true if present",
                         "type": "boolean"
                     },
                     "itemLevel": {
+                        "description": "ItemLevel used for items that always display their item level",
                         "type": "integer"
                     },
                     "league": {
                         "type": "string"
                     },
                     "lockedToAccount": {
+                        "description": "LockedToAccount always true if present",
                         "type": "boolean"
                     },
                     "lockedToCharacter": {
+                        "description": "LockedToCharacter always true if present",
                         "type": "boolean"
                     },
                     "logbookMods": {
@@ -409,21 +642,23 @@ const docTemplate = `{
                         "type": "integer"
                     },
                     "memoryItem": {
+                        "description": "MemoryItem always true if present",
                         "type": "boolean"
                     },
-                    "monsterLevel": {
-                        "description": "PoE1 only; used for items that always display their monster level",
-                        "type": "integer"
-                    },
-                    "mutated": {
-                        "type": "boolean"
-                    },
-                    "mutatedMods": {
+                    "mercenarySkills": {
                         "items": {
-                            "type": "string"
+                            "$ref": "#/components/schemas/ItemMercenarySkill"
                         },
                         "type": "array",
                         "uniqueItems": false
+                    },
+                    "monsterLevel": {
+                        "description": "MonsterLevel PoE1 only; used for items that always display their monster level",
+                        "type": "integer"
+                    },
+                    "mutated": {
+                        "description": "Mutated PoE1: true on Foulborn Uniques, PoE2: true on all Vaal Uniques",
+                        "type": "boolean"
                     },
                     "name": {
                         "type": "string"
@@ -443,11 +678,8 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "note": {
+                        "description": "Note user-generated text",
                         "type": "string"
-                    },
-                    "objectiveId": {
-                        "description": "filled by us and not ggg",
-                        "type": "integer"
                     },
                     "properties": {
                         "items": {
@@ -460,12 +692,13 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "rarity": {
-                        "type": "string"
+                        "$ref": "#/components/schemas/ItemRarity"
                     },
                     "realm": {
                         "$ref": "#/components/schemas/Realm"
                     },
                     "replica": {
+                        "description": "Replica always true if present",
                         "type": "boolean"
                     },
                     "requirements": {
@@ -483,7 +716,7 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "runeMods": {
-                        "description": "PoE2 only",
+                        "description": "RuneMods PoE2 only",
                         "items": {
                             "type": "string"
                         },
@@ -491,10 +724,11 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "ruthless": {
+                        "description": "Ruthless always true if present",
                         "type": "boolean"
                     },
                     "sanctified": {
-                        "description": "PoE2 only",
+                        "description": "Sanctified PoE2 only; always true if present",
                         "type": "boolean"
                     },
                     "scourgeMods": {
@@ -508,22 +742,25 @@ const docTemplate = `{
                         "$ref": "#/components/schemas/ItemScourged"
                     },
                     "seaRaceReward": {
+                        "description": "SeaRaceReward always true if present",
                         "type": "boolean"
                     },
                     "searing": {
+                        "description": "Searing always true if present",
                         "type": "boolean"
                     },
                     "secDescrText": {
                         "type": "string"
                     },
                     "shaper": {
+                        "description": "Shaper always true if present",
                         "type": "boolean"
                     },
                     "socket": {
                         "type": "integer"
                     },
                     "socketedIcon": {
-                        "description": "PoE2 only",
+                        "description": "SocketedIcon PoE2 only; an image URL to use when this item is in the socket of another item",
                         "type": "string"
                     },
                     "socketedItems": {
@@ -541,6 +778,7 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "split": {
+                        "description": "Split always true if present",
                         "type": "boolean"
                     },
                     "stackSize": {
@@ -550,10 +788,11 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "support": {
+                        "description": "Support always true if present",
                         "type": "boolean"
                     },
                     "supportGemRequirements": {
-                        "description": "PoE2 only",
+                        "description": "SupportGemRequirements PoE2 only",
                         "items": {
                             "$ref": "#/components/schemas/ItemProperty"
                         },
@@ -561,13 +800,11 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "synthesised": {
+                        "description": "Synthesised always true if present",
                         "type": "boolean"
                     },
-                    "talismanTier": {
-                        "type": "integer"
-                    },
                     "tamedBeastProperties": {
-                        "description": "PoE2 only",
+                        "description": "TamedBeastProperties PoE2 only",
                         "items": {
                             "$ref": "#/components/schemas/ItemProperty"
                         },
@@ -575,9 +812,11 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "tangled": {
+                        "description": "Tangled always true if present",
                         "type": "boolean"
                     },
                     "thRaceReward": {
+                        "description": "ThRaceReward always true if present",
                         "type": "boolean"
                     },
                     "typeLine": {
@@ -591,10 +830,15 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "unidentifiedTier": {
-                        "description": "PoE2 only",
+                        "description": "UnidentifiedTier PoE2 only",
                         "type": "integer"
                     },
                     "unmodifiable": {
+                        "description": "Unmodifiable always true if present",
+                        "type": "boolean"
+                    },
+                    "unmodifiableExceptChaos": {
+                        "description": "UnmodifiableExceptChaos always true if present",
                         "type": "boolean"
                     },
                     "utilityMods": {
@@ -605,9 +849,11 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "veiled": {
+                        "description": "Veiled always true if present",
                         "type": "boolean"
                     },
                     "veiledMods": {
+                        "description": "VeiledMods random video identifier",
                         "items": {
                             "type": "string"
                         },
@@ -617,11 +863,15 @@ const docTemplate = `{
                     "verified": {
                         "type": "boolean"
                     },
+                    "vestigial": {
+                        "description": "Vestigial PoE1 only; always true if present",
+                        "type": "boolean"
+                    },
                     "w": {
                         "type": "integer"
                     },
                     "weaponRequirements": {
-                        "description": "PoE2 only",
+                        "description": "WeaponRequirements PoE2 only",
                         "items": {
                             "$ref": "#/components/schemas/ItemProperty"
                         },
@@ -635,9 +885,76 @@ const docTemplate = `{
                         "type": "integer"
                     }
                 },
+                "required": [
+                    "baseType",
+                    "frameTypeId",
+                    "h",
+                    "icon",
+                    "identified",
+                    "ilvl",
+                    "name",
+                    "typeLine",
+                    "verified",
+                    "w"
+                ],
+                "type": "object"
+            },
+            "ItemColour": {
+                "description": "Colour PoE1 only; S, D, I, or G",
+                "enum": [
+                    "D",
+                    "G",
+                    "I",
+                    "S"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "ItemColourD",
+                    "ItemColourG",
+                    "ItemColourI",
+                    "ItemColourS"
+                ]
+            },
+            "ItemCrucible": {
+                "properties": {
+                    "layout": {
+                        "description": "Layout URL to an image of the tree layout",
+                        "type": "string"
+                    },
+                    "nodes": {
+                        "additionalProperties": {
+                            "$ref": "#/components/schemas/CrucibleNode"
+                        },
+                        "description": "Nodes the key is the string value of the node index",
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "layout",
+                    "nodes"
+                ],
+                "type": "object"
+            },
+            "ItemEnshrouded": {
+                "properties": {
+                    "progress": {
+                        "type": "integer"
+                    },
+                    "total": {
+                        "type": "integer"
+                    },
+                    "unique": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "progress",
+                    "total"
+                ],
                 "type": "object"
             },
             "ItemExtended": {
+                "description": "Extended only present in the Public Stash API",
                 "properties": {
                     "prefixes": {
                         "type": "integer"
@@ -674,11 +991,15 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "baseTypeName"
+                ],
                 "type": "object"
             },
             "ItemIncubatedItem": {
                 "properties": {
                     "level": {
+                        "description": "Level monster level required to progress",
                         "type": "integer"
                     },
                     "name": {
@@ -691,6 +1012,12 @@ const docTemplate = `{
                         "type": "integer"
                     }
                 },
+                "required": [
+                    "level",
+                    "name",
+                    "progress",
+                    "total"
+                ],
                 "type": "object"
             },
             "ItemJewelData": {
@@ -711,50 +1038,112 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "required": [
+                    "type"
+                ],
                 "type": "object"
             },
             "ItemJewelDataSubgraph": {
+                "description": "Subgraph only present on cluster jewels",
                 "properties": {
                     "groups": {
                         "additionalProperties": {
                             "$ref": "#/components/schemas/PassiveGroup"
                         },
+                        "description": "Groups the key is the string value of the group id",
                         "type": "object"
                     },
                     "nodes": {
                         "additionalProperties": {
                             "$ref": "#/components/schemas/PassiveNode"
                         },
+                        "description": "Nodes the key is the string value of the node identifier",
                         "type": "object"
                     }
                 },
+                "required": [
+                    "groups",
+                    "nodes"
+                ],
                 "type": "object"
             },
             "ItemLogbookMod": {
                 "properties": {
                     "faction": {
-                        "$ref": "#/components/schemas/ItemLogbookModFaction"
-                    },
-                    "mods": {
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
+                        "$ref": "#/components/schemas/Faction"
                     },
                     "name": {
+                        "description": "Name area name",
                         "type": "string"
                     }
                 },
+                "required": [
+                    "faction",
+                    "name"
+                ],
                 "type": "object"
             },
-            "ItemLogbookModFaction": {
+            "ItemMercenarySkill": {
                 "properties": {
-                    "id": {
+                    "hash": {
+                        "type": "integer"
+                    },
+                    "icon": {
                         "type": "string"
                     },
                     "name": {
                         "type": "string"
+                    },
+                    "supports": {
+                        "items": {
+                            "$ref": "#/components/schemas/Support"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    }
+                },
+                "required": [
+                    "hash",
+                    "icon",
+                    "name"
+                ],
+                "type": "object"
+            },
+            "ItemMod": {
+                "properties": {
+                    "description": {
+                        "type": "string"
+                    },
+                    "flags": {
+                        "$ref": "#/components/schemas/ItemModFlags"
+                    }
+                },
+                "required": [
+                    "description"
+                ],
+                "type": "object"
+            },
+            "ItemModFlags": {
+                "properties": {
+                    "crafted": {
+                        "description": "Crafted always true if present",
+                        "type": "boolean"
+                    },
+                    "desecrated": {
+                        "description": "Desecrated PoE2 only; always true if present",
+                        "type": "boolean"
+                    },
+                    "fractured": {
+                        "description": "Fractured always true if present",
+                        "type": "boolean"
+                    },
+                    "mutated": {
+                        "description": "Mutated always true if present",
+                        "type": "boolean"
+                    },
+                    "vestigial": {
+                        "description": "Vestigial PoE1 only; always true if present",
+                        "type": "boolean"
                     }
                 },
                 "type": "object"
@@ -765,13 +1154,13 @@ const docTemplate = `{
                         "type": "integer"
                     },
                     "icon": {
-                        "description": "PoE2 only",
                         "type": "string"
                     },
                     "name": {
                         "type": "string"
                     },
                     "progress": {
+                        "description": "Progress rounded to 2 decimal places",
                         "type": "number"
                     },
                     "suffix": {
@@ -789,7 +1178,27 @@ const docTemplate = `{
                         "uniqueItems": false
                     }
                 },
+                "required": [
+                    "name",
+                    "values"
+                ],
                 "type": "object"
+            },
+            "ItemRarity": {
+                "description": "Rarity Normal, Magic, Rare, or Unique",
+                "enum": [
+                    "Magic",
+                    "Normal",
+                    "Rare",
+                    "Unique"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "ItemRarityMagic",
+                    "ItemRarityNormal",
+                    "ItemRarityRare",
+                    "ItemRarityUnique"
+                ]
             },
             "ItemReward": {
                 "properties": {
@@ -800,32 +1209,42 @@ const docTemplate = `{
                         "additionalProperties": {
                             "type": "integer"
                         },
+                        "description": "Rewards the key is a string representing the type of reward. The value is the amount",
                         "type": "object"
                     }
                 },
+                "required": [
+                    "label",
+                    "rewards"
+                ],
                 "type": "object"
             },
             "ItemScourged": {
                 "properties": {
                     "level": {
+                        "description": "Level monster level required to progress",
                         "type": "integer"
                     },
                     "progress": {
                         "type": "integer"
                     },
                     "tier": {
+                        "description": "Tier 1-3 for items, 1-10 for maps",
                         "type": "integer"
                     },
                     "total": {
                         "type": "integer"
                     }
                 },
+                "required": [
+                    "tier"
+                ],
                 "type": "object"
             },
             "ItemSocket": {
                 "properties": {
                     "attr": {
-                        "type": "string"
+                        "$ref": "#/components/schemas/ItemSocketAttr"
                     },
                     "group": {
                         "type": "integer"
@@ -834,38 +1253,89 @@ const docTemplate = `{
                         "$ref": "#/components/schemas/ItemSocketItem"
                     },
                     "sColour": {
-                        "type": "string"
+                        "$ref": "#/components/schemas/ItemSocketSColour"
                     },
                     "type": {
                         "$ref": "#/components/schemas/ItemSocketType"
                     }
                 },
+                "required": [
+                    "group"
+                ],
                 "type": "object"
             },
-            "ItemSocketItem": {
-                "description": "PoE2 only",
+            "ItemSocketAttr": {
+                "description": "Attr PoE1 only; S, D, I, G, A, or DV",
                 "enum": [
-                    "emerald",
-                    "sapphire",
-                    "ruby",
-                    "rune",
-                    "soulcore",
-                    "activegem",
-                    "supportgem"
+                    "A",
+                    "D",
+                    "DV",
+                    "G",
+                    "I",
+                    "S"
                 ],
                 "type": "string",
                 "x-enum-varnames": [
+                    "ItemSocketAttrA",
+                    "ItemSocketAttrD",
+                    "ItemSocketAttrDV",
+                    "ItemSocketAttrG",
+                    "ItemSocketAttrI",
+                    "ItemSocketAttrS"
+                ]
+            },
+            "ItemSocketItem": {
+                "description": "Item PoE2 only; emerald, sapphire, ruby, rune, soulcore, primaltalisman, vividtalisman, wildtalisman, sacredtalisman, activegem, or supportgem",
+                "enum": [
+                    "activegem",
+                    "emerald",
+                    "primaltalisman",
+                    "ruby",
+                    "rune",
+                    "sacredtalisman",
+                    "sapphire",
+                    "soulcore",
+                    "supportgem",
+                    "vividtalisman",
+                    "wildtalisman"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "ItemSocketItemActivegem",
                     "ItemSocketItemEmerald",
-                    "ItemSocketItemSapphire",
+                    "ItemSocketItemPrimaltalisman",
                     "ItemSocketItemRuby",
                     "ItemSocketItemRune",
+                    "ItemSocketItemSacredtalisman",
+                    "ItemSocketItemSapphire",
                     "ItemSocketItemSoulcore",
-                    "ItemSocketItemActiveGem",
-                    "ItemSocketItemSupportGem"
+                    "ItemSocketItemSupportgem",
+                    "ItemSocketItemVividtalisman",
+                    "ItemSocketItemWildtalisman"
+                ]
+            },
+            "ItemSocketSColour": {
+                "description": "SColour PoE1 only; R, G, B, W, A, or DV",
+                "enum": [
+                    "A",
+                    "B",
+                    "DV",
+                    "G",
+                    "R",
+                    "W"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "ItemSocketSColourA",
+                    "ItemSocketSColourB",
+                    "ItemSocketSColourDV",
+                    "ItemSocketSColourG",
+                    "ItemSocketSColourR",
+                    "ItemSocketSColourW"
                 ]
             },
             "ItemSocketType": {
-                "description": "PoE2 only",
+                "description": "Type PoE2 only; gem, jewel, or rune",
                 "enum": [
                     "gem",
                     "jewel",
@@ -884,25 +1354,24 @@ const docTemplate = `{
                         "type": "integer"
                     },
                     "type": {
+                        "description": "Type text used to display ultimatum icons",
                         "type": "string"
                     }
                 },
-                "type": "object"
-            },
-            "Metadata": {
-                "properties": {
-                    "version": {
-                        "type": "string"
-                    }
-                },
+                "required": [
+                    "tier",
+                    "type"
+                ],
                 "type": "object"
             },
             "PassiveGroup": {
                 "properties": {
                     "isProxy": {
+                        "description": "IsProxy always true if present",
                         "type": "boolean"
                     },
                     "nodes": {
+                        "description": "Nodes the node identifiers associated with this group",
                         "items": {
                             "type": "string"
                         },
@@ -917,6 +1386,7 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "proxy": {
+                        "description": "Proxy identifier of the placeholder node",
                         "type": "string"
                     },
                     "x": {
@@ -926,14 +1396,22 @@ const docTemplate = `{
                         "type": "number"
                     }
                 },
+                "required": [
+                    "nodes",
+                    "orbits",
+                    "x",
+                    "y"
+                ],
                 "type": "object"
             },
             "PassiveNode": {
                 "properties": {
                     "activeEffectImage": {
+                        "description": "ActiveEffectImage active mastery or tattoo background image",
                         "type": "string"
                     },
                     "activeIcon": {
+                        "description": "ActiveIcon active mastery image",
                         "type": "string"
                     },
                     "ascendancyName": {
@@ -953,24 +1431,29 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "grantedDexterity": {
+                        "description": "GrantedDexterity sum of stats on this node that grant dexterity",
                         "type": "integer"
                     },
                     "grantedIntelligence": {
+                        "description": "GrantedIntelligence sum of stats on this node that grant intelligence",
                         "type": "integer"
                     },
                     "grantedPassivePoints": {
                         "type": "integer"
                     },
                     "grantedStrength": {
+                        "description": "GrantedStrength sum of stats on this node that grant strength",
                         "type": "integer"
                     },
                     "group": {
+                        "description": "Group the key value to look up in the groups table",
                         "type": "string"
                     },
                     "icon": {
                         "type": "string"
                     },
                     "in": {
+                        "description": "In node identifiers of nodes connected to this one",
                         "items": {
                             "type": "string"
                         },
@@ -978,36 +1461,47 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "inactiveIcon": {
+                        "description": "InactiveIcon inactive mastery image",
                         "type": "string"
                     },
                     "isAscendancyStart": {
+                        "description": "IsAscendancyStart always true if present",
                         "type": "boolean"
                     },
                     "isBlighted": {
+                        "description": "IsBlighted always true if present",
                         "type": "boolean"
                     },
                     "isJewelSocket": {
+                        "description": "IsJewelSocket always true if present",
                         "type": "boolean"
                     },
                     "isKeystone": {
+                        "description": "IsKeystone always true if present",
                         "type": "boolean"
                     },
                     "isMastery": {
+                        "description": "IsMastery always true if present",
                         "type": "boolean"
                     },
                     "isMultipleChoice": {
+                        "description": "IsMultipleChoice always true if present",
                         "type": "boolean"
                     },
                     "isMultipleChoiceOption": {
+                        "description": "IsMultipleChoiceOption always true if present",
                         "type": "boolean"
                     },
                     "isNotable": {
+                        "description": "IsNotable always true if present",
                         "type": "boolean"
                     },
                     "isProxy": {
+                        "description": "IsProxy always true if present",
                         "type": "boolean"
                     },
                     "isTattoo": {
+                        "description": "IsTattoo always true if present",
                         "type": "boolean"
                     },
                     "masteryEffects": {
@@ -1021,12 +1515,15 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "orbit": {
+                        "description": "Orbit the orbit this node occupies within it's group",
                         "type": "integer"
                     },
                     "orbitIndex": {
+                        "description": "OrbitIndex the index of this node in the group's orbit",
                         "type": "integer"
                     },
                     "out": {
+                        "description": "Out node identifiers of nodes this one connects to",
                         "items": {
                             "type": "string"
                         },
@@ -1034,6 +1531,7 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "recipe": {
+                        "description": "Recipe components required for Blight crafting this node.\n            each string is one of ClearOil, SepiaOil, AmberOil, VerdantOil,\nTealOil, AzureOil, IndigoOil, VioletOil, CrimsonOil,\nBlackOil, OpalescentOil, SilverOil, GoldenOil, or PrismaticOil",
                         "items": {
                             "type": "string"
                         },
@@ -1048,10 +1546,11 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "skill": {
-                        "description": "actually an int but it's a string in the ggg response",
-                        "type": "string"
+                        "description": "Skill skill hash",
+                        "type": "integer"
                     },
                     "stats": {
+                        "description": "Stats stat descriptions",
                         "items": {
                             "type": "string"
                         },
@@ -1059,18 +1558,25 @@ const docTemplate = `{
                         "uniqueItems": false
                     }
                 },
+                "required": [
+                    "in",
+                    "out"
+                ],
                 "type": "object"
             },
             "PassiveNodeExpansionJewel": {
+                "description": "ExpansionJewel cluster jewel information",
                 "properties": {
                     "index": {
                         "type": "integer"
                     },
                     "parent": {
-                        "type": "string"
+                        "description": "Parent the parent node identifier",
+                        "type": "integer"
                     },
                     "proxy": {
-                        "type": "string"
+                        "description": "Proxy the proxy node identifier",
+                        "type": "integer"
                     },
                     "size": {
                         "type": "integer"
@@ -1081,6 +1587,7 @@ const docTemplate = `{
             "PassiveNodeMasteryEffect": {
                 "properties": {
                     "effect": {
+                        "description": "Effect effect hash",
                         "type": "integer"
                     },
                     "reminderText": {
@@ -1091,6 +1598,7 @@ const docTemplate = `{
                         "uniqueItems": false
                     },
                     "stats": {
+                        "description": "Stats stat descriptions",
                         "items": {
                             "type": "string"
                         },
@@ -1098,110 +1606,27 @@ const docTemplate = `{
                         "uniqueItems": false
                     }
                 },
-                "type": "object"
-            },
-            "Passives": {
-                "properties": {
-                    "alternate_ascendancy": {
-                        "type": "string"
-                    },
-                    "bandit_choice": {
-                        "type": "string"
-                    },
-                    "hashes": {
-                        "items": {
-                            "type": "integer"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
-                    },
-                    "hashes_ex": {
-                        "items": {
-                            "type": "integer"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
-                    },
-                    "jewel_data": {
-                        "additionalProperties": {
-                            "$ref": "#/components/schemas/ItemJewelData"
-                        },
-                        "type": "object"
-                    },
-                    "mastery_effects": {
-                        "additionalProperties": {
-                            "type": "integer"
-                        },
-                        "type": "object"
-                    },
-                    "pantheon_major": {
-                        "type": "string"
-                    },
-                    "pantheon_minor": {
-                        "type": "string"
-                    },
-                    "quest_stats": {
-                        "description": "PoE2 only; passives granted via quests",
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
-                    },
-                    "skill_overrides": {
-                        "additionalProperties": {
-                            "$ref": "#/components/schemas/PassiveNode"
-                        },
-                        "type": "object"
-                    },
-                    "specialisation": {
-                        "$ref": "#/components/schemas/Specialisations"
-                    }
-                },
+                "required": [
+                    "effect",
+                    "stats"
+                ],
                 "type": "object"
             },
             "Realm": {
-                "description": "PoE2 only",
+                "description": "Realm pc, xbox, or sony",
                 "enum": [
                     "pc",
+                    "poe2",
                     "sony",
-                    "xbox",
-                    "poe2"
+                    "xbox"
                 ],
                 "type": "string",
                 "x-enum-varnames": [
-                    "PC",
+                    "Pc",
+                    "Poe2",
                     "Sony",
-                    "Xbox",
-                    "PoE2"
+                    "Xbox"
                 ]
-            },
-            "Specialisations": {
-                "description": "PoE2 only",
-                "properties": {
-                    "set1": {
-                        "items": {
-                            "type": "integer"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
-                    },
-                    "set2": {
-                        "items": {
-                            "type": "integer"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
-                    },
-                    "shapeshift": {
-                        "items": {
-                            "type": "integer"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
-                    }
-                },
-                "type": "object"
             },
             "StashTab": {
                 "properties": {
@@ -1212,7 +1637,12 @@ const docTemplate = `{
                         "type": "array",
                         "uniqueItems": false
                     },
+                    "folder": {
+                        "description": "Folder a 10 digit hexadecimal string",
+                        "type": "string"
+                    },
                     "id": {
+                        "description": "Id a 10 digit hexadecimal string",
                         "type": "string"
                     },
                     "index": {
@@ -1232,30 +1662,60 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "parent": {
+                        "description": "Parent a 10 digit hexadecimal string",
                         "type": "string"
                     },
                     "type": {
                         "type": "string"
                     }
                 },
+                "required": [
+                    "id",
+                    "metadata",
+                    "name",
+                    "type"
+                ],
                 "type": "object"
             },
             "StashTabMetadata": {
                 "properties": {
                     "colour": {
+                        "description": "Colour 6 digit hex colour",
                         "type": "string"
                     },
                     "folder": {
+                        "description": "Folder always true if present",
                         "type": "boolean"
                     },
-                    "items": {
-                        "type": "integer"
+                    "map": {
+                        "additionalProperties": {},
+                        "description": "Map various game specific properties",
+                        "type": "object"
                     },
-                    "layout": {},
                     "public": {
+                        "description": "Public always true if present",
                         "type": "boolean"
                     }
                 },
+                "type": "object"
+            },
+            "Support": {
+                "properties": {
+                    "hash": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "tier": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "hash",
+                    "name",
+                    "tier"
+                ],
                 "type": "object"
             },
             "TwitchStream": {
@@ -1435,44 +1895,7 @@ const docTemplate = `{
                 },
                 "type": "object"
             },
-            "CallbackBody": {
-                "properties": {
-                    "code": {
-                        "type": "string"
-                    },
-                    "referrer": {
-                        "type": "string"
-                    },
-                    "state": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "code",
-                    "state"
-                ],
-                "type": "object"
-            },
-            "CallbackResponse": {
-                "properties": {
-                    "auth_token": {
-                        "type": "string"
-                    },
-                    "last_path": {
-                        "type": "string"
-                    },
-                    "user": {
-                        "$ref": "#/components/schemas/User"
-                    }
-                },
-                "required": [
-                    "auth_token",
-                    "last_path",
-                    "user"
-                ],
-                "type": "object"
-            },
-            "Character": {
+            "BplCharacter": {
                 "properties": {
                     "ascendancy": {
                         "type": "string"
@@ -1519,6 +1942,43 @@ const docTemplate = `{
                     "name",
                     "pantheon",
                     "void_stones"
+                ],
+                "type": "object"
+            },
+            "CallbackBody": {
+                "properties": {
+                    "code": {
+                        "type": "string"
+                    },
+                    "referrer": {
+                        "type": "string"
+                    },
+                    "state": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "code",
+                    "state"
+                ],
+                "type": "object"
+            },
+            "CallbackResponse": {
+                "properties": {
+                    "auth_token": {
+                        "type": "string"
+                    },
+                    "last_path": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    }
+                },
+                "required": [
+                    "auth_token",
+                    "last_path",
+                    "user"
                 ],
                 "type": "object"
             },
@@ -2139,6 +2599,508 @@ const docTemplate = `{
                     "priority",
                     "user_id",
                     "value"
+                ],
+                "type": "object"
+            },
+            "ItemWithCompletions": {
+                "properties": {
+                    "abyssJewel": {
+                        "description": "AbyssJewel always true if present",
+                        "type": "boolean"
+                    },
+                    "additionalProperties": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemProperty"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "artFilename": {
+                        "type": "string"
+                    },
+                    "baseType": {
+                        "type": "string"
+                    },
+                    "bondedMods": {
+                        "description": "BondedMods PoE2 only",
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "builtInSupport": {
+                        "description": "BuiltInSupport PoE1 only; Supported by level 1 x",
+                        "type": "string"
+                    },
+                    "cisRaceReward": {
+                        "description": "CisRaceReward always true if present",
+                        "type": "boolean"
+                    },
+                    "colour": {
+                        "$ref": "#/components/schemas/ItemColour"
+                    },
+                    "corrupted": {
+                        "description": "Corrupted always true if present",
+                        "type": "boolean"
+                    },
+                    "cosmeticMods": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "crucible": {
+                        "$ref": "#/components/schemas/ItemCrucible"
+                    },
+                    "crucibleMods": {
+                        "description": "CrucibleMods only allocated mods are included",
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "delve": {
+                        "description": "Delve always true if present",
+                        "type": "boolean"
+                    },
+                    "descrText": {
+                        "type": "string"
+                    },
+                    "desecrated": {
+                        "description": "Desecrated PoE2 only; always true if present",
+                        "type": "boolean"
+                    },
+                    "doubleCorrupted": {
+                        "description": "DoubleCorrupted PoE2 only; always true if present",
+                        "type": "boolean"
+                    },
+                    "duplicated": {
+                        "description": "Duplicated always true if present",
+                        "type": "boolean"
+                    },
+                    "elder": {
+                        "description": "Elder always true if present",
+                        "type": "boolean"
+                    },
+                    "enchantMods": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "enshrouded": {
+                        "$ref": "#/components/schemas/ItemEnshrouded"
+                    },
+                    "explicitMods": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemMod"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "extended": {
+                        "$ref": "#/components/schemas/ItemExtended"
+                    },
+                    "flavourText": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "flavourTextNote": {
+                        "description": "FlavourTextNote user-generated text",
+                        "type": "string"
+                    },
+                    "foilVariation": {
+                        "type": "integer"
+                    },
+                    "foreseeing": {
+                        "description": "Foreseeing always true if present",
+                        "type": "boolean"
+                    },
+                    "forum_note": {
+                        "description": "ForumNote user-generated text",
+                        "type": "string"
+                    },
+                    "fractured": {
+                        "description": "Fractured always true if present",
+                        "type": "boolean"
+                    },
+                    "frameType": {
+                        "description": "FrameType deprecated; use frameTypeId",
+                        "type": "integer"
+                    },
+                    "frameTypeId": {
+                        "type": "string"
+                    },
+                    "gemBackground": {
+                        "description": "GemBackground PoE2 only",
+                        "type": "string"
+                    },
+                    "gemSkill": {
+                        "description": "GemSkill PoE2 only",
+                        "type": "string"
+                    },
+                    "gemSockets": {
+                        "description": "GemSockets PoE2 only; string is always W",
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "gemTabs": {
+                        "description": "GemTabs PoE2 only",
+                        "items": {
+                            "$ref": "#/components/schemas/GemTab"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "grantedSkills": {
+                        "description": "GrantedSkills PoE2 only",
+                        "items": {
+                            "$ref": "#/components/schemas/ItemProperty"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "h": {
+                        "type": "integer"
+                    },
+                    "hybrid": {
+                        "$ref": "#/components/schemas/ItemHybrid"
+                    },
+                    "icon": {
+                        "type": "string"
+                    },
+                    "iconStackLevel": {
+                        "description": "IconStackLevel describes the level of a stack of items",
+                        "type": "string"
+                    },
+                    "iconTierText": {
+                        "description": "IconTierText usually roman numerals",
+                        "type": "string"
+                    },
+                    "id": {
+                        "description": "Id a unique 64 digit hexadecimal string",
+                        "type": "string"
+                    },
+                    "identified": {
+                        "type": "boolean"
+                    },
+                    "ilvl": {
+                        "type": "integer"
+                    },
+                    "implicitMods": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemMod"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "incubatedItem": {
+                        "$ref": "#/components/schemas/ItemIncubatedItem"
+                    },
+                    "influences": {
+                        "additionalProperties": {},
+                        "type": "object"
+                    },
+                    "inventoryId": {
+                        "type": "string"
+                    },
+                    "isRelic": {
+                        "description": "IsRelic always true if present",
+                        "type": "boolean"
+                    },
+                    "itemLevel": {
+                        "description": "ItemLevel used for items that always display their item level",
+                        "type": "integer"
+                    },
+                    "league": {
+                        "type": "string"
+                    },
+                    "lockedToAccount": {
+                        "description": "LockedToAccount always true if present",
+                        "type": "boolean"
+                    },
+                    "lockedToCharacter": {
+                        "description": "LockedToCharacter always true if present",
+                        "type": "boolean"
+                    },
+                    "logbookMods": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemLogbookMod"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "maxStackSize": {
+                        "type": "integer"
+                    },
+                    "memoryItem": {
+                        "description": "MemoryItem always true if present",
+                        "type": "boolean"
+                    },
+                    "mercenarySkills": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemMercenarySkill"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "monsterLevel": {
+                        "description": "MonsterLevel PoE1 only; used for items that always display their monster level",
+                        "type": "integer"
+                    },
+                    "mutated": {
+                        "description": "Mutated PoE1: true on Foulborn Uniques, PoE2: true on all Vaal Uniques",
+                        "type": "boolean"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "nextLevelRequirements": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemProperty"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "notableProperties": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemProperty"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "note": {
+                        "description": "Note user-generated text",
+                        "type": "string"
+                    },
+                    "objective_id": {
+                        "type": "integer"
+                    },
+                    "properties": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemProperty"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "prophecyText": {
+                        "type": "string"
+                    },
+                    "rarity": {
+                        "$ref": "#/components/schemas/ItemRarity"
+                    },
+                    "realm": {
+                        "$ref": "#/components/schemas/Realm"
+                    },
+                    "replica": {
+                        "description": "Replica always true if present",
+                        "type": "boolean"
+                    },
+                    "requirements": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemProperty"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "rewards": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemReward"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "runeMods": {
+                        "description": "RuneMods PoE2 only",
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "ruthless": {
+                        "description": "Ruthless always true if present",
+                        "type": "boolean"
+                    },
+                    "sanctified": {
+                        "description": "Sanctified PoE2 only; always true if present",
+                        "type": "boolean"
+                    },
+                    "scourgeMods": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "scourged": {
+                        "$ref": "#/components/schemas/ItemScourged"
+                    },
+                    "seaRaceReward": {
+                        "description": "SeaRaceReward always true if present",
+                        "type": "boolean"
+                    },
+                    "searing": {
+                        "description": "Searing always true if present",
+                        "type": "boolean"
+                    },
+                    "secDescrText": {
+                        "type": "string"
+                    },
+                    "shaper": {
+                        "description": "Shaper always true if present",
+                        "type": "boolean"
+                    },
+                    "socket": {
+                        "type": "integer"
+                    },
+                    "socketedIcon": {
+                        "description": "SocketedIcon PoE2 only; an image URL to use when this item is in the socket of another item",
+                        "type": "string"
+                    },
+                    "socketedItems": {
+                        "items": {
+                            "$ref": "#/components/schemas/Item"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "sockets": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemSocket"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "split": {
+                        "description": "Split always true if present",
+                        "type": "boolean"
+                    },
+                    "stackSize": {
+                        "type": "integer"
+                    },
+                    "stackSizeText": {
+                        "type": "string"
+                    },
+                    "support": {
+                        "description": "Support always true if present",
+                        "type": "boolean"
+                    },
+                    "supportGemRequirements": {
+                        "description": "SupportGemRequirements PoE2 only",
+                        "items": {
+                            "$ref": "#/components/schemas/ItemProperty"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "synthesised": {
+                        "description": "Synthesised always true if present",
+                        "type": "boolean"
+                    },
+                    "tamedBeastProperties": {
+                        "description": "TamedBeastProperties PoE2 only",
+                        "items": {
+                            "$ref": "#/components/schemas/ItemProperty"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "tangled": {
+                        "description": "Tangled always true if present",
+                        "type": "boolean"
+                    },
+                    "thRaceReward": {
+                        "description": "ThRaceReward always true if present",
+                        "type": "boolean"
+                    },
+                    "typeLine": {
+                        "type": "string"
+                    },
+                    "ultimatumMods": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemUltimatumMod"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "unidentifiedTier": {
+                        "description": "UnidentifiedTier PoE2 only",
+                        "type": "integer"
+                    },
+                    "unmodifiable": {
+                        "description": "Unmodifiable always true if present",
+                        "type": "boolean"
+                    },
+                    "unmodifiableExceptChaos": {
+                        "description": "UnmodifiableExceptChaos always true if present",
+                        "type": "boolean"
+                    },
+                    "utilityMods": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "veiled": {
+                        "description": "Veiled always true if present",
+                        "type": "boolean"
+                    },
+                    "veiledMods": {
+                        "description": "VeiledMods random video identifier",
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "verified": {
+                        "type": "boolean"
+                    },
+                    "vestigial": {
+                        "description": "Vestigial PoE1 only; always true if present",
+                        "type": "boolean"
+                    },
+                    "w": {
+                        "type": "integer"
+                    },
+                    "weaponRequirements": {
+                        "description": "WeaponRequirements PoE2 only",
+                        "items": {
+                            "$ref": "#/components/schemas/ItemProperty"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "x": {
+                        "type": "integer"
+                    },
+                    "y": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "baseType",
+                    "frameTypeId",
+                    "h",
+                    "icon",
+                    "identified",
+                    "ilvl",
+                    "name",
+                    "typeLine",
+                    "verified",
+                    "w"
                 ],
                 "type": "object"
             },
@@ -2797,6 +3759,55 @@ const docTemplate = `{
                 },
                 "required": [
                     "expected_playtime"
+                ],
+                "type": "object"
+            },
+            "StashTabWithCompletions": {
+                "properties": {
+                    "children": {
+                        "items": {
+                            "$ref": "#/components/schemas/StashTabWithCompletions"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "folder": {
+                        "description": "Folder a 10 digit hexadecimal string",
+                        "type": "string"
+                    },
+                    "id": {
+                        "description": "Id a 10 digit hexadecimal string",
+                        "type": "string"
+                    },
+                    "index": {
+                        "type": "integer"
+                    },
+                    "items": {
+                        "items": {
+                            "$ref": "#/components/schemas/ItemWithCompletions"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
+                    "metadata": {
+                        "$ref": "#/components/schemas/StashTabMetadata"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "parent": {
+                        "description": "Parent a 10 digit hexadecimal string",
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "metadata",
+                    "name",
+                    "type"
                 ],
                 "type": "object"
             },
@@ -4232,7 +5243,7 @@ const docTemplate = `{
                             "application/json": {
                                 "schema": {
                                     "items": {
-                                        "$ref": "#/components/schemas/Character"
+                                        "$ref": "#/components/schemas/BplCharacter"
                                     },
                                     "type": "array"
                                 }
@@ -6874,7 +7885,7 @@ const docTemplate = `{
                             "application/json": {
                                 "schema": {
                                     "items": {
-                                        "$ref": "#/components/schemas/Character"
+                                        "$ref": "#/components/schemas/BplCharacter"
                                     },
                                     "type": "array"
                                 }
@@ -6959,7 +7970,7 @@ const docTemplate = `{
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/GGGCharacter"
+                                    "$ref": "#/components/schemas/Character"
                                 }
                             }
                         },
@@ -7436,7 +8447,7 @@ const docTemplate = `{
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/GuildStashTabGGG"
+                                    "$ref": "#/components/schemas/StashTabWithCompletions"
                                 }
                             }
                         },

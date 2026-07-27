@@ -70,7 +70,7 @@ func (s *GuildStashServiceImpl) UpdateGuildStash(user *repository.User, teamId i
 		stashMap[stash.Id] = stash
 	}
 	stashesToPersist := make([]*repository.GuildStashTab, 0)
-	responseStashes := utils.FlatMap(resp.Stashes, func(stash client.GuildStashTabGGG) []*client.GuildStashTabGGG {
+	responseStashes := utils.FlatMap(resp.Stashes, func(stash client.StashTab) []*client.StashTab {
 		return stash.FlatMap()
 	})
 	for _, stash := range responseStashes {

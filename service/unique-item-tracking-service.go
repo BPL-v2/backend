@@ -35,7 +35,7 @@ func (s *UniqueItemTrackingServiceImpl) TrackUniqueItems(items []client.Item, te
 			return err
 		}
 		entries = append(entries, &repository.UniqueItemTracking{
-			ItemId:    item.Id,
+			ItemId:    *item.Id,
 			ItemRefId: itemRefId,
 			TeamId:    teamId,
 			PlayerId:  userId,

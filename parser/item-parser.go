@@ -89,7 +89,7 @@ func StringFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) st
 	case dbModel.RARITY:
 		return func(item *clientModel.Item) string {
 			if item.Rarity != nil {
-				return *item.Rarity
+				return string(*item.Rarity)
 			}
 			return ""
 		}, nil
@@ -99,7 +99,7 @@ func StringFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) st
 				var socketString strings.Builder
 				for _, socket := range *item.Sockets {
 					if socket.SColour != nil {
-						socketString.WriteString(*socket.SColour)
+						socketString.WriteString(string(*socket.SColour))
 					}
 				}
 				return socketString.String()
@@ -163,15 +163,30 @@ func StringFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) st
 		return nil, fmt.Errorf("%s is not a valid string field", field)
 	}
 }
+func ModsToStringArray(mods *[]clientModel.ItemMod) []string {
+	if mods == nil {
+		return []string{}
+	}
+	result := make([]string, len(*mods))
+	for i, mod := range *mods {
+		result[i] = mod.Description
+	}
+	return result
+}
 
 func StringArrayFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) []string, error) {
 	switch field {
 	case dbModel.FOULBORN_MODS:
 		return func(item *clientModel.Item) []string {
-			if item.MutatedMods != nil {
-				return *item.MutatedMods
+			mods := make([]string, 0)
+			if item.ExplicitMods != nil {
+				for _, mod := range *item.ExplicitMods {
+					if mod.Flags.Mutated != nil && *mod.Flags.Mutated {
+						mods = append(mods, mod.Description)
+					}
+				}
 			}
-			return []string{}
+			return mods
 		}, nil
 	case dbModel.ENCHANTS:
 		return func(item *clientModel.Item) []string {
@@ -182,31 +197,47 @@ func StringArrayFieldGetter(field dbModel.ItemField) (func(item *clientModel.Ite
 		}, nil
 	case dbModel.EXPLICITS:
 		return func(item *clientModel.Item) []string {
+			mods := make([]string, 0)
 			if item.ExplicitMods != nil {
-				return *item.ExplicitMods
+				for _, mod := range *item.ExplicitMods {
+					mods = append(mods, mod.Description)
+				}
 			}
-			return []string{}
+			return mods
 		}, nil
 	case dbModel.IMPLICITS:
 		return func(item *clientModel.Item) []string {
+			mods := make([]string, 0)
 			if item.ImplicitMods != nil {
-				return *item.ImplicitMods
+				for _, mod := range *item.ImplicitMods {
+					mods = append(mods, mod.Description)
+				}
 			}
-			return []string{}
+			return mods
 		}, nil
 	case dbModel.CRAFTED_MODS:
 		return func(item *clientModel.Item) []string {
-			if item.CraftedMods != nil {
-				return *item.CraftedMods
+			mods := make([]string, 0)
+			if item.ExplicitMods != nil {
+				for _, mod := range *item.ExplicitMods {
+					if mod.Flags.Crafted != nil && *mod.Flags.Crafted {
+						mods = append(mods, mod.Description)
+					}
+				}
 			}
-			return []string{}
+			return mods
 		}, nil
 	case dbModel.FRACTURED_MODS:
 		return func(item *clientModel.Item) []string {
-			if item.FracturedMods != nil {
-				return *item.FracturedMods
+			mods := make([]string, 0)
+			if item.ExplicitMods != nil {
+				for _, mod := range *item.ExplicitMods {
+					if mod.Flags.Fractured != nil && *mod.Flags.Fractured {
+						mods = append(mods, mod.Description)
+					}
+				}
 			}
-			return []string{}
+			return mods
 		}, nil
 	case dbModel.SANCTUM_MODS:
 		return func(item *clientModel.Item) []string {
@@ -289,9 +320,7 @@ func IntFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) int, 
 		}, nil
 	case dbModel.TALISMAN_TIER:
 		return func(item *clientModel.Item) int {
-			if item.TalismanTier != nil {
-				return *item.TalismanTier
-			}
+			// doesnt exist anymore
 			return 0
 		}, nil
 	case dbModel.MAP_TIER:

@@ -389,7 +389,7 @@ func (e *GuildStashController) switchStashFetch() gin.HandlerFunc {
 // @Param eventId path int true "Event Id"
 // @Param teamId path int true "Team Id"
 // @Param stash_id path string true "Stash Tab Id"
-// @Success 200 {object} client.GuildStashTabGGG
+// @Success 200 {object} StashTabWithCompletions
 // @Router /{eventId}/teams/{teamId}/guild-stash/{stash_id}  [get]
 func (e *GuildStashController) getGuildStashTab() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -446,11 +446,11 @@ func toModel(tab *repository.GuildStashTab) *GuildStashTab {
 	}
 }
 
-func toGGGModel(tab *repository.GuildStashTab, parser *parser.ItemChecker) *client.GuildStashTabGGG {
+func toGGGModel(tab *repository.GuildStashTab, parser *parser.ItemChecker) *StashTabWithCompletions {
 	if tab == nil {
 		return nil
 	}
-	model := &client.GuildStashTabGGG{}
+	model := &StashTabWithCompletions{}
 	err := json.Unmarshal([]byte(tab.Raw), &model)
 	if err != nil {
 		return nil
@@ -458,18 +458,19 @@ func toGGGModel(tab *repository.GuildStashTab, parser *parser.ItemChecker) *clie
 
 	model.Name = tab.Name
 	if model.Items != nil {
-		items := make([]client.Item, 0, len(*model.Items))
+		items := make([]ItemWithCompletions, 0, len(*model.Items))
 		for _, item := range *model.Items {
-			completions := parser.CheckForCompletions(&item)
+			completions := parser.CheckForCompletions(item.Item)
 			if len(completions) > 0 {
-				item.ObjectiveId = completions[0].ObjectiveId
+				objectiveId := completions[0].ObjectiveId
+				item.ObjectiveId = &objectiveId
 			}
 			items = append(items, item)
 		}
 		model.Items = &items
 	}
 
-	children := make([]client.GuildStashTabGGG, 0, len(tab.Children))
+	children := make([]StashTabWithCompletions, 0, len(tab.Children))
 	for _, child := range tab.Children {
 		childModel := toGGGModel(child, parser)
 		if childModel != nil {
@@ -629,4 +630,15 @@ func toChangeLog(tab *repository.GuildStashChangelog) *GuildStashChangelog {
 		Number:      tab.Number,
 		Action:      toActionModel(tab.Action),
 	}
+}
+
+type StashTabWithCompletions struct {
+	*client.StashTab
+	Items    *[]ItemWithCompletions     `json:"items,omitempty"`
+	Children *[]StashTabWithCompletions `json:"children,omitempty"`
+}
+
+type ItemWithCompletions struct {
+	*client.Item
+	ObjectiveId *int `json:"objective_id,omitempty"`
 }

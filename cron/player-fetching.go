@@ -51,11 +51,11 @@ func getPoBRequestWriter() *kafka.Writer {
 	return pobWriter
 }
 
-// publishPoBRequest serialises a GGGCharacter and publishes it to the
+// publishPoBRequest serialises a Character and publishes it to the
 // pob-requests Kafka topic for async PoB export processing.
-func publishPoBRequest(character *client.GGGCharacter) {
+func publishPoBRequest(character *client.Character) {
 	game := "poe1"
-	if character.Realm == client.PoE2 {
+	if character.Realm == client.Poe2 {
 		game = "poe2"
 	}
 	charJSON, err := json.Marshal(character)
@@ -174,7 +174,7 @@ func (s *PlayerFetchingService) UpdateCharacterName(player *parser.PlayerUpdate,
 	}
 }
 
-func (s *PlayerFetchingService) UpdateCharacter(player *parser.PlayerUpdate, event *repository.Event) (*client.GGGCharacter, error) {
+func (s *PlayerFetchingService) UpdateCharacter(player *parser.PlayerUpdate, event *repository.Event) (*client.Character, error) {
 	fmt.Println("Updating character", player.New.Character.Name)
 	characterResponse, clientError := s.poeClient.GetCharacter(player.Token, player.New.Character.Name, event.GetRealm())
 	player.Mu.Lock()
@@ -214,6 +214,7 @@ func (s *PlayerFetchingService) UpdateCharacter(player *parser.PlayerUpdate, eve
 		player.LastUpdateTimes.PoB = time.Now()
 	}
 	player.New.VoidStones = player.Old.VoidStones.Union(player.New.Character.GetVoidStones())
+	player.Old.VoidStones = player.New.VoidStones
 	character := &repository.Character{
 		Id:               player.New.Character.Id,
 		UserId:           &player.UserId,
@@ -326,11 +327,11 @@ func (service *PlayerFetchingService) initPlayerUpdates(event *repository.Event)
 			TokenExpiry:      user.TokenExpiry,
 			SuccessiveErrors: 0,
 			New: parser.Player{
-				Character: &client.GGGCharacter{},
+				Character: &client.Character{},
 				PoB:       &repository.CharacterPob{},
 			},
 			Old: parser.Player{
-				Character: &client.GGGCharacter{},
+				Character: &client.Character{},
 				PoB:       &repository.CharacterPob{},
 			},
 			Mu: sync.Mutex{},
@@ -410,7 +411,7 @@ func (service *PlayerFetchingService) UpdatePlayerTokens(players []*parser.Playe
 // processPoBResult handles a PoB export result: decodes the export, builds the
 // CharacterPob entity, feeds it into pobQueue for the player loop, and persists
 // it if the stats changed.
-func processPoBResult(character *client.GGGCharacter, export string, queuedAt time.Time, characterRepo repository.CharacterRepository, itemService service.ItemService) {
+func processPoBResult(character *client.Character, export string, queuedAt time.Time, characterRepo repository.CharacterRepository, itemService service.ItemService) {
 	pob, err := client.DecodePoBExport(export)
 	if err != nil {
 		metrics.PobsCalculatedErrorCounter.Inc()
@@ -497,7 +498,7 @@ func PlayerStatsLoop(ctx context.Context) {
 			reader.CommitMessages(ctx, msg)
 			continue
 		}
-		var character client.GGGCharacter
+		var character client.Character
 		if err := json.Unmarshal(result.Character, &character); err != nil {
 			log.Printf("Failed to unmarshal character from PoB result %s: %v", result.CharacterID, err)
 			reader.CommitMessages(ctx, msg)
@@ -550,6 +551,7 @@ func PlayerFetchLoop(ctx context.Context, event *repository.Event, poeClient *cl
 			return
 		default:
 			if time.Now().Before(event.EventStartTime.Add(5 * time.Minute)) {
+				fmt.Printf("Event %s has not started yet, waiting...\n", event.Name)
 				time.Sleep(10 * time.Second)
 				continue
 			}

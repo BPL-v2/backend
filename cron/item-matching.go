@@ -73,8 +73,8 @@ func (m *MatchingService) getItemMatches(
 
 	for _, stash := range stashes {
 		var accountName string
-		if stash.AccountName != nil {
-			accountName = *stash.AccountName
+		if stash.StashChange.AccountName != nil {
+			accountName = *stash.StashChange.AccountName
 		}
 
 		var userId *int
@@ -87,17 +87,17 @@ func (m *MatchingService) getItemMatches(
 			}
 		}
 
-		if stash.League == nil || *stash.League != m.event.Name || teamId == 0 {
+		if stash.StashChange.League == nil || *stash.StashChange.League != m.event.Name || teamId == 0 {
 			continue
 		}
 
-		fmt.Printf("Processing stash %s for team %d\n", stash.Id, teamId)
+		fmt.Printf("Processing stash %s for team %d\n", stash.StashChange.Id, teamId)
 		completions := make(map[int]int)
-		if stash.Items != nil {
-			if err := m.uniqueItemTrackingService.TrackUniqueItems(stash.Items, teamId, userId, m.event.Id, stashChange.Source, stashChange.Timestamp); err != nil {
-				log.Printf("Failed to track unique items for stash %s: %v", stash.Id, err)
+		if stash.StashChange.Items != nil {
+			if err := m.uniqueItemTrackingService.TrackUniqueItems(stash.StashChange.Items, teamId, userId, m.event.Id, stashChange.Source, stashChange.Timestamp); err != nil {
+				log.Printf("Failed to track unique items for stash %s: %v", stash.StashChange.Id, err)
 			}
-			for _, item := range stash.Items {
+			for _, item := range stash.StashChange.Items {
 				for _, result := range itemChecker.CheckForCompletions(&item) {
 					if syncFinished || slices.Contains(desyncedObjectiveIds, result.ObjectiveId) {
 						completions[result.ObjectiveId] += result.Number
@@ -115,7 +115,7 @@ func (m *MatchingService) getItemMatches(
 		metrics.TeamMatchesTotal.WithLabelValues(teamLabel).Add(float64(len(completions)))
 
 		sc := &repository.StashChange{
-			StashId:   stash.Id,
+			StashId:   stash.StashChange.Id,
 			EventId:   m.event.Id,
 			Timestamp: stashChange.Timestamp,
 		}

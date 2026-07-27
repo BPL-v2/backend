@@ -15,7 +15,7 @@ type ItemService interface {
 	GetIds(items []*repository.Item) (pq.Int32Array, error)
 	GetOrCreateId(itemName string, itemType repository.ItemType) (int, error)
 	GetItemMap() (map[repository.ItemType]map[string]int, error)
-	GetItemIds(character *client.GGGCharacter) (pq.Int32Array, error)
+	GetItemIds(character *client.Character) (pq.Int32Array, error)
 }
 
 type ItemServiceImpl struct {
@@ -122,7 +122,7 @@ func (s *ItemServiceImpl) GetItemMap() (map[repository.ItemType]map[string]int, 
 	return s.itemMap, nil
 }
 
-func (c *ItemServiceImpl) GetItemIds(character *client.GGGCharacter) (pq.Int32Array, error) {
+func (c *ItemServiceImpl) GetItemIds(character *client.Character) (pq.Int32Array, error) {
 	itemIds := make(pq.Int32Array, 0)
 	items := make([]*repository.Item, 0)
 	for _, item := range character.GetAllItems() {

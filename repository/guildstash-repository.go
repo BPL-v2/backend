@@ -44,7 +44,7 @@ func (g *GuildStashTab) ShouldUpdate(timings map[TimingKey]time.Duration) bool {
 	return time.Since(g.LastFetch) > timings[GuildstashUpdateInterval]
 }
 
-func (g *GuildStashTab) AddChildren(children []client.GuildStashTabGGG) {
+func (g *GuildStashTab) AddChildren(children []client.StashTab) {
 	existingChildren := make(map[string]*GuildStashTab)
 	for _, child := range g.Children {
 		existingChildren[child.Id] = child

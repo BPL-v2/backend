@@ -40,7 +40,7 @@ type Event struct {
 
 func (e *Event) GetRealm() *client.Realm {
 	if e.GameVersion == PoE2 {
-		realm := client.PoE2
+		realm := client.Poe2
 		return &realm
 	}
 	return nil

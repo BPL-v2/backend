@@ -9,8 +9,24 @@ import (
 	"gorm.io/gorm"
 )
 
+type TeamStashChange struct {
+	TeamId      int
+	StashChange client.PublicStashChange
+}
+
+func ToTeamStashChanges(stashChanges []client.PublicStashChange, teamId int) []TeamStashChange {
+	teamStashChanges := make([]TeamStashChange, len(stashChanges))
+	for i, stashChange := range stashChanges {
+		teamStashChanges[i] = TeamStashChange{
+			TeamId:      teamId,
+			StashChange: stashChange,
+		}
+	}
+	return teamStashChanges
+}
+
 type StashChangeMessage struct {
-	Stashes      []client.PublicStashChange
+	Stashes      []TeamStashChange
 	ChangeId     string
 	NextChangeId string
 	Timestamp    time.Time

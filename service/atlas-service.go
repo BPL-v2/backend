@@ -6,7 +6,7 @@ import (
 )
 
 type AtlasService interface {
-	SaveAtlasTrees(userId int, eventId int, trees []client.AtlasPassiveTree) error
+	SaveAtlasTrees(userId int, eventId int, treeHashes []client.LeagueAccountAtlasPassiveTree) error
 	GetLatestAtlasesForEventAndTeam(eventId int, teamId int) (atlas []*repository.AtlasTree, err error)
 	GetAtlasesForEventAndUser(userId int, eventId int) (atlas []*repository.AtlasTree, err error)
 }
@@ -43,18 +43,22 @@ func (a *AtlasServiceImpl) initCache(userId int, eventId int) error {
 	return nil
 }
 
-func (a *AtlasServiceImpl) SaveAtlasTrees(userId int, eventId int, trees []client.AtlasPassiveTree) error {
+func (a *AtlasServiceImpl) SaveAtlasTrees(userId int, eventId int, trees []client.LeagueAccountAtlasPassiveTree) error {
 	if err := a.initCache(userId, eventId); err != nil {
 		return err
 	}
 	hashValues := a.latestAtlas[eventId][userId]
 	for index, tree := range trees {
-		if repository.PassiveNodes(tree.Hashes).GetHash() != hashValues[index] {
-			err := a.atlasRepository.CreateAtlasTree(userId, eventId, index, tree.Hashes)
+		hashes := []int{}
+		for _, hash := range tree.Hashes {
+			hashes = append(hashes, hash)
+		}
+		if repository.PassiveNodes(hashes).GetHash() != hashValues[index] {
+			err := a.atlasRepository.CreateAtlasTree(userId, eventId, index, hashes)
 			if err != nil {
 				return err
 			}
-			hashValues[index] = repository.PassiveNodes(tree.Hashes).GetHash()
+			hashValues[index] = repository.PassiveNodes(hashes).GetHash()
 		}
 	}
 	return nil

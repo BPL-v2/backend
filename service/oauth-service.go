@@ -6,6 +6,7 @@ import (
 	"bpl/repository"
 	"bpl/utils"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -145,7 +146,7 @@ func (e *OauthServiceImpl) GetNewVerifier(user *repository.User, lastUrl string)
 			delete(e.stateMap, verifier)
 		}
 	}
-	state := oauth2.GenerateVerifier()
+	state := embedOriginInState(oauth2.GenerateVerifier(), lastUrl)
 	verifier := oauth2.GenerateVerifier()
 	e.stateMap[state] = OauthState{
 		Verifier: verifier,
@@ -156,19 +157,36 @@ func (e *OauthServiceImpl) GetNewVerifier(user *repository.User, lastUrl string)
 	return state, verifier
 }
 
+// embedOriginInState appends the frontend origin the flow started from to
+// the random oauth state, as "<randomState>.<base64url(origin)>". Providers
+// only allow us to register a single redirect_uri (https://bpl-poe.com/...),
+// so when we're testing against localhost (or another approved test
+// domain), the oauth callback still lands on bpl-poe.com first. The state
+// param is the only thing providers guarantee to echo back completely
+// unchanged, so encoding the origin into it lets the bpl-poe.com callback
+// page recognize this case *client-side*, with no backend round trip, and
+// redirect the browser (same path, same query string, different origin) to
+// the origin that actually needs to exchange the code - since that's the
+// backend that holds the matching state/verifier in its stateMap.
+func embedOriginInState(state string, lastUrl string) string {
+	parsed, err := url.Parse(lastUrl)
+	if err != nil || parsed.Host == "" {
+		return state
+	}
+	origin := parsed.Scheme + "://" + parsed.Host
+	return state + "." + base64.RawURLEncoding.EncodeToString([]byte(origin))
+}
+
 func (e *OauthServiceImpl) GetOauthConfig(provider repository.Provider) *oauth2.Config {
 	return e.Config[provider]
 }
 
 // sanitizeLastUrl makes sure a lastUrl coming from an oauth redirect request
-// can only ever send the user (and their fresh auth token) to an origin we
-// recognize. GGG (and the other providers) only allow us to register a
-// single redirect_uri (https://bpl-poe.com/...), so to support logging in
-// while testing against localhost or another approved test domain, the
-// frontend running on bpl-poe.com hands the user off to that origin once the
-// oauth callback completes there. Anything we don't recognize is dropped in
-// favor of a same-origin default so we never redirect (and leak an auth
-// token) to an arbitrary domain.
+// can only ever be used to redirect the browser (and, via embedOriginInState,
+// to forward the in-progress callback) to an origin we recognize. Anything
+// we don't recognize is dropped in favor of a same-origin default so we
+// never redirect - or hand off which backend should process the callback -
+// to an arbitrary domain.
 func sanitizeLastUrl(lastUrl string) string {
 	parsed, err := url.Parse(lastUrl)
 	if err != nil || parsed.Host == "" {
@@ -355,7 +373,7 @@ func (e *OauthServiceImpl) VerifyPoE(state string, code string, referrer *string
 		fmt.Printf("Failed to get profile: %v\n", clientError)
 		return nil, fmt.Errorf("failed to get profile: %v", clientError)
 	}
-	return e.addAccountToUser(&authState, referrer, profile.UUId, profile.Name, token, repository.ProviderPoE)
+	return e.addAccountToUser(&authState, referrer, profile.Uuid, profile.Name, token, repository.ProviderPoE)
 }
 
 func (e *OauthServiceImpl) GetApplicationToken(provider repository.Provider) (string, error) {

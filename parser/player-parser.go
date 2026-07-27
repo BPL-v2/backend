@@ -13,9 +13,9 @@ import (
 )
 
 type Player struct {
-	AtlasPassiveTrees []client.AtlasPassiveTree
+	AtlasPassiveTrees []client.LeagueAccountAtlasPassiveTree
 	DelveDepth        int
-	Character         *client.GGGCharacter
+	Character         *client.Character
 	PoB               *repository.CharacterPob
 	VoidStones        utils.Set[string]
 }
@@ -42,7 +42,7 @@ type PlayerUpdate struct {
 }
 
 func (p *Player) MaxAtlasTreeNodes() int {
-	return utils.Max(utils.Map(p.AtlasPassiveTrees, func(tree client.AtlasPassiveTree) int {
+	return utils.Max(utils.Map(p.AtlasPassiveTrees, func(tree client.LeagueAccountAtlasPassiveTree) int {
 		return len(tree.Hashes)
 	})...)
 }
@@ -380,7 +380,7 @@ func parserForTrackedValue(numberField repository.TrackedValue) (PlayerObjective
 	case repository.TrackedValueTeamPlayersWithPantheonUnlocked:
 		return func(p *Player) int {
 			count := 0
-			if p.Character == nil {
+			if p.Character == nil || p.Character.Passives == nil {
 				return count
 			}
 			if p.Character.Passives.PantheonMajor != nil {
@@ -604,7 +604,7 @@ func parserForTrackedValue(numberField repository.TrackedValue) (PlayerObjective
 		}, nil
 	case repository.TrackedValueBloodlineAscendancyUnlocked:
 		return func(p *Player) int {
-			if p.Character == nil || p.Character.Passives.AlternateAscendancy == nil {
+			if p.Character == nil || p.Character.Passives == nil || p.Character.Passives.AlternateAscendancy == nil {
 				return 0
 			}
 			return 1
@@ -621,7 +621,7 @@ func GetPlayerChecker(objective *repository.Objective) (PlayerObjectiveChecker, 
 	return parserForTrackedValue(objective.TrackedValue)
 }
 
-func quality(character *client.GGGCharacter, superclass string) int {
+func quality(character *client.Character, superclass string) int {
 	if character == nil || character.Equipment == nil {
 		return 0
 	}
@@ -643,7 +643,7 @@ func quality(character *client.GGGCharacter, superclass string) int {
 	return totalQuality
 }
 
-func itemCount(character *client.GGGCharacter, predicate func(item client.Item) bool) int {
+func itemCount(character *client.Character, predicate func(item client.Item) bool) int {
 	if character == nil {
 		return 0
 	}
