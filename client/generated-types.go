@@ -620,7 +620,7 @@ type CrucibleNode struct {
 	ReminderText *[]string `json:"reminderText,omitempty"`
 
 	// Skill mod hash
-	Skill *int `json:"skill,omitempty"`
+	Skill *string `json:"skill,omitempty"`
 
 	// Stats stat descriptions
 	Stats *[]string `json:"stats,omitempty"`
@@ -1479,7 +1479,7 @@ type PassiveNode struct {
 	ReminderText *[]string `json:"reminderText,omitempty"`
 
 	// Skill skill hash
-	Skill *int `json:"skill,omitempty"`
+	Skill *string `json:"skill,omitempty"`
 
 	// Stats stat descriptions
 	Stats *[]string `json:"stats,omitempty"`
@@ -1490,11 +1490,11 @@ type PassiveNodeExpansionJewel struct {
 	Index *int `json:"index,omitempty"`
 
 	// Parent the parent node identifier
-	Parent *int `json:"parent,omitempty"`
+	Parent *string `json:"parent,omitempty"`
 
 	// Proxy the proxy node identifier
-	Proxy *int `json:"proxy,omitempty"`
-	Size  *int `json:"size,omitempty"`
+	Proxy *string `json:"proxy,omitempty"`
+	Size  *int    `json:"size,omitempty"`
 }
 
 // PassiveNodeMasteryEffect defines model for PassiveNodeMasteryEffect.

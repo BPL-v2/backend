@@ -305,7 +305,7 @@ const docTemplate = `{
                     },
                     "skill": {
                         "description": "Skill mod hash",
-                        "type": "integer"
+                        "type": "string"
                     },
                     "stats": {
                         "description": "Stats stat descriptions",
@@ -1547,7 +1547,7 @@ const docTemplate = `{
                     },
                     "skill": {
                         "description": "Skill skill hash",
-                        "type": "integer"
+                        "type": "string"
                     },
                     "stats": {
                         "description": "Stats stat descriptions",
@@ -1572,11 +1572,11 @@ const docTemplate = `{
                     },
                     "parent": {
                         "description": "Parent the parent node identifier",
-                        "type": "integer"
+                        "type": "string"
                     },
                     "proxy": {
                         "description": "Proxy the proxy node identifier",
-                        "type": "integer"
+                        "type": "string"
                     },
                     "size": {
                         "type": "integer"
