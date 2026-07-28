@@ -221,7 +221,6 @@ func (f *FetchingService) FilterStashChanges() error {
 				NextChangeId: stashChange.NextChangeId,
 				Stashes:      stashes,
 				Timestamp:    now,
-				Source:       repository.UniqueItemSourcePublicStash,
 			}
 			// make sure that stash changes are only saved if the messages are successfully written to kafka
 			err = f.stashChangeService.SaveStashChangesConditionally(message, f.event.Id,
@@ -528,7 +527,6 @@ func addGuildStashesToQueue(kafkaWriter *kafka.Writer, change *client.PublicStas
 		NextChangeId: "",
 		Stashes:      []repository.TeamStashChange{{StashChange: *change, TeamId: teamId}},
 		Timestamp:    time.Now(),
-		Source:       repository.UniqueItemSourceGuildStash,
 	})
 	if err != nil {
 		return err

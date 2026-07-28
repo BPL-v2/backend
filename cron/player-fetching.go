@@ -104,7 +104,6 @@ type PlayerFetchingService struct {
 	characterRepository       repository.CharacterRepository
 	activityRepository        repository.ActivityRepository
 	itemWishService           service.ItemWishService
-	uniqueItemTrackingService service.UniqueItemTrackingService
 	timings                   map[repository.TimingKey]time.Duration
 
 	lastLadderUpdate time.Time
@@ -136,7 +135,6 @@ func NewPlayerFetchingService(poeClient *client.PoEClient) *PlayerFetchingServic
 		atlasService:              service.NewAtlasService(),
 		oauthService:              service.NewOauthService(),
 		itemWishService:           service.NewItemWishService(),
-		uniqueItemTrackingService: service.NewUniqueItemTrackingService(),
 		timingRepository:          repository.NewTimingRepository(),
 		characterRepository:       repository.NewCharacterRepository(),
 		activityRepository:        repository.NewActivityRepository(),
@@ -198,16 +196,6 @@ func (s *PlayerFetchingService) UpdateCharacter(player *parser.PlayerUpdate, eve
 	}
 	player.SuccessiveErrors = 0
 	player.New.Character = characterResponse.Character
-	if err := s.uniqueItemTrackingService.TrackUniqueItems(
-		characterResponse.Character.GetAllItems(),
-		player.TeamId,
-		&player.UserId,
-		event.Id,
-		repository.UniqueItemSourceCharacter,
-		time.Now(),
-	); err != nil {
-		log.Printf("Failed to track unique items for character %s: %v", characterResponse.Character.Name, err)
-	}
 	if !player.New.Character.HasSameEquipment(player.Old.Character) {
 		log.Printf("Character equipment changed for player %d, queuing for PoB processing", player.UserId)
 		publishPoBRequest(characterResponse.Character)

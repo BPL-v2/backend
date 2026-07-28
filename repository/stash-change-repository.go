@@ -30,7 +30,6 @@ type StashChangeMessage struct {
 	ChangeId     string
 	NextChangeId string
 	Timestamp    time.Time
-	Source       UniqueItemSource
 }
 
 type StashChangeRepository interface {
