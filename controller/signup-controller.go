@@ -4,6 +4,7 @@ import (
 	"bpl/client"
 	"bpl/repository"
 	"bpl/service"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -113,10 +114,8 @@ func (e *SignupController) createSignupHandler() gin.HandlerFunc {
 		}
 		isMember, err := e.discordClient.CheckForServerMemberShip(*discordId)
 		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
-			return
-		}
-		if !isMember {
+			fmt.Printf("Error checking Discord membership: %v\n", err)
+		} else if !isMember {
 			c.JSON(403, gin.H{"error": "User is not a member of the Discord server"})
 			return
 		}
