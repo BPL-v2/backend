@@ -16,6 +16,7 @@ type SignupController struct {
 	userService   service.UserService
 	teamService   service.TeamService
 	eventService  service.EventService
+	discordClient *client.LocalDiscordClient
 }
 
 func NewSignupController() *SignupController {
@@ -29,38 +30,18 @@ func NewSignupController() *SignupController {
 
 func setupSignupController() []RouteInfo {
 	e := NewSignupController()
+	e.discordClient = client.NewLocalDiscordClient()
 	basePath := "/events/:event_id/signups"
 	routes := []RouteInfo{
 		{Method: "GET", Path: "", HandlerFunc: e.getSignupsForEvent(), Authenticated: true, RequiredRoles: []repository.Permission{repository.PermissionAdmin, repository.PermissionManager}},
 		{Method: "GET", Path: "/self", HandlerFunc: e.getPersonalSignupHandler(), Authenticated: true},
 		{Method: "PUT", Path: "/self", HandlerFunc: e.createSignupHandler(), Authenticated: true},
 		{Method: "DELETE", Path: "/:user_id", HandlerFunc: e.deleteSignupHandler(), Authenticated: true, RequiresUserSelf: true},
-		{Method: "GET", Path: "/discord", HandlerFunc: getDiscordMembersHandler(), Authenticated: true, RequiredRoles: []repository.Permission{repository.PermissionAdmin, repository.PermissionManager}},
 	}
 	for i, route := range routes {
 		routes[i].Path = basePath + route.Path
 	}
 	return routes
-}
-
-func getDiscordMembersHandler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		event := getEvent(c)
-		if event == nil {
-			return
-		}
-		discordClient := client.NewLocalDiscordClient()
-		members, err := discordClient.GetServerMembers()
-		if err != nil {
-			c.JSON(500, gin.H{"error": "Failed to fetch discord members"})
-			return
-		}
-		c.JSON(200, members)
-	}
-}
-
-type ReportPlaytimeRequest struct {
-	ActualPlaytime int `json:"actual_playtime" binding:"required"`
 }
 
 // @id GetPersonalSignup
@@ -125,12 +106,20 @@ func (e *SignupController) createSignupHandler() gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": "Cannot change signup after being added to a team"})
 			return
 		}
-		//  TODO: Uncomment this when discord server check is implemented
-		// err = e.userService.DiscordServerCheck(user)
-		// if err != nil {
-		// 	c.JSON(403, gin.H{"error": err.Error()})
-		// 	return
-		// }
+		discordId := user.GetDiscordId()
+		if discordId == nil {
+			c.JSON(400, gin.H{"error": "User does not have a linked Discord account"})
+			return
+		}
+		isMember, err := e.discordClient.CheckForServerMemberShip(*discordId)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		if !isMember {
+			c.JSON(403, gin.H{"error": "User is not a member of the Discord server"})
+			return
+		}
 		var signupCreate SignupCreate
 		if err := c.BindJSON(&signupCreate); err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})

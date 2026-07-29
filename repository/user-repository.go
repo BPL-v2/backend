@@ -19,10 +19,10 @@ import (
 type Permission string
 
 const (
-	PermissionAdmin              Permission = "admin"
-	PermissionManager            Permission = "manager"
-	PermissionObjectiveDesigner  Permission = "objective_designer"
-	PermissionSubmissionJudge    Permission = "submission_judge"
+	PermissionAdmin               Permission = "admin"
+	PermissionManager             Permission = "manager"
+	PermissionObjectiveDesigner   Permission = "objective_designer"
+	PermissionSubmissionJudge     Permission = "submission_judge"
 	PermissionAchievementAssigner Permission = "achievement_assigner"
 )
 
@@ -84,6 +84,14 @@ func (u *User) GetAccountName(provider Provider) *string {
 	for _, oauth := range u.OauthAccounts {
 		if oauth.Provider == provider {
 			return &oauth.Name
+		}
+	}
+	return nil
+}
+func (u *User) GetDiscordId() *string {
+	for _, oauth := range u.OauthAccounts {
+		if oauth.Provider == ProviderDiscord {
+			return &oauth.AccountId
 		}
 	}
 	return nil

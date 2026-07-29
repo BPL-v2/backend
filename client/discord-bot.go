@@ -11,6 +11,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+type ServerMembers struct {
+	MemberIds []*discordgo.Member `json:"members"`
+}
+
 type LocalDiscordClient struct {
 	Client   *http.Client
 	BaseURL  string
@@ -27,6 +31,21 @@ func NewLocalDiscordClient() *LocalDiscordClient {
 
 func (c *LocalDiscordClient) AssignRoles() (*http.Response, error) {
 	return c.Client.Post(fmt.Sprintf("%s/%s/assign-roles", c.BaseURL, c.ServerId), "application/json", nil)
+}
+
+func (c *LocalDiscordClient) CheckForServerMemberShip(discordId string) (bool, error) {
+	resp, err := c.Client.Get(fmt.Sprintf("%s/%s/members/%s", c.BaseURL, c.ServerId, discordId))
+	if err != nil {
+		return false, err
+	}
+	defer utils.Closer(resp.Body)()
+	if resp.StatusCode == http.StatusNotFound {
+		return false, nil
+	}
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+	return true, nil
 }
 
 func (c *LocalDiscordClient) GetServerMembers() ([]*discordgo.Member, error) {
