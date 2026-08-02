@@ -3,6 +3,8 @@ package repository
 import (
 	"bpl/config"
 	"bpl/utils"
+	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -141,24 +143,51 @@ type ObjectiveScoringRule struct {
 	ScoringRuleId int `gorm:"primaryKey"`
 }
 
+// ObjectiveDetails holds optional, per-objective extras that only apply to a
+// small subset of objectives (e.g. gem/ascendancy restrictions, an
+// explanation of how the tracked value is computed). New fields can be
+// added here without a schema migration, since the whole struct is stored
+// as one jsonb column.
+type ObjectiveDetails struct {
+	GemsLimited             bool    `json:"gems_limited,omitempty"`
+	AscendanciesLimited     bool    `json:"ascendancies_limited,omitempty"`
+	TrackedValueExplanation *string `json:"tracked_value_explanation,omitempty"`
+}
+
+func (d *ObjectiveDetails) Scan(value any) error {
+	if value == nil {
+		*d = ObjectiveDetails{}
+		return nil
+	}
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("failed to unmarshal JSONB value: not a byte slice")
+	}
+	return json.Unmarshal(bytes, d)
+}
+
+func (d ObjectiveDetails) Value() (driver.Value, error) {
+	return json.Marshal(d)
+}
+
 type Objective struct {
-	Id                      int            `gorm:"primaryKey"`
-	Name                    string         `gorm:"not null"`
-	Extra                   string         `gorm:"null"`
-	RequiredAmount          int            `gorm:"not null"`
-	Conditions              Conditions     `gorm:"type:jsonb"`
-	ParentId                *int           `gorm:"null"`
-	EventId                 int            `gorm:"not null;references:events(id)"`
-	ObjectiveType           ObjectiveType  `gorm:"not null"`
-	TrackedValue            TrackedValue   `gorm:"not null"`
-	CountingMethod          CountingMethod `gorm:"not null"`
-	ValidFrom               *time.Time     `gorm:"null"`
-	ValidTo                 *time.Time     `gorm:"null"`
-	ScoringRules            []*ScoringRule `gorm:"many2many:objective_scoring_rules;joinForeignKey:objective_id;joinReferences:scoring_rule_id"`
-	HideProgress            bool           `gorm:"not null;default:false"`
-	SyncStatus              SyncStatus     `gorm:"not null;default:DESYNCED"`
-	TrackedValueExplanation *string        `gorm:"null"`
-	Children                []*Objective   `gorm:"foreignKey:ParentId;constraint:OnDelete:CASCADE"`
+	Id             int              `gorm:"primaryKey"`
+	Name           string           `gorm:"not null"`
+	Extra          string           `gorm:"null"`
+	RequiredAmount int              `gorm:"not null"`
+	Conditions     Conditions       `gorm:"type:jsonb"`
+	ParentId       *int             `gorm:"null"`
+	EventId        int              `gorm:"not null;references:events(id)"`
+	ObjectiveType  ObjectiveType    `gorm:"not null"`
+	TrackedValue   TrackedValue     `gorm:"not null"`
+	CountingMethod CountingMethod   `gorm:"not null"`
+	ValidFrom      *time.Time       `gorm:"null"`
+	ValidTo        *time.Time       `gorm:"null"`
+	ScoringRules   []*ScoringRule   `gorm:"many2many:objective_scoring_rules;joinForeignKey:objective_id;joinReferences:scoring_rule_id"`
+	HideProgress   bool             `gorm:"not null;default:false"`
+	SyncStatus     SyncStatus       `gorm:"not null;default:DESYNCED"`
+	Children       []*Objective     `gorm:"foreignKey:ParentId;constraint:OnDelete:CASCADE"`
+	Details        ObjectiveDetails `gorm:"type:jsonb;not null;default:'{}'"`
 }
 
 func (o *Objective) FlatMap() []*Objective {

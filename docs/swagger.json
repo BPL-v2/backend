@@ -3338,6 +3338,9 @@
                     "counting_method": {
                         "$ref": "#/components/schemas/CountingMethod"
                     },
+                    "details": {
+                        "$ref": "#/components/schemas/ObjectiveDetails"
+                    },
                     "extra": {
                         "type": "string"
                     },
@@ -3368,9 +3371,6 @@
                     },
                     "tracked_value": {
                         "$ref": "#/components/schemas/TrackedValue"
-                    },
-                    "tracked_value_explanation": {
-                        "type": "string"
                     },
                     "valid_from": {
                         "format": "date-time",
@@ -3409,6 +3409,9 @@
                     "counting_method": {
                         "$ref": "#/components/schemas/CountingMethod"
                     },
+                    "details": {
+                        "$ref": "#/components/schemas/ObjectiveDetails"
+                    },
                     "extra": {
                         "type": "string"
                     },
@@ -3439,9 +3442,6 @@
                     },
                     "tracked_value": {
                         "$ref": "#/components/schemas/TrackedValue"
-                    },
-                    "tracked_value_explanation": {
-                        "type": "string"
                     },
                     "valid_from": {
                         "format": "date-time",
@@ -3810,8 +3810,22 @@
                     "approval_status": {
                         "$ref": "#/components/schemas/ApprovalStatus"
                     },
+                    "ascendancy_classes_used": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
                     "comment": {
                         "type": "string"
+                    },
+                    "gems_used": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
                     },
                     "id": {
                         "type": "integer"
@@ -3857,8 +3871,22 @@
             },
             "SubmissionCreate": {
                 "properties": {
+                    "ascendancy_classes_used": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
                     "comment": {
                         "type": "string"
+                    },
+                    "gems_used": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
                     },
                     "id": {
                         "type": "integer"
@@ -4345,6 +4373,20 @@
                     "FetchCharacterData",
                     "FetchGuildStashes"
                 ]
+            },
+            "ObjectiveDetails": {
+                "properties": {
+                    "ascendancies_limited": {
+                        "type": "boolean"
+                    },
+                    "gems_limited": {
+                        "type": "boolean"
+                    },
+                    "tracked_value_explanation": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
             },
             "ObjectiveType": {
                 "enum": [

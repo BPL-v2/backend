@@ -238,12 +238,14 @@ func (e *SubmissionController) reviewSubmissionHandler() gin.HandlerFunc {
 }
 
 type SubmissionCreate struct {
-	Id          *int      `json:"id"`
-	ObjectiveId int       `json:"objective_id" binding:"required"`
-	Timestamp   time.Time `json:"timestamp" binding:"required" format:"date-time"`
-	Number      int       `json:"number"`
-	Proof       string    `json:"proof"`
-	Comment     string    `json:"comment"`
+	Id                    *int      `json:"id"`
+	ObjectiveId           int       `json:"objective_id" binding:"required"`
+	Timestamp             time.Time `json:"timestamp" binding:"required" format:"date-time"`
+	Number                int       `json:"number"`
+	Proof                 string    `json:"proof"`
+	Comment               string    `json:"comment"`
+	GemsUsed              []string  `json:"gems_used"`
+	AscendancyClassesUsed []string  `json:"ascendancy_classes_used"`
 }
 
 type TeamSubmissionCreate struct {
@@ -263,6 +265,10 @@ func (s *SubmissionCreate) toModel() *repository.Submission {
 		Proof:       s.Proof,
 		Timestamp:   s.Timestamp,
 		Comment:     s.Comment,
+		Extra: repository.SubmissionExtra{
+			GemsUsed:              s.GemsUsed,
+			AscendancyClassesUsed: s.AscendancyClassesUsed,
+		},
 	}
 	if s.Id != nil {
 		submission.Id = *s.Id
@@ -295,31 +301,35 @@ func (s *SubmissionReview) toModel() *repository.Submission {
 }
 
 type Submission struct {
-	Id             int                       `json:"id" binding:"required"`
-	Number         int                       `json:"number" binding:"required"`
-	Proof          string                    `json:"proof" binding:"required"`
-	Timestamp      time.Time                 `json:"timestamp" binding:"required" format:"date-time"`
-	ApprovalStatus repository.ApprovalStatus `json:"approval_status" binding:"required"`
-	Comment        string                    `json:"comment" binding:"required"`
-	TeamId         int                       `json:"team_id" binding:"required"`
-	ReviewComment  *string                   `json:"review_comment"`
-	ReviewerId     *int                      `json:"reviewer_id"`
-	ObjectiveId    int                       `json:"objective_id" binding:"required"`
-	UserId         int                       `json:"user_id" binding:"required"`
+	Id                    int                       `json:"id" binding:"required"`
+	Number                int                       `json:"number" binding:"required"`
+	Proof                 string                    `json:"proof" binding:"required"`
+	Timestamp             time.Time                 `json:"timestamp" binding:"required" format:"date-time"`
+	ApprovalStatus        repository.ApprovalStatus `json:"approval_status" binding:"required"`
+	Comment               string                    `json:"comment" binding:"required"`
+	TeamId                int                       `json:"team_id" binding:"required"`
+	ReviewComment         *string                   `json:"review_comment"`
+	ReviewerId            *int                      `json:"reviewer_id"`
+	ObjectiveId           int                       `json:"objective_id" binding:"required"`
+	UserId                int                       `json:"user_id" binding:"required"`
+	GemsUsed              []string                  `json:"gems_used"`
+	AscendancyClassesUsed []string                  `json:"ascendancy_classes_used"`
 }
 
 func toSubmissionResponse(submission *repository.Submission) *Submission {
 	return &Submission{
-		Id:             submission.Id,
-		Number:         submission.Number,
-		Proof:          submission.Proof,
-		Timestamp:      submission.Timestamp,
-		ApprovalStatus: submission.ApprovalStatus,
-		Comment:        submission.Comment,
-		ReviewComment:  submission.ReviewComment,
-		ReviewerId:     submission.ReviewerId,
-		ObjectiveId:    submission.ObjectiveId,
-		UserId:         submission.UserId,
-		TeamId:         submission.TeamId,
+		Id:                    submission.Id,
+		Number:                submission.Number,
+		Proof:                 submission.Proof,
+		Timestamp:             submission.Timestamp,
+		ApprovalStatus:        submission.ApprovalStatus,
+		Comment:               submission.Comment,
+		ReviewComment:         submission.ReviewComment,
+		ReviewerId:            submission.ReviewerId,
+		ObjectiveId:           submission.ObjectiveId,
+		UserId:                submission.UserId,
+		TeamId:                submission.TeamId,
+		GemsUsed:              submission.Extra.GemsUsed,
+		AscendancyClassesUsed: submission.Extra.AscendancyClassesUsed,
 	}
 }

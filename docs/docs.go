@@ -3344,6 +3344,9 @@ const docTemplate = `{
                     "counting_method": {
                         "$ref": "#/components/schemas/CountingMethod"
                     },
+                    "details": {
+                        "$ref": "#/components/schemas/ObjectiveDetails"
+                    },
                     "extra": {
                         "type": "string"
                     },
@@ -3374,9 +3377,6 @@ const docTemplate = `{
                     },
                     "tracked_value": {
                         "$ref": "#/components/schemas/TrackedValue"
-                    },
-                    "tracked_value_explanation": {
-                        "type": "string"
                     },
                     "valid_from": {
                         "format": "date-time",
@@ -3415,6 +3415,9 @@ const docTemplate = `{
                     "counting_method": {
                         "$ref": "#/components/schemas/CountingMethod"
                     },
+                    "details": {
+                        "$ref": "#/components/schemas/ObjectiveDetails"
+                    },
                     "extra": {
                         "type": "string"
                     },
@@ -3445,9 +3448,6 @@ const docTemplate = `{
                     },
                     "tracked_value": {
                         "$ref": "#/components/schemas/TrackedValue"
-                    },
-                    "tracked_value_explanation": {
-                        "type": "string"
                     },
                     "valid_from": {
                         "format": "date-time",
@@ -3816,8 +3816,22 @@ const docTemplate = `{
                     "approval_status": {
                         "$ref": "#/components/schemas/ApprovalStatus"
                     },
+                    "ascendancy_classes_used": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
                     "comment": {
                         "type": "string"
+                    },
+                    "gems_used": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
                     },
                     "id": {
                         "type": "integer"
@@ -3863,8 +3877,22 @@ const docTemplate = `{
             },
             "SubmissionCreate": {
                 "properties": {
+                    "ascendancy_classes_used": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    },
                     "comment": {
                         "type": "string"
+                    },
+                    "gems_used": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
                     },
                     "id": {
                         "type": "integer"
@@ -4351,6 +4379,20 @@ const docTemplate = `{
                     "FetchCharacterData",
                     "FetchGuildStashes"
                 ]
+            },
+            "ObjectiveDetails": {
+                "properties": {
+                    "ascendancies_limited": {
+                        "type": "boolean"
+                    },
+                    "gems_limited": {
+                        "type": "boolean"
+                    },
+                    "tracked_value_explanation": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
             },
             "ObjectiveType": {
                 "enum": [

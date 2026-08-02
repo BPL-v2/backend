@@ -64,6 +64,7 @@ func (e *SubmissionServiceImpl) SaveSubmission(submission *repository.Submission
 		existingSubmission.Number = submission.Number
 		existingSubmission.Proof = submission.Proof
 		existingSubmission.Comment = submission.Comment
+		existingSubmission.Extra = submission.Extra
 		if existingSubmission.ApprovalStatus == repository.APPROVED {
 			existingSubmission.ApprovalStatus = repository.PENDING
 		}

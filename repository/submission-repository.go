@@ -3,6 +3,9 @@ package repository
 import (
 	"bpl/config"
 	"bpl/utils"
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -17,21 +20,47 @@ const (
 )
 
 type Submission struct {
-	Id             int            `gorm:"primaryKey"`
-	ObjectiveId    int            `gorm:"not null;references:objectives(id)"`
-	Timestamp      time.Time      `gorm:"not null"`
-	Number         int            `gorm:"not null"`
-	UserId         int            `gorm:"not null;references:users(id)"`
-	Proof          string         `gorm:"not null"`
-	Comment        string         `gorm:"not null"`
-	ApprovalStatus ApprovalStatus `gorm:"not null"`
-	ReviewComment  *string        `gorm:"null"`
-	ReviewerId     *int           `gorm:"null;references:users(id)"`
-	TeamId         int            `gorm:"not null;references:teams(id)"`
+	Id             int             `gorm:"primaryKey"`
+	ObjectiveId    int             `gorm:"not null;references:objectives(id)"`
+	Timestamp      time.Time       `gorm:"not null"`
+	Number         int             `gorm:"not null"`
+	UserId         int             `gorm:"not null;references:users(id)"`
+	Proof          string          `gorm:"not null"`
+	Comment        string          `gorm:"not null"`
+	ApprovalStatus ApprovalStatus  `gorm:"not null"`
+	ReviewComment  *string         `gorm:"null"`
+	ReviewerId     *int            `gorm:"null;references:users(id)"`
+	TeamId         int             `gorm:"not null;references:teams(id)"`
+	Extra          SubmissionExtra `gorm:"type:jsonb;not null;default:'{}'"`
 
 	Objective *Objective `gorm:"foreignKey:ObjectiveId;constraint:OnDelete:CASCADE;"`
 	User      *User      `gorm:"foreignKey:UserId;constraint:OnDelete:CASCADE;"`
 	Reviewer  *User      `gorm:"foreignKey:ReviewerId;constraint:OnDelete:CASCADE;"`
+}
+
+// SubmissionExtra holds optional, structured details about how a submission
+// was fulfilled (e.g. gems or ascendancy classes used). It mirrors
+// ObjectiveDetails on the objective side and, like it, is stored as a
+// single jsonb column so new fields can be added without a migration.
+type SubmissionExtra struct {
+	GemsUsed              []string `json:"gems_used,omitempty"`
+	AscendancyClassesUsed []string `json:"ascendancy_classes_used,omitempty"`
+}
+
+func (e *SubmissionExtra) Scan(value any) error {
+	if value == nil {
+		*e = SubmissionExtra{}
+		return nil
+	}
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("failed to unmarshal JSONB value: not a byte slice")
+	}
+	return json.Unmarshal(bytes, e)
+}
+
+func (e SubmissionExtra) Value() (driver.Value, error) {
+	return json.Marshal(e)
 }
 
 func (s *Submission) ToObjectiveMatch() *ObjectiveMatch {

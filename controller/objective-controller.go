@@ -345,55 +345,55 @@ type ObjectiveConditionCreate struct {
 }
 
 type ObjectiveCreate struct {
-	Id                      int                       `json:"id"`
-	Name                    string                    `json:"name" binding:"required"`
-	Extra                   string                    `json:"extra"`
-	RequiredNumber          int                       `json:"required_number" binding:"required"`
-	ObjectiveType           repository.ObjectiveType  `json:"objective_type" binding:"required"`
-	TrackedValue            repository.TrackedValue   `json:"tracked_value" binding:"required"`
-	TrackedValueExplanation *string                   `json:"tracked_value_explanation"`
-	CountingMethod          repository.CountingMethod `json:"counting_method" binding:"required"`
-	ParentId                int                       `json:"parent_id" binding:"required"`
-	Conditions              []Condition               `json:"conditions" binding:"required"`
-	ValidFrom               *time.Time                `json:"valid_from" binding:"omitempty" format:"date-time"`
-	ValidTo                 *time.Time                `json:"valid_to" binding:"omitempty" format:"date-time"`
-	ScoringRuleIds          []int                     `json:"scoring_rule_ids" binding:"required"`
-	HideProgress            bool                      `json:"hide_progress"`
+	Id             int                         `json:"id"`
+	Name           string                      `json:"name" binding:"required"`
+	Extra          string                      `json:"extra"`
+	RequiredNumber int                         `json:"required_number" binding:"required"`
+	ObjectiveType  repository.ObjectiveType    `json:"objective_type" binding:"required"`
+	TrackedValue   repository.TrackedValue     `json:"tracked_value" binding:"required"`
+	CountingMethod repository.CountingMethod   `json:"counting_method" binding:"required"`
+	ParentId       int                         `json:"parent_id" binding:"required"`
+	Conditions     []Condition                 `json:"conditions" binding:"required"`
+	ValidFrom      *time.Time                  `json:"valid_from" binding:"omitempty" format:"date-time"`
+	ValidTo        *time.Time                  `json:"valid_to" binding:"omitempty" format:"date-time"`
+	ScoringRuleIds []int                       `json:"scoring_rule_ids" binding:"required"`
+	HideProgress   bool                        `json:"hide_progress"`
+	Details        repository.ObjectiveDetails `json:"details"`
 }
 
 type Objective struct {
-	Id                      int                       `json:"id" binding:"required"`
-	Name                    string                    `json:"name" binding:"required"`
-	Extra                   string                    `json:"extra" binding:"required"`
-	RequiredNumber          int                       `json:"required_number" binding:"required"`
-	ParentId                *int                      `json:"parent_id" binding:"required"`
-	ObjectiveType           repository.ObjectiveType  `json:"objective_type" binding:"required"`
-	Conditions              []*Condition              `json:"conditions" binding:"required"`
-	ValidFrom               *time.Time                `json:"valid_from" binding:"omitempty" format:"date-time"`
-	ValidTo                 *time.Time                `json:"valid_to" binding:"omitempty" format:"date-time"`
-	ScoringRules            []*ScoringRule            `json:"scoring_rules" binding:"required"`
-	TrackedValue            repository.TrackedValue   `json:"tracked_value" binding:"required"`
-	TrackedValueExplanation *string                   `json:"tracked_value_explanation"`
-	CountingMethod          repository.CountingMethod `json:"counting_method" binding:"required"`
-	Children                []*Objective              `json:"children" binding:"required"`
-	HideProgress            bool                      `json:"hide_progress" binding:"required"`
+	Id             int                         `json:"id" binding:"required"`
+	Name           string                      `json:"name" binding:"required"`
+	Extra          string                      `json:"extra" binding:"required"`
+	RequiredNumber int                         `json:"required_number" binding:"required"`
+	ParentId       *int                        `json:"parent_id" binding:"required"`
+	ObjectiveType  repository.ObjectiveType    `json:"objective_type" binding:"required"`
+	Conditions     []*Condition                `json:"conditions" binding:"required"`
+	ValidFrom      *time.Time                  `json:"valid_from" binding:"omitempty" format:"date-time"`
+	ValidTo        *time.Time                  `json:"valid_to" binding:"omitempty" format:"date-time"`
+	ScoringRules   []*ScoringRule              `json:"scoring_rules" binding:"required"`
+	TrackedValue   repository.TrackedValue     `json:"tracked_value" binding:"required"`
+	CountingMethod repository.CountingMethod   `json:"counting_method" binding:"required"`
+	Children       []*Objective                `json:"children" binding:"required"`
+	HideProgress   bool                        `json:"hide_progress" binding:"required"`
+	Details        repository.ObjectiveDetails `json:"details"`
 }
 
 func (e *ObjectiveCreate) toModel() *repository.Objective {
 	return &repository.Objective{
-		Id:                      e.Id,
-		Name:                    e.Name,
-		Extra:                   e.Extra,
-		RequiredAmount:          e.RequiredNumber,
-		ObjectiveType:           e.ObjectiveType,
-		TrackedValue:            e.TrackedValue,
-		TrackedValueExplanation: e.TrackedValueExplanation,
-		CountingMethod:          e.CountingMethod,
-		Conditions:              utils.Map(e.Conditions, func(c Condition) *repository.Condition { return c.toModel() }),
-		ValidFrom:               e.ValidFrom,
-		ValidTo:                 e.ValidTo,
-		ParentId:                &e.ParentId,
-		HideProgress:            e.HideProgress,
+		Id:             e.Id,
+		Name:           e.Name,
+		Extra:          e.Extra,
+		RequiredAmount: e.RequiredNumber,
+		ObjectiveType:  e.ObjectiveType,
+		TrackedValue:   e.TrackedValue,
+		CountingMethod: e.CountingMethod,
+		Conditions:     utils.Map(e.Conditions, func(c Condition) *repository.Condition { return c.toModel() }),
+		ValidFrom:      e.ValidFrom,
+		ValidTo:        e.ValidTo,
+		ParentId:       &e.ParentId,
+		HideProgress:   e.HideProgress,
+		Details:        e.Details,
 	}
 }
 
@@ -415,21 +415,21 @@ func toObjectiveResponse(objective *repository.Objective, public bool, eventEnd 
 	}
 
 	return &Objective{
-		Id:                      objective.Id,
-		Name:                    objective.Name,
-		Extra:                   objective.Extra,
-		RequiredNumber:          objective.RequiredAmount,
-		ParentId:                objective.ParentId,
-		ObjectiveType:           objective.ObjectiveType,
-		ValidFrom:               objective.ValidFrom,
-		ValidTo:                 objective.ValidTo,
-		Conditions:              utils.FilterNull(utils.Map(objective.Conditions, toConditionResponse)),
-		TrackedValue:            objective.TrackedValue,
-		TrackedValueExplanation: objective.TrackedValueExplanation,
-		CountingMethod:          objective.CountingMethod,
-		ScoringRules:            utils.FilterNull(utils.Map(objective.ScoringRules, toScoringRuleResponse)),
-		Children:                utils.FilterNull(utils.Map(objective.Children, func(o *repository.Objective) *Objective { return toObjectiveResponse(o, public, eventEnd) })),
-		HideProgress:            objective.HideProgress,
+		Id:             objective.Id,
+		Name:           objective.Name,
+		Extra:          objective.Extra,
+		RequiredNumber: objective.RequiredAmount,
+		ParentId:       objective.ParentId,
+		ObjectiveType:  objective.ObjectiveType,
+		ValidFrom:      objective.ValidFrom,
+		ValidTo:        objective.ValidTo,
+		Conditions:     utils.FilterNull(utils.Map(objective.Conditions, toConditionResponse)),
+		TrackedValue:   objective.TrackedValue,
+		CountingMethod: objective.CountingMethod,
+		ScoringRules:   utils.FilterNull(utils.Map(objective.ScoringRules, toScoringRuleResponse)),
+		Children:       utils.FilterNull(utils.Map(objective.Children, func(o *repository.Objective) *Objective { return toObjectiveResponse(o, public, eventEnd) })),
+		HideProgress:   objective.HideProgress,
+		Details:        objective.Details,
 	}
 }
 
