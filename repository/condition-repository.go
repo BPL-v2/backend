@@ -16,6 +16,7 @@ const (
 	ICON_NAME               ItemField = "ICON_NAME"
 	TYPE_LINE               ItemField = "TYPE_LINE"
 	QUALITY                 ItemField = "QUALITY"
+	INTANGIBILITY           ItemField = "INTANGIBILITY"
 	LEVEL                   ItemField = "LEVEL"
 	RARITY                  ItemField = "RARITY"
 	ILVL                    ItemField = "ILVL"
@@ -70,6 +71,7 @@ var FieldToType = map[ItemField]FieldType{
 	ITEM_CLASS:              String,
 	TYPE_LINE:               String,
 	QUALITY:                 Int,
+	INTANGIBILITY:           Int,
 	LEVEL:                   Int,
 	RARITY:                  String,
 	ILVL:                    Int,

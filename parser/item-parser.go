@@ -5,7 +5,6 @@ import (
 	dbModel "bpl/repository"
 	"bpl/utils"
 	"fmt"
-	"log"
 	"regexp"
 	"slices"
 	"strconv"
@@ -312,6 +311,26 @@ func StringArrayFieldGetter(field dbModel.ItemField) (func(item *clientModel.Ite
 	}
 }
 
+func propertyValue(item *clientModel.Item, propertyName string, cutOuts ...string) int {
+	if item.Properties != nil {
+		for _, property := range *item.Properties {
+			if property.Name == propertyName {
+				name := property.Values[0].Name()
+				for _, cutOut := range cutOuts {
+					name = strings.ReplaceAll(name, cutOut, "")
+				}
+				value, err := strconv.Atoi(name)
+				if err != nil {
+					fmt.Printf("Error parsing property %s: %s\n", propertyName, err)
+					return 0
+				}
+				return value
+			}
+		}
+	}
+	return 0
+}
+
 func IntFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) int, error) {
 	switch field {
 	case dbModel.ILVL:
@@ -325,67 +344,19 @@ func IntFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) int, 
 		}, nil
 	case dbModel.MAP_TIER:
 		return func(item *clientModel.Item) int {
-			if item.Properties != nil {
-				for _, property := range *item.Properties {
-					if property.Name == "Map Tier" {
-						tier, err := strconv.Atoi(property.Values[0].Name())
-						if err != nil {
-							log.Printf("Error parsing map tier %s", property.Values[0].Name())
-							return 0
-						}
-						return tier
-					}
-				}
-			}
-			return 0
+			return propertyValue(item, "Map Tier")
 		}, nil
 	case dbModel.MAP_QUANT:
 		return func(item *clientModel.Item) int {
-			if item.Properties != nil {
-				for _, property := range *item.Properties {
-					if property.Name == "Item Quantity" {
-						quantity, err := strconv.Atoi(strings.ReplaceAll(strings.ReplaceAll(property.Values[0].Name(), "%", ""), "+", ""))
-						if err != nil {
-							log.Printf("Error parsing map quantity %s", property.Values[0].Name())
-							return 0
-						}
-						return quantity
-					}
-				}
-			}
-			return 0
+			return propertyValue(item, "Item Quantity", "%", "+")
 		}, nil
 	case dbModel.MAP_RARITY:
 		return func(item *clientModel.Item) int {
-			if item.Properties != nil {
-				for _, property := range *item.Properties {
-					if property.Name == "Map Rarity" {
-						rarity, err := strconv.Atoi(strings.ReplaceAll(strings.ReplaceAll(property.Values[0].Name(), "%", ""), "+", ""))
-						if err != nil {
-							log.Printf("Error parsing map rarity %s", property.Values[0].Name())
-							return 0
-						}
-						return rarity
-					}
-				}
-			}
-			return 0
+			return propertyValue(item, "Map Rarity", "%", "+")
 		}, nil
 	case dbModel.MAP_PACK_SIZE:
 		return func(item *clientModel.Item) int {
-			if item.Properties != nil {
-				for _, property := range *item.Properties {
-					if property.Name == "Monster Pack Size" {
-						size, err := strconv.Atoi(strings.ReplaceAll(strings.ReplaceAll(property.Values[0].Name(), "%", ""), "+", ""))
-						if err != nil {
-							log.Printf("Error parsing monster pack size %s", property.Values[0].Name())
-							return 0
-						}
-						return size
-					}
-				}
-			}
-			return 0
+			return propertyValue(item, "Monster Pack Size", "%", "+")
 		}, nil
 	case dbModel.INCUBATOR_KILLS:
 		return func(item *clientModel.Item) int {
@@ -397,67 +368,24 @@ func IntFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) int, 
 
 	case dbModel.FACETOR_LENS_EXP:
 		return func(item *clientModel.Item) int {
-			if item.Properties != nil {
-				for _, property := range *item.Properties {
-					if property.Name == "Stored Experience: {0}" {
-						exp, err := strconv.Atoi(property.Values[0].Name())
-						if err != nil {
-							log.Printf("Error parsing facetor lens exp %s", property.Values[0].Name())
-							return 0
-						}
-						return exp
-					}
-				}
-			}
-			return 0
+			return propertyValue(item, "Stored Experience: {0}")
 		}, nil
 	case dbModel.QUALITY:
 		return func(item *clientModel.Item) int {
-			if item.Properties != nil {
-				for _, property := range *item.Properties {
-					if strings.Contains(property.Name, "Quality") {
-						quality, err := strconv.Atoi(strings.ReplaceAll(strings.ReplaceAll(property.Values[0].Name(), "%", ""), "+", ""))
-						if err != nil {
-							log.Printf("Error parsing quality %s", property.Values[0].Name())
-							return 0
-						}
-						return quality
-					}
-				}
-			}
-			return 0
+			return propertyValue(item, "Quality", "%")
 		}, nil
+	case dbModel.INTANGIBILITY:
+		return func(item *clientModel.Item) int {
+			return propertyValue(item, "Intangibility", "%")
+		}, nil
+
 	case dbModel.LEVEL:
 		return func(item *clientModel.Item) int {
-			if item.Properties != nil {
-				for _, property := range *item.Properties {
-					if property.Name == "Level" {
-						level, err := strconv.Atoi(strings.ReplaceAll(property.Values[0].Name(), " (Max)", ""))
-						if err != nil {
-							log.Printf("Error parsing level %s", property.Values[0].Name())
-							return 0
-						}
-						return level
-					}
-				}
-			}
-			return 0
+			return propertyValue(item, "Level", " (Max)")
 		}, nil
 	case dbModel.MEMORY_STRANDS:
 		return func(item *clientModel.Item) int {
-			if item.Properties != nil {
-				for _, property := range *item.Properties {
-					if property.Name == "Memory Strands" {
-						strands, err := strconv.Atoi(property.Values[0].Name())
-						if err != nil {
-							log.Printf("Error parsing memory strands %s", property.Values[0].Name())
-							return 0
-						}
-						return strands
-					}
-				}
-			}
-			return 0
+			return propertyValue(item, "Memory Strands")
 		}, nil
 	case dbModel.GRAFT_SKILL_LEVEL:
 		return func(item *clientModel.Item) int {
@@ -465,18 +393,9 @@ func IntFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) int, 
 				return 0
 			}
 			for _, socketedItem := range *item.SocketedItems {
-				if socketedItem.Properties == nil {
-					continue
-				}
-				for _, property := range *socketedItem.Properties {
-					if property.Name == "Level" {
-						level, err := strconv.Atoi(strings.ReplaceAll(property.Values[0].Name(), " (Max)", ""))
-						if err != nil {
-							log.Printf("Error parsing graft skill level %s", property.Values[0].Name())
-							return 0
-						}
-						return level
-					}
+				lvl := propertyValue(&socketedItem, "Level", " (Max)")
+				if lvl > 0 {
+					return lvl
 				}
 			}
 			return 0
