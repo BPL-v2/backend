@@ -3077,6 +3077,7 @@ components:
       - ICON_NAME
       - TYPE_LINE
       - QUALITY
+      - INTANGIBILITY
       - LEVEL
       - RARITY
       - ILVL
@@ -3123,6 +3124,7 @@ components:
       - ICON_NAME
       - TYPE_LINE
       - QUALITY
+      - INTANGIBILITY
       - LEVEL
       - RARITY
       - ILVL
