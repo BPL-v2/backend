@@ -331,7 +331,7 @@ func toAchievementResponse(a *repository.Achievement) *AchievementResponse {
 		IsCustom:    a.IsCustom,
 	}
 	if len(a.Icon) > 0 {
-		resp.IconUrl = "/api/achievements/" + strconv.Itoa(a.Id) + "/icon"
+		resp.IconUrl = "/achievements/" + strconv.Itoa(a.Id) + "/icon"
 	}
 	return resp
 }
