@@ -63,12 +63,6 @@ func (e *EventController) getEventsHandler() gin.HandlerFunc {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
-		roles := getUserRoles(c)
-		if !slices.Contains(roles, repository.PermissionAdmin) {
-			events = utils.Filter(events, func(event *repository.Event) bool {
-				return event.Public
-			})
-		}
 		c.JSON(200, utils.Map(events, toEventResponse))
 	}
 }
