@@ -124,6 +124,15 @@ func getEvent(c *gin.Context) *repository.Event {
 	return ev
 }
 
+func getEventNoAuthCheck(c *gin.Context) *repository.Event {
+	event, ok := c.Get("event")
+	if !ok {
+		c.AbortWithStatus(400)
+		return nil
+	}
+	return event.(*repository.Event)
+}
+
 func AuthenticationMiddleware() gin.HandlerFunc {
 	return func(r *gin.Context) {
 		if !isAuthenticated(r) {

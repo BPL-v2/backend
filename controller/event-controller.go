@@ -164,7 +164,7 @@ func (e *EventController) deleteEventHandler() gin.HandlerFunc {
 // @Router /events/{event_id}/status [get]
 func (e *EventController) getEventStatus() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		event := getEvent(c)
+		event := getEventNoAuthCheck(c)
 		if event == nil {
 			return
 		}
