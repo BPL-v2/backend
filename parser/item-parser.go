@@ -180,7 +180,7 @@ func StringArrayFieldGetter(field dbModel.ItemField) (func(item *clientModel.Ite
 			mods := make([]string, 0)
 			if item.ExplicitMods != nil {
 				for _, mod := range *item.ExplicitMods {
-					if mod.Flags.Mutated != nil && *mod.Flags.Mutated {
+					if mod.Flags != nil && mod.Flags.Mutated != nil && *mod.Flags.Mutated {
 						mods = append(mods, mod.Description)
 					}
 				}
@@ -219,7 +219,7 @@ func StringArrayFieldGetter(field dbModel.ItemField) (func(item *clientModel.Ite
 			mods := make([]string, 0)
 			if item.ExplicitMods != nil {
 				for _, mod := range *item.ExplicitMods {
-					if mod.Flags.Crafted != nil && *mod.Flags.Crafted {
+					if mod.Flags != nil && mod.Flags.Crafted != nil && *mod.Flags.Crafted {
 						mods = append(mods, mod.Description)
 					}
 				}
@@ -231,7 +231,7 @@ func StringArrayFieldGetter(field dbModel.ItemField) (func(item *clientModel.Ite
 			mods := make([]string, 0)
 			if item.ImplicitMods != nil {
 				for _, mod := range *item.ImplicitMods {
-					if mod.Flags.Crafted != nil && *mod.Flags.Crafted {
+					if mod.Flags != nil && mod.Flags.Crafted != nil && *mod.Flags.Crafted {
 						mods = append(mods, mod.Description)
 					}
 				}
@@ -243,7 +243,7 @@ func StringArrayFieldGetter(field dbModel.ItemField) (func(item *clientModel.Ite
 			mods := make([]string, 0)
 			if item.ExplicitMods != nil {
 				for _, mod := range *item.ExplicitMods {
-					if mod.Flags.Fractured != nil && *mod.Flags.Fractured {
+					if mod.Flags != nil && mod.Flags.Fractured != nil && *mod.Flags.Fractured {
 						mods = append(mods, mod.Description)
 					}
 				}

@@ -2202,6 +2202,9 @@ const docTemplate = `{
                         "format": "date-time",
                         "type": "string"
                     },
+                    "duo_signups": {
+                        "type": "boolean"
+                    },
                     "event_end_time": {
                         "format": "date-time",
                         "type": "string"
@@ -2254,6 +2257,7 @@ const docTemplate = `{
                 "required": [
                     "application_end_time",
                     "application_start_time",
+                    "duo_signups",
                     "event_end_time",
                     "event_start_time",
                     "game_version",
@@ -2279,6 +2283,9 @@ const docTemplate = `{
                     "application_start_time": {
                         "format": "date-time",
                         "type": "string"
+                    },
+                    "duo_signups": {
+                        "type": "boolean"
                     },
                     "event_end_time": {
                         "format": "date-time",
