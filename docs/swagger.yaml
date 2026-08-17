@@ -3100,6 +3100,7 @@ components:
       - CRAFTED_IMPLICIT_MODS
       - CRAFTED_MODS
       - FRACTURED_MODS
+      - VESTIGIAL_MODS
       - INFLUENCES
       - MAX_LINKS
       - SOCKETS
@@ -3148,6 +3149,7 @@ components:
       - CRAFTED_IMPLICIT_MODS
       - CRAFTED_MODS
       - FRACTURED_MODS
+      - VESTIGIAL_MODS
       - INFLUENCES
       - MAX_LINKS
       - SOCKETS

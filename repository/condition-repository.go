@@ -34,6 +34,7 @@ const (
 	CRAFTED_IMPLICIT_MODS   ItemField = "CRAFTED_IMPLICIT_MODS"
 	CRAFTED_MODS            ItemField = "CRAFTED_MODS"
 	FRACTURED_MODS          ItemField = "FRACTURED_MODS"
+	VESTIGIAL_MODS          ItemField = "VESTIGIAL_MODS"
 	INFLUENCES              ItemField = "INFLUENCES"
 	MAX_LINKS               ItemField = "MAX_LINKS"
 	SOCKETS                 ItemField = "SOCKETS" // as string like "RGBW"
@@ -91,6 +92,7 @@ var FieldToType = map[ItemField]FieldType{
 	CRAFTED_MODS:            StringArray,
 	FRACTURED_MODS:          StringArray,
 	INFLUENCES:              StringArray,
+	VESTIGIAL_MODS:          StringArray,
 	MAX_LINKS:               Int,
 	SOCKETS:                 String,
 	INCUBATOR_KILLS:         Int,

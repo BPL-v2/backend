@@ -238,6 +238,18 @@ func StringArrayFieldGetter(field dbModel.ItemField) (func(item *clientModel.Ite
 			}
 			return mods
 		}, nil
+	case dbModel.VESTIGIAL_MODS:
+		return func(item *clientModel.Item) []string {
+			mods := make([]string, 0)
+			if item.ImplicitMods != nil {
+				for _, mod := range *item.ImplicitMods {
+					if mod.Flags != nil && mod.Flags.Vestigial != nil && *mod.Flags.Vestigial {
+						mods = append(mods, mod.Description)
+					}
+				}
+			}
+			return mods
+		}, nil
 	case dbModel.FRACTURED_MODS:
 		return func(item *clientModel.Item) []string {
 			mods := make([]string, 0)
