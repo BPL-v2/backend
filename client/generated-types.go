@@ -620,7 +620,7 @@ type CrucibleNode struct {
 	ReminderText *[]string `json:"reminderText,omitempty"`
 
 	// Skill mod hash
-	Skill *string `json:"skill,omitempty"`
+	Skill *int `json:"skill,omitempty"`
 
 	// Stats stat descriptions
 	Stats *[]string `json:"stats,omitempty"`

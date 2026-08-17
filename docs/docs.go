@@ -305,7 +305,7 @@ const docTemplate = `{
                     },
                     "skill": {
                         "description": "Skill mod hash",
-                        "type": "string"
+                        "type": "integer"
                     },
                     "stats": {
                         "description": "Stats stat descriptions",
