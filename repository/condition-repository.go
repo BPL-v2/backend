@@ -40,6 +40,7 @@ const (
 	SOCKETS                 ItemField = "SOCKETS" // as string like "RGBW"
 	INCUBATOR_KILLS         ItemField = "INCUBATOR_KILLS"
 	IS_CORRUPTED            ItemField = "IS_CORRUPTED"
+	IS_VESTIGAL             ItemField = "IS_VESTIGAL"
 	IS_VAAL                 ItemField = "IS_VAAL"
 	IS_SPLIT                ItemField = "IS_SPLIT"
 	IS_IDENTIFIED           ItemField = "IS_IDENTIFIED"
@@ -102,6 +103,7 @@ var FieldToType = map[ItemField]FieldType{
 	IS_SPLIT:                Bool,
 	IS_IDENTIFIED:           Bool,
 	IS_MIRRORED:             Bool,
+	IS_VESTIGAL:             Bool,
 	SANCTUM_MODS:            StringArray,
 	TEMPLE_ROOMS:            StringArray,
 	TEMPLE_ROOMS_T3:         StringArray,

@@ -62,6 +62,13 @@ func BoolFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) bool
 			}
 			return false
 		}, nil
+	case dbModel.IS_VESTIGAL:
+		return func(item *clientModel.Item) bool {
+			if item.Vestigial != nil {
+				return *item.Vestigial
+			}
+			return false
+		}, nil
 	default:
 		return nil, fmt.Errorf("%s is not a valid boolean field", field)
 	}

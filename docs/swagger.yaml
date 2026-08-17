@@ -3106,6 +3106,7 @@ components:
       - SOCKETS
       - INCUBATOR_KILLS
       - IS_CORRUPTED
+      - IS_VESTIGAL
       - IS_VAAL
       - IS_SPLIT
       - IS_IDENTIFIED
@@ -3155,6 +3156,7 @@ components:
       - SOCKETS
       - INCUBATOR_KILLS
       - IS_CORRUPTED
+      - IS_VESTIGAL
       - IS_VAAL
       - IS_SPLIT
       - IS_IDENTIFIED
