@@ -35,6 +35,7 @@ const (
 	CRAFTED_MODS            ItemField = "CRAFTED_MODS"
 	FRACTURED_MODS          ItemField = "FRACTURED_MODS"
 	VESTIGIAL_MODS          ItemField = "VESTIGIAL_MODS"
+	VEILED_MODS             ItemField = "VEILED_MODS"
 	INFLUENCES              ItemField = "INFLUENCES"
 	MAX_LINKS               ItemField = "MAX_LINKS"
 	SOCKETS                 ItemField = "SOCKETS" // as string like "RGBW"
@@ -45,6 +46,7 @@ const (
 	IS_SPLIT                ItemField = "IS_SPLIT"
 	IS_IDENTIFIED           ItemField = "IS_IDENTIFIED"
 	IS_MIRRORED             ItemField = "IS_MIRRORED"
+	IS_VEILED               ItemField = "IS_VEILED"
 	SANCTUM_MODS            ItemField = "SANCTUM_AFFLICTIONS"
 	TEMPLE_ROOMS            ItemField = "TEMPLE_ROOMS"
 	TEMPLE_ROOMS_T3         ItemField = "TEMPLE_ROOMS_T3"
@@ -94,6 +96,7 @@ var FieldToType = map[ItemField]FieldType{
 	FRACTURED_MODS:          StringArray,
 	INFLUENCES:              StringArray,
 	VESTIGIAL_MODS:          StringArray,
+	VEILED_MODS:             StringArray,
 	MAX_LINKS:               Int,
 	SOCKETS:                 String,
 	INCUBATOR_KILLS:         Int,
@@ -104,6 +107,7 @@ var FieldToType = map[ItemField]FieldType{
 	IS_IDENTIFIED:           Bool,
 	IS_MIRRORED:             Bool,
 	IS_VESTIGAL:             Bool,
+	IS_VEILED:               Bool,
 	SANCTUM_MODS:            StringArray,
 	TEMPLE_ROOMS:            StringArray,
 	TEMPLE_ROOMS_T3:         StringArray,

@@ -69,6 +69,14 @@ func BoolFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) bool
 			}
 			return false
 		}, nil
+	case dbModel.IS_VEILED:
+		return func(item *clientModel.Item) bool {
+			if item.Veiled != nil {
+				return *item.Veiled
+			}
+			return false
+		}, nil
+
 	default:
 		return nil, fmt.Errorf("%s is not a valid boolean field", field)
 	}
@@ -256,6 +264,13 @@ func StringArrayFieldGetter(field dbModel.ItemField) (func(item *clientModel.Ite
 				}
 			}
 			return mods
+		}, nil
+	case dbModel.VEILED_MODS:
+		return func(item *clientModel.Item) []string {
+			if item.VeiledMods != nil {
+				return *item.VeiledMods
+			}
+			return make([]string, 0)
 		}, nil
 	case dbModel.FRACTURED_MODS:
 		return func(item *clientModel.Item) []string {

@@ -3101,6 +3101,7 @@ components:
       - CRAFTED_MODS
       - FRACTURED_MODS
       - VESTIGIAL_MODS
+      - VEILED_MODS
       - INFLUENCES
       - MAX_LINKS
       - SOCKETS
@@ -3111,6 +3112,7 @@ components:
       - IS_SPLIT
       - IS_IDENTIFIED
       - IS_MIRRORED
+      - IS_VEILED
       - SANCTUM_AFFLICTIONS
       - TEMPLE_ROOMS
       - TEMPLE_ROOMS_T3
@@ -3151,6 +3153,7 @@ components:
       - CRAFTED_MODS
       - FRACTURED_MODS
       - VESTIGIAL_MODS
+      - VEILED_MODS
       - INFLUENCES
       - MAX_LINKS
       - SOCKETS
@@ -3161,6 +3164,7 @@ components:
       - IS_SPLIT
       - IS_IDENTIFIED
       - IS_MIRRORED
+      - IS_VEILED
       - SANCTUM_MODS
       - TEMPLE_ROOMS
       - TEMPLE_ROOMS_T3
