@@ -31,6 +31,7 @@ const (
 	ENCHANTS                ItemField = "ENCHANT_MODS"
 	EXPLICITS               ItemField = "EXPLICIT_MODS"
 	IMPLICITS               ItemField = "IMPLICIT_MODS"
+	CRAFTED_IMPLICIT_MODS   ItemField = "CRAFTED_IMPLICIT_MODS"
 	CRAFTED_MODS            ItemField = "CRAFTED_MODS"
 	FRACTURED_MODS          ItemField = "FRACTURED_MODS"
 	INFLUENCES              ItemField = "INFLUENCES"
@@ -86,6 +87,7 @@ var FieldToType = map[ItemField]FieldType{
 	ENCHANTS:                StringArray,
 	EXPLICITS:               StringArray,
 	IMPLICITS:               StringArray,
+	CRAFTED_IMPLICIT_MODS:   StringArray,
 	CRAFTED_MODS:            StringArray,
 	FRACTURED_MODS:          StringArray,
 	INFLUENCES:              StringArray,

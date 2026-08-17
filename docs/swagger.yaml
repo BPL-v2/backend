@@ -3092,6 +3092,7 @@ components:
       - ENCHANT_MODS
       - EXPLICIT_MODS
       - IMPLICIT_MODS
+      - CRAFTED_IMPLICIT_MODS
       - CRAFTED_MODS
       - FRACTURED_MODS
       - INFLUENCES
@@ -3139,6 +3140,7 @@ components:
       - ENCHANTS
       - EXPLICITS
       - IMPLICITS
+      - CRAFTED_IMPLICIT_MODS
       - CRAFTED_MODS
       - FRACTURED_MODS
       - INFLUENCES
