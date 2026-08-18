@@ -124,6 +124,10 @@ func (e *SignupController) createSignupHandler() gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
+		if signupCreate.ExpectedPlaytime < 0 || signupCreate.ExpectedPlaytime > 24 {
+			c.JSON(400, gin.H{"error": "Fuck you frisbee"})
+			return
+		}
 
 		signup, err := e.signupService.GetSignupForUser(user.Id, event.Id)
 		if err != nil {
