@@ -43,7 +43,8 @@ func (c *LocalDiscordClient) CheckForServerMemberShip(discordId string) (bool, e
 		return false, nil
 	}
 	if resp.StatusCode != http.StatusOK {
-		return false, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+		return false, fmt.Errorf("unexpected status code: %d, message: %s", resp.StatusCode, string(body))
 	}
 	return true, nil
 }
