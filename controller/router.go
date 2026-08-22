@@ -43,6 +43,7 @@ func SetRoutes(r *gin.Engine) {
 	routes = append(routes, setupScoreController(poeClient)...)
 	routes = append(routes, setupLadderController(poeClient)...)
 	routes = append(routes, setupTeamSuggestionController()...)
+	routes = append(routes, setupTeamSheetController()...)
 	routes = append(routes, setupCharacterController(poeClient)...)
 	routes = append(routes, setupStreamController(cache)...)
 	routes = append(routes, setupRecurringJobsController(poeClient)...)

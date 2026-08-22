@@ -4016,6 +4016,100 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "TeamSheetEntry": {
+                "properties": {
+                    "altars": {
+                        "type": "string"
+                    },
+                    "ascendancy": {
+                        "type": "string"
+                    },
+                    "build_notes": {
+                        "type": "string"
+                    },
+                    "character_name": {
+                        "type": "string"
+                    },
+                    "looking_for_group": {
+                        "type": "boolean"
+                    },
+                    "main_skill": {
+                        "type": "string"
+                    },
+                    "pob_url": {
+                        "type": "string"
+                    },
+                    "realm": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "secondary_role": {
+                        "type": "string"
+                    },
+                    "secondary_specialization": {
+                        "type": "string"
+                    },
+                    "specialization": {
+                        "type": "string"
+                    },
+                    "uniques_needed": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/NonSensitiveUser"
+                    }
+                },
+                "required": [
+                    "user"
+                ],
+                "type": "object"
+            },
+            "TeamSheetEntryUpdate": {
+                "properties": {
+                    "altars": {
+                        "type": "string"
+                    },
+                    "ascendancy": {
+                        "type": "string"
+                    },
+                    "build_notes": {
+                        "type": "string"
+                    },
+                    "character_name": {
+                        "type": "string"
+                    },
+                    "looking_for_group": {
+                        "type": "boolean"
+                    },
+                    "main_skill": {
+                        "type": "string"
+                    },
+                    "pob_url": {
+                        "type": "string"
+                    },
+                    "realm": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string"
+                    },
+                    "secondary_role": {
+                        "type": "string"
+                    },
+                    "secondary_specialization": {
+                        "type": "string"
+                    },
+                    "specialization": {
+                        "type": "string"
+                    },
+                    "uniques_needed": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "TeamSubmissionCreate": {
                 "properties": {
                     "objective_id": {
@@ -7035,6 +7129,119 @@ const docTemplate = `{
                 },
                 "tags": [
                     "item_wishes"
+                ]
+            }
+        },
+        "/events/{event_id}/teams/{team_id}/sheet": {
+            "get": {
+                "description": "Fetches the team sheet (planned characters/roles) for your team for an event",
+                "operationId": "GetTeamSheet",
+                "parameters": [
+                    {
+                        "description": "Event Id",
+                        "in": "path",
+                        "name": "event_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Team Id",
+                        "in": "path",
+                        "name": "team_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/TeamSheetEntry"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "team"
+                ]
+            },
+            "put": {
+                "description": "Creates or updates your own row in your team's sheet for an event",
+                "operationId": "SaveMyTeamSheetEntry",
+                "parameters": [
+                    {
+                        "description": "Event Id",
+                        "in": "path",
+                        "name": "event_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Team Id",
+                        "in": "path",
+                        "name": "team_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/TeamSheetEntryUpdate",
+                                        "summary": "entry",
+                                        "description": "Sheet entry data"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Sheet entry data",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TeamSheetEntry"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "team"
                 ]
             }
         },
