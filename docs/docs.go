@@ -4048,12 +4048,6 @@ const docTemplate = `{
                     "secondary_role": {
                         "type": "string"
                     },
-                    "secondary_specialization": {
-                        "type": "string"
-                    },
-                    "specialization": {
-                        "type": "string"
-                    },
                     "uniques_needed": {
                         "type": "string"
                     },
@@ -4096,12 +4090,6 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "secondary_role": {
-                        "type": "string"
-                    },
-                    "secondary_specialization": {
-                        "type": "string"
-                    },
-                    "specialization": {
                         "type": "string"
                     },
                     "uniques_needed": {

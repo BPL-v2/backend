@@ -4,6 +4,7 @@ import "bpl/repository"
 
 type TeamSheetService interface {
 	GetEntriesForTeam(eventId int, teamId int) ([]*repository.TeamSheetEntry, error)
+	GetEntryForUser(eventId int, userId int) (*repository.TeamSheetEntry, error)
 	SaveEntry(entry *repository.TeamSheetEntry) (*repository.TeamSheetEntry, error)
 }
 
@@ -24,21 +25,15 @@ func (s *TeamSheetServiceImpl) GetEntriesForTeam(eventId int, teamId int) ([]*re
 	if err != nil {
 		return nil, err
 	}
-	teamUserIds := make(map[int]bool, len(teamUsers))
-	for _, teamUser := range teamUsers {
-		teamUserIds[teamUser.UserId] = true
+	userIds := make([]int, len(teamUsers))
+	for i, teamUser := range teamUsers {
+		userIds[i] = teamUser.UserId
 	}
-	entries, err := s.teamSheetRepository.GetEntriesForEvent(eventId)
-	if err != nil {
-		return nil, err
-	}
-	teamEntries := make([]*repository.TeamSheetEntry, 0)
-	for _, entry := range entries {
-		if teamUserIds[entry.UserId] {
-			teamEntries = append(teamEntries, entry)
-		}
-	}
-	return teamEntries, nil
+	return s.teamSheetRepository.GetEntriesForUsers(eventId, userIds)
+}
+
+func (s *TeamSheetServiceImpl) GetEntryForUser(eventId int, userId int) (*repository.TeamSheetEntry, error) {
+	return s.teamSheetRepository.GetEntryForUser(eventId, userId)
 }
 
 func (s *TeamSheetServiceImpl) SaveEntry(entry *repository.TeamSheetEntry) (*repository.TeamSheetEntry, error) {

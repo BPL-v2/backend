@@ -88,23 +88,22 @@ func (e *TeamSheetController) saveMyTeamSheetEntryHandler() gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		entry := &repository.TeamSheetEntry{
-			EventId:                 event.Id,
-			UserId:                  userId,
-			CharacterName:           update.CharacterName,
-			Role:                    update.Role,
-			Specialization:          update.Specialization,
-			SecondaryRole:           update.SecondaryRole,
-			SecondarySpecialization: update.SecondarySpecialization,
-			Ascendancy:              update.Ascendancy,
-			MainSkill:               update.MainSkill,
-			BuildNotes:              update.BuildNotes,
-			PobUrl:                  update.PobUrl,
-			Realm:                   update.Realm,
-			UniquesNeeded:           update.UniquesNeeded,
-			Altars:                  update.Altars,
-			LookingForGroup:         update.LookingForGroup,
+		entry, err := e.teamSheetService.GetEntryForUser(event.Id, userId)
+		if err != nil {
+			entry = &repository.TeamSheetEntry{EventId: event.Id, UserId: userId}
 		}
+		entry.CharacterName = update.CharacterName
+		entry.Role = update.Role
+		entry.SecondaryRole = update.SecondaryRole
+		entry.Ascendancy = update.Ascendancy
+		entry.MainSkill = update.MainSkill
+		entry.BuildNotes = update.BuildNotes
+		entry.PobUrl = update.PobUrl
+		entry.Realm = update.Realm
+		entry.UniquesNeeded = update.UniquesNeeded
+		entry.Altars = update.Altars
+		entry.LookingForGroup = update.LookingForGroup
+
 		saved, err := e.teamSheetService.SaveEntry(entry)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
@@ -116,52 +115,46 @@ func (e *TeamSheetController) saveMyTeamSheetEntryHandler() gin.HandlerFunc {
 
 func toTeamSheetEntryResponse(entry *repository.TeamSheetEntry) *TeamSheetEntry {
 	return &TeamSheetEntry{
-		User:                    toNonSensitiveUserResponse(entry.User),
-		CharacterName:           entry.CharacterName,
-		Role:                    entry.Role,
-		Specialization:          entry.Specialization,
-		SecondaryRole:           entry.SecondaryRole,
-		SecondarySpecialization: entry.SecondarySpecialization,
-		Ascendancy:              entry.Ascendancy,
-		MainSkill:               entry.MainSkill,
-		BuildNotes:              entry.BuildNotes,
-		PobUrl:                  entry.PobUrl,
-		Realm:                   entry.Realm,
-		UniquesNeeded:           entry.UniquesNeeded,
-		Altars:                  entry.Altars,
-		LookingForGroup:         entry.LookingForGroup,
+		User:            toNonSensitiveUserResponse(entry.User),
+		CharacterName:   entry.CharacterName,
+		Role:            entry.Role,
+		SecondaryRole:   entry.SecondaryRole,
+		Ascendancy:      entry.Ascendancy,
+		MainSkill:       entry.MainSkill,
+		BuildNotes:      entry.BuildNotes,
+		PobUrl:          entry.PobUrl,
+		Realm:           entry.Realm,
+		UniquesNeeded:   entry.UniquesNeeded,
+		Altars:          entry.Altars,
+		LookingForGroup: entry.LookingForGroup,
 	}
 }
 
 type TeamSheetEntry struct {
-	User                    *NonSensitiveUser `json:"user" binding:"required"`
-	CharacterName           *string           `json:"character_name"`
-	Role                    *string           `json:"role"`
-	Specialization          *string           `json:"specialization"`
-	SecondaryRole           *string           `json:"secondary_role"`
-	SecondarySpecialization *string           `json:"secondary_specialization"`
-	Ascendancy              *string           `json:"ascendancy"`
-	MainSkill               *string           `json:"main_skill"`
-	BuildNotes              *string           `json:"build_notes"`
-	PobUrl                  *string           `json:"pob_url"`
-	Realm                   *string           `json:"realm"`
-	UniquesNeeded           *string           `json:"uniques_needed"`
-	Altars                  *string           `json:"altars"`
-	LookingForGroup         bool              `json:"looking_for_group"`
+	User            *NonSensitiveUser `json:"user" binding:"required"`
+	CharacterName   *string           `json:"character_name"`
+	Role            *string           `json:"role"`
+	SecondaryRole   *string           `json:"secondary_role"`
+	Ascendancy      *string           `json:"ascendancy"`
+	MainSkill       *string           `json:"main_skill"`
+	BuildNotes      *string           `json:"build_notes"`
+	PobUrl          *string           `json:"pob_url"`
+	Realm           *string           `json:"realm"`
+	UniquesNeeded   *string           `json:"uniques_needed"`
+	Altars          *string           `json:"altars"`
+	LookingForGroup bool              `json:"looking_for_group"`
 }
 
 type TeamSheetEntryUpdate struct {
-	CharacterName           *string `json:"character_name"`
-	Role                    *string `json:"role"`
-	Specialization          *string `json:"specialization"`
-	SecondaryRole           *string `json:"secondary_role"`
-	SecondarySpecialization *string `json:"secondary_specialization"`
-	Ascendancy              *string `json:"ascendancy"`
-	MainSkill               *string `json:"main_skill"`
-	BuildNotes              *string `json:"build_notes"`
-	PobUrl                  *string `json:"pob_url"`
-	Realm                   *string `json:"realm"`
-	UniquesNeeded           *string `json:"uniques_needed"`
-	Altars                  *string `json:"altars"`
-	LookingForGroup         bool    `json:"looking_for_group"`
+	CharacterName   *string `json:"character_name"`
+	Role            *string `json:"role"`
+	SecondaryRole   *string `json:"secondary_role"`
+	Ascendancy      *string `json:"ascendancy"`
+	MainSkill       *string `json:"main_skill"`
+	BuildNotes      *string `json:"build_notes"`
+	PobUrl          *string `json:"pob_url"`
+	Realm           *string `json:"realm"`
+	UniquesNeeded   *string `json:"uniques_needed"`
+	Altars          *string `json:"altars"`
+	LookingForGroup bool    `json:"looking_for_group"`
 }

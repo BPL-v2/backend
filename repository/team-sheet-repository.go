@@ -8,28 +8,27 @@ import (
 )
 
 type TeamSheetEntry struct {
-	EventId                 int   `gorm:"not null;primaryKey"`
-	UserId                  int   `gorm:"not null;primaryKey"`
-	User                    *User `gorm:"foreignKey:UserId;references:Id;constraint:OnDelete:CASCADE"`
-	CharacterName           *string
-	Role                    *string
-	Specialization          *string
-	SecondaryRole           *string
-	SecondarySpecialization *string
-	Ascendancy              *string
-	MainSkill               *string
-	BuildNotes              *string
-	PobUrl                  *string
-	Realm                   *string
-	UniquesNeeded           *string
-	Altars                  *string
-	LookingForGroup         bool      `gorm:"not null;default:false"`
-	UpdatedAt               time.Time `gorm:"not null;autoUpdateTime"`
+	EventId         int   `gorm:"not null;primaryKey"`
+	UserId          int   `gorm:"not null;primaryKey"`
+	User            *User `gorm:"foreignKey:UserId;references:Id;constraint:OnDelete:CASCADE"`
+	CharacterName   *string
+	Role            *string
+	SecondaryRole   *string
+	Ascendancy      *string
+	MainSkill       *string
+	BuildNotes      *string
+	PobUrl          *string
+	Realm           *string
+	UniquesNeeded   *string
+	Altars          *string
+	LookingForGroup bool      `gorm:"not null;default:false"`
+	UpdatedAt       time.Time `gorm:"not null;autoUpdateTime"`
 }
 
 type TeamSheetRepository interface {
 	SaveEntry(entry *TeamSheetEntry) (*TeamSheetEntry, error)
-	GetEntriesForEvent(eventId int) ([]*TeamSheetEntry, error)
+	GetEntryForUser(eventId int, userId int) (*TeamSheetEntry, error)
+	GetEntriesForUsers(eventId int, userIds []int) ([]*TeamSheetEntry, error)
 }
 
 type TeamSheetRepositoryImpl struct {
@@ -47,9 +46,20 @@ func (r *TeamSheetRepositoryImpl) SaveEntry(entry *TeamSheetEntry) (*TeamSheetEn
 	return entry, nil
 }
 
-func (r *TeamSheetRepositoryImpl) GetEntriesForEvent(eventId int) ([]*TeamSheetEntry, error) {
+func (r *TeamSheetRepositoryImpl) GetEntryForUser(eventId int, userId int) (*TeamSheetEntry, error) {
+	entry := &TeamSheetEntry{}
+	result := r.DB.First(entry, TeamSheetEntry{EventId: eventId, UserId: userId})
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return entry, nil
+}
+
+func (r *TeamSheetRepositoryImpl) GetEntriesForUsers(eventId int, userIds []int) ([]*TeamSheetEntry, error) {
 	entries := make([]*TeamSheetEntry, 0)
-	result := r.DB.Preload("User.OauthAccounts").Find(&entries, TeamSheetEntry{EventId: eventId})
+	result := r.DB.Preload("User.OauthAccounts").
+		Where("event_id = ? AND user_id IN ?", eventId, userIds).
+		Find(&entries)
 	if result.Error != nil {
 		return nil, result.Error
 	}
