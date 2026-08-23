@@ -26,7 +26,7 @@ type TeamUser struct {
 	TeamId     int       `gorm:"index;primaryKey"`
 	UserId     int       `gorm:"index;primaryKey"`
 	IsTeamLead bool      `gorm:"not null;default:false"`
-	SortedAt   time.Time `gorm:"not null;autoCreateTime"`
+	SortedAt   time.Time `gorm:"not null;autoCreateTime;default:CURRENT_TIMESTAMP"`
 }
 
 type TeamRepository interface {
