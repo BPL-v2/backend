@@ -12,6 +12,7 @@ var staticApprovedOrigins = []string{
 	"https://bpl-poe.com",
 	"https://bpl-2.netlify.app",
 	"https://v2202503259898322516.goodsrv.de",
+	"https://bpl-v2.github.io/",
 }
 
 // approvedTestHostnames returns the extra hostnames (no scheme/port) that
