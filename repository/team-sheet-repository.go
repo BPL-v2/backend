@@ -43,6 +43,9 @@ func (r *TeamSheetRepositoryImpl) SaveEntry(entry *TeamSheetEntry) (*TeamSheetEn
 	if err := r.DB.Save(entry).Error; err != nil {
 		return nil, err
 	}
+	if err := r.DB.Preload("User.OauthAccounts").First(entry, TeamSheetEntry{EventId: entry.EventId, UserId: entry.UserId}).Error; err != nil {
+		return nil, err
+	}
 	return entry, nil
 }
 
