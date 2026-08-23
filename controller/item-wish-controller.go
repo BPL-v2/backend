@@ -92,11 +92,12 @@ func (e *ItemWishController) creatItemWishHandler() gin.HandlerFunc {
 		}
 
 		itemWish := &repository.ItemWish{
-			UserID:    userId,
-			TeamID:    teamId,
-			ItemField: itemWishReq.ItemField,
-			Value:     itemWishReq.Value,
-			Fulfilled: false,
+			UserID:        userId,
+			TeamID:        teamId,
+			ItemField:     itemWishReq.ItemField,
+			Value:         itemWishReq.Value,
+			Fulfilled:     false,
+			BuildEnabling: itemWishReq.BuildEnabling,
 		}
 
 		savedItemWish, err := e.itemWishService.CreateItemWish(itemWish, teamId)
