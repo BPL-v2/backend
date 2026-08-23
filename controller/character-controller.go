@@ -42,6 +42,7 @@ func setupCharacterController(poeClient *client.PoEClient) []RouteInfo {
 		{Method: "GET", Path: "/:character_id", HandlerFunc: e.getCharacterHistoryHandler()},
 		{Method: "PATCH", Path: "/:character_id", HandlerFunc: e.updateCharacterHandler(), Authenticated: true, RequiresUserSelf: true},
 		{Method: "GET", Path: "/:character_id/pobs", HandlerFunc: e.getPoBExportHandler()},
+		{Method: "GET", Path: "/:character_id/delve", HandlerFunc: e.getDelveHistoryHandler()},
 		{Method: "DELETE", Path: "/:character_id/pobs/:pob_id", HandlerFunc: e.deletePoBExportHandler(), Authenticated: true, RequiresUserSelf: true},
 		// {Method: "GET", Path: "/:user_id/:event_id/:character_name", HandlerFunc: e.getTimeSeries()},
 	}
@@ -167,6 +168,25 @@ func (c *CharacterController) getCharacterHistoryHandler() gin.HandlerFunc {
 	}
 }
 
+// @id GetDelveHistory
+// @Description Get the delve depth progression over time for a character
+// @Tags characters
+// @Produce json
+// @Param user_id path int true "User ID"
+// @Param character_id path string true "Character ID"
+// @Success 200 {array} DelveHistoryEntry
+// @Router /users/{user_id}/characters/{character_id}/delve [get]
+func (e *CharacterController) getDelveHistoryHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		history, err := e.characterService.GetDelveHistory(c.Param("character_id"))
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, utils.Map(history, toDelveHistoryResponse))
+	}
+}
+
 // @id DeletePoBExport
 // @Description Delete a PoB export for a character
 // @Tags characters
@@ -262,6 +282,21 @@ func toPoBResponse(pob *repository.CharacterPob) *PoB {
 		Evasion:       pob.Evasion,
 		XP:            pob.XP,
 		MovementSpeed: pob.MovementSpeed,
+	}
+}
+
+type DelveHistoryEntry struct {
+	Delve      int       `json:"delve" binding:"required"`
+	RecordedAt time.Time `json:"recorded_at" binding:"required" format:"date-time"`
+}
+
+func toDelveHistoryResponse(entry *repository.CharacterDelveHistory) *DelveHistoryEntry {
+	if entry == nil {
+		return nil
+	}
+	return &DelveHistoryEntry{
+		Delve:      entry.Delve,
+		RecordedAt: entry.RecordedAt,
 	}
 }
 

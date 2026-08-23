@@ -31,6 +31,10 @@ type CharacterService interface {
 	GetPoBById(pobId int) (*repository.CharacterPob, error)
 	DeletePoB(pobId int) error
 	DeleteInvalidPoBs() error
+	SaveDelveHistoryEntries(entries []*repository.CharacterDelveHistory) error
+	GetLatestDelveDepthsForEvent(eventId int) (map[string]int, error)
+	GetDelveHistory(characterId string) ([]*repository.CharacterDelveHistory, error)
+	GetDelveDepthProgressionForEvent(eventId int, fromDepth int, toDepth int) ([]*repository.DelveDepthProgression, error)
 }
 
 type CharacterServiceImpl struct {
@@ -362,6 +366,22 @@ func (c *CharacterServiceImpl) UpdatePoBStats() error {
 		fmt.Printf("Updated PoBs up to ID %d\n", startId)
 	}
 	return nil
+}
+
+func (c *CharacterServiceImpl) SaveDelveHistoryEntries(entries []*repository.CharacterDelveHistory) error {
+	return c.characterRepository.SaveDelveHistoryEntries(entries)
+}
+
+func (c *CharacterServiceImpl) GetLatestDelveDepthsForEvent(eventId int) (map[string]int, error) {
+	return c.characterRepository.GetLatestDelveDepthsForEvent(eventId)
+}
+
+func (c *CharacterServiceImpl) GetDelveHistory(characterId string) ([]*repository.CharacterDelveHistory, error) {
+	return c.characterRepository.GetDelveHistory(characterId)
+}
+
+func (c *CharacterServiceImpl) GetDelveDepthProgressionForEvent(eventId int, fromDepth int, toDepth int) ([]*repository.DelveDepthProgression, error) {
+	return c.characterRepository.GetDelveDepthProgressionForEvent(eventId, fromDepth, toDepth)
 }
 
 func (c *CharacterServiceImpl) GetPoBById(pobId int) (*repository.CharacterPob, error) {

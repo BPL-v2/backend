@@ -37,6 +37,7 @@ func setupLadderController(poeClient *client.PoEClient) []RouteInfo {
 	routes := []RouteInfo{
 		{Method: "GET", Path: "/ladder", HandlerFunc: c.getLadderHandler()},
 		{Method: "GET", Path: "/characters", HandlerFunc: c.GetCharactersForEvent()},
+		{Method: "GET", Path: "/delve-progression", HandlerFunc: c.getDelveProgressionHandler()},
 		{Method: "GET", Path: "/team/:team_id/atlas", HandlerFunc: c.getAtlasesForEvent(), Authenticated: true, RequiresTeamSelf: true},
 	}
 	for i, route := range routes {
@@ -190,6 +191,81 @@ type LadderEntry struct {
 
 	DelveDepth int `json:"delve_depth" binding:"required"`
 	Rank       int `json:"rank" binding:"required"`
+}
+
+// @id GetDelveProgression
+// @Description Get how long each character took to progress between two delve depths for an event
+// @Tags characters
+// @Produce json
+// @Param event_id path int true "Event ID"
+// @Param from_depth query int false "Starting delve depth" default(300)
+// @Param to_depth query int false "Target delve depth" default(350)
+// @Success 200 {array} DelveProgressionEntry
+// @Router /events/{event_id}/delve-progression [get]
+func (c *LadderController) getDelveProgressionHandler() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		event := getEvent(ctx)
+		if event == nil {
+			return
+		}
+		fromDepth, err := strconv.Atoi(ctx.DefaultQuery("from_depth", "300"))
+		if err != nil {
+			ctx.JSON(400, gin.H{"error": "Invalid from_depth"})
+			return
+		}
+		toDepth, err := strconv.Atoi(ctx.DefaultQuery("to_depth", "350"))
+		if err != nil {
+			ctx.JSON(400, gin.H{"error": "Invalid to_depth"})
+			return
+		}
+		if toDepth <= fromDepth {
+			ctx.JSON(400, gin.H{"error": "to_depth must be greater than from_depth"})
+			return
+		}
+		progressions, err := c.characterService.GetDelveDepthProgressionForEvent(event.Id, fromDepth, toDepth)
+		if err != nil {
+			ctx.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		characters, err := c.characterService.GetCharactersForEvent(event.Id)
+		if err != nil {
+			ctx.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		characterMap := make(map[string]*repository.Character, len(characters))
+		for _, character := range characters {
+			characterMap[character.Id] = character
+		}
+		ctx.JSON(200, toDelveProgressionResponse(progressions, characterMap))
+	}
+}
+
+type DelveProgressionEntry struct {
+	CharacterId     string    `json:"character_id" binding:"required"`
+	CharacterName   string    `json:"character_name" binding:"required"`
+	UserId          *int      `json:"user_id"`
+	FromTime        time.Time `json:"from_time" binding:"required" format:"date-time"`
+	ToTime          time.Time `json:"to_time" binding:"required" format:"date-time"`
+	DurationSeconds int64     `json:"duration_seconds" binding:"required"`
+}
+
+func toDelveProgressionResponse(progressions []*repository.DelveDepthProgression, characterMap map[string]*repository.Character) []*DelveProgressionEntry {
+	response := make([]*DelveProgressionEntry, 0, len(progressions))
+	for _, progression := range progressions {
+		character := characterMap[progression.CharacterId]
+		if character == nil {
+			continue
+		}
+		response = append(response, &DelveProgressionEntry{
+			CharacterId:     character.Id,
+			CharacterName:   character.Name,
+			UserId:          character.UserId,
+			FromTime:        progression.FromTime,
+			ToTime:          progression.ToTime,
+			DurationSeconds: int64(progression.ToTime.Sub(progression.FromTime).Seconds()),
+		})
+	}
+	return response
 }
 
 type Atlas struct {

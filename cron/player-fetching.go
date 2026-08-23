@@ -279,6 +279,7 @@ func (s *PlayerFetchingService) UpdateLadder(players []*parser.PlayerUpdate, eve
 		charToUserId[player.New.Character.Name] = player.UserId
 	}
 
+	delveHistoryEntries := make([]*repository.CharacterDelveHistory, 0)
 	entriesToPersist := make([]*client.LadderEntry, 0, len(resp.Ladder.Entries))
 	for _, entry := range resp.Ladder.Entries {
 		entriesToPersist = append(entriesToPersist, &entry)
@@ -288,6 +289,13 @@ func (s *PlayerFetchingService) UpdateLadder(players []*parser.PlayerUpdate, eve
 			player.New.Character.Level = entry.Character.Level
 			if entry.Character.Depth != nil && entry.Character.Depth.Default != nil {
 				player.New.DelveDepth = *entry.Character.Depth.Default
+				if player.New.Character.Id != "" && player.New.DelveDepth != player.Old.DelveDepth {
+					delveHistoryEntries = append(delveHistoryEntries, &repository.CharacterDelveHistory{
+						CharacterId: player.New.Character.Id,
+						Delve:       player.New.DelveDepth,
+						RecordedAt:  time.Now(),
+					})
+				}
 			}
 			if entry.Character.Experience != nil {
 				player.New.Character.Experience = *entry.Character.Experience
@@ -298,6 +306,10 @@ func (s *PlayerFetchingService) UpdateLadder(players []*parser.PlayerUpdate, eve
 	err = s.ladderService.UpsertLadder(entriesToPersist, event.Id, charToUserId)
 	if err != nil {
 		log.Print(clientError)
+	}
+	err = s.characterService.SaveDelveHistoryEntries(delveHistoryEntries)
+	if err != nil {
+		log.Printf("Error saving delve history entries: %v", err)
 	}
 }
 
@@ -352,6 +364,10 @@ func (service *PlayerFetchingService) initPlayerUpdates(event *repository.Event)
 		}
 		voidStonesMap[*character.UserId] = voidStonesMap[*character.UserId].Union(utils.ToSet([]string(character.VoidStones)))
 	}
+	latestDelveDepths, err := service.characterService.GetLatestDelveDepthsForEvent(event.Id)
+	if err != nil {
+		return nil, err
+	}
 
 	for _, player := range players {
 		if character, ok := characterMap[player.UserId]; ok {
@@ -370,6 +386,10 @@ func (service *PlayerFetchingService) initPlayerUpdates(event *repository.Event)
 			if pob, ok := pobMap[character.Id]; ok {
 				player.New.PoB = pob
 				player.Old.PoB = pob
+			}
+			if depth, ok := latestDelveDepths[character.Id]; ok {
+				player.New.DelveDepth = depth
+				player.Old.DelveDepth = depth
 			}
 		}
 	}

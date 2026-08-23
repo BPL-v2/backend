@@ -190,6 +190,23 @@ func (p *CharacterPob) UpdateStats(pob *client.PathOfBuilding) {
 	p.LowestEleRes = float2Int8(min(pob.Build.PlayerStats.FireResist, pob.Build.PlayerStats.ColdResist, pob.Build.PlayerStats.LightningResist))
 }
 
+type CharacterDelveHistory struct {
+	Id          int       `gorm:"not null;primaryKey"`
+	CharacterId string    `gorm:"not null;index"`
+	Delve       int       `gorm:"not null"`
+	RecordedAt  time.Time `gorm:"not null"`
+}
+
+func (CharacterDelveHistory) TableName() string {
+	return "character_delve_history"
+}
+
+type DelveDepthProgression struct {
+	CharacterId string
+	FromTime    time.Time
+	ToTime      time.Time
+}
+
 type CharacterRepository interface {
 	GetPobByCharacterIdBeforeTimestamp(characterId string, timestamp time.Time) (*CharacterPob, error)
 	GetPobs(characterId string) ([]*CharacterPob, error)
@@ -211,6 +228,10 @@ type CharacterRepository interface {
 	GetPoBById(pobId int) (*CharacterPob, error)
 	GetPobsOrderedByCharacterAndTime(offset int, limit int) ([]*CharacterPob, error)
 	DeletePoBs(ids []int) error
+	SaveDelveHistoryEntries(entries []*CharacterDelveHistory) error
+	GetLatestDelveDepthsForEvent(eventId int) (map[string]int, error)
+	GetDelveHistory(characterId string) ([]*CharacterDelveHistory, error)
+	GetDelveDepthProgressionForEvent(eventId int, fromDepth int, toDepth int) ([]*DelveDepthProgression, error)
 }
 
 type CharacterRepositoryImpl struct {
@@ -455,6 +476,62 @@ func (r *CharacterRepositoryImpl) DeletePoBs(ids []int) error {
 		return nil
 	}
 	return r.DB.Delete(&CharacterPob{}, ids).Error
+}
+
+func (r *CharacterRepositoryImpl) SaveDelveHistoryEntries(entries []*CharacterDelveHistory) error {
+	if len(entries) == 0 {
+		return nil
+	}
+	return r.DB.CreateInBatches(entries, 500).Error
+}
+
+func (r *CharacterRepositoryImpl) GetLatestDelveDepthsForEvent(eventId int) (map[string]int, error) {
+	type Result struct {
+		CharacterId string
+		Delve       int
+	}
+	results := []Result{}
+	query := `SELECT DISTINCT ON (h.character_id) h.character_id, h.delve
+		FROM character_delve_history h
+		JOIN characters ON h.character_id = characters.id
+		WHERE characters.event_id = ?
+		ORDER BY h.character_id, h.recorded_at DESC`
+	err := r.DB.Raw(query, eventId).Scan(&results).Error
+	if err != nil {
+		return nil, fmt.Errorf("error getting latest delve depths for event %d: %w", eventId, err)
+	}
+	depths := make(map[string]int, len(results))
+	for _, res := range results {
+		depths[res.CharacterId] = res.Delve
+	}
+	return depths, nil
+}
+
+func (r *CharacterRepositoryImpl) GetDelveHistory(characterId string) ([]*CharacterDelveHistory, error) {
+	history := []*CharacterDelveHistory{}
+	err := r.DB.Where("character_id = ?", characterId).Order("recorded_at ASC").Find(&history).Error
+	if err != nil {
+		return nil, fmt.Errorf("error getting delve history for character %s: %w", characterId, err)
+	}
+	return history, nil
+}
+
+func (r *CharacterRepositoryImpl) GetDelveDepthProgressionForEvent(eventId int, fromDepth int, toDepth int) ([]*DelveDepthProgression, error) {
+	results := []*DelveDepthProgression{}
+	query := `SELECT h.character_id,
+			MIN(h.recorded_at) FILTER (WHERE h.delve >= ?) as from_time,
+			MIN(h.recorded_at) FILTER (WHERE h.delve >= ?) as to_time
+		FROM character_delve_history h
+		JOIN characters c ON h.character_id = c.id
+		WHERE c.event_id = ?
+		GROUP BY h.character_id
+		HAVING MIN(h.recorded_at) FILTER (WHERE h.delve >= ?) IS NOT NULL
+			AND MIN(h.recorded_at) FILTER (WHERE h.delve >= ?) IS NOT NULL`
+	err := r.DB.Raw(query, fromDepth, toDepth, eventId, fromDepth, toDepth).Scan(&results).Error
+	if err != nil {
+		return nil, fmt.Errorf("error getting delve depth progression for event %d: %w", eventId, err)
+	}
+	return results, nil
 }
 
 func (r *CharacterRepositoryImpl) GetPoBById(pobId int) (*CharacterPob, error) {

@@ -2181,6 +2181,54 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
+            "DelveHistoryEntry": {
+                "properties": {
+                    "delve": {
+                        "type": "integer"
+                    },
+                    "recorded_at": {
+                        "format": "date-time",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "delve",
+                    "recorded_at"
+                ],
+                "type": "object"
+            },
+            "DelveProgressionEntry": {
+                "properties": {
+                    "character_id": {
+                        "type": "string"
+                    },
+                    "character_name": {
+                        "type": "string"
+                    },
+                    "duration_seconds": {
+                        "type": "integer"
+                    },
+                    "from_time": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "to_time": {
+                        "format": "date-time",
+                        "type": "string"
+                    },
+                    "user_id": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "character_id",
+                    "character_name",
+                    "duration_seconds",
+                    "from_time",
+                    "to_time"
+                ],
+                "type": "object"
+            },
             "EngagementAdd": {
                 "properties": {
                     "name": {
@@ -5404,6 +5452,59 @@ const docTemplate = `{
                 ]
             }
         },
+        "/events/{event_id}/delve-progression": {
+            "get": {
+                "description": "Get how long each character took to progress between two delve depths for an event",
+                "operationId": "GetDelveProgression",
+                "parameters": [
+                    {
+                        "description": "Event ID",
+                        "in": "path",
+                        "name": "event_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Starting delve depth",
+                        "in": "query",
+                        "name": "from_depth",
+                        "schema": {
+                            "default": 300,
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Target delve depth",
+                        "in": "query",
+                        "name": "to_depth",
+                        "schema": {
+                            "default": 350,
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/DelveProgressionEntry"
+                                    },
+                                    "type": "array"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    }
+                },
+                "tags": [
+                    "characters"
+                ]
+            }
+        },
         "/events/{event_id}/duplicate": {
             "post": {
                 "description": "Duplicates an event's configuration",
@@ -8231,6 +8332,50 @@ const docTemplate = `{
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Character"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    }
+                },
+                "tags": [
+                    "characters"
+                ]
+            }
+        },
+        "/users/{user_id}/characters/{character_id}/delve": {
+            "get": {
+                "description": "Get the delve depth progression over time for a character",
+                "operationId": "GetDelveHistory",
+                "parameters": [
+                    {
+                        "description": "User ID",
+                        "in": "path",
+                        "name": "user_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Character ID",
+                        "in": "path",
+                        "name": "character_id",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "items": {
+                                        "$ref": "#/components/schemas/DelveHistoryEntry"
+                                    },
+                                    "type": "array"
                                 }
                             }
                         },
