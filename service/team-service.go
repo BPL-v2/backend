@@ -3,6 +3,7 @@ package service
 import (
 	"bpl/repository"
 	"bpl/utils"
+	"time"
 )
 
 type TeamService interface {
@@ -94,13 +95,14 @@ func (e *TeamServiceImpl) GetTeamLeadsForEvent(eventId int) (map[int][]*reposito
 }
 
 type SortedUser struct {
-	UserId      int    `json:"user_id" binding:"required"`
-	DisplayName string `json:"display_name" binding:"required"`
-	PoEName     string `json:"poe_name" binding:"required"`
-	DiscordName string `json:"discord_name" binding:"required"`
-	DiscordId   string `json:"discord_id" binding:"required"`
-	TeamId      int    `json:"team_id" binding:"required"`
-	IsTeamLead  bool   `json:"is_team_lead" binding:"required"`
+	UserId      int       `json:"user_id" binding:"required"`
+	DisplayName string    `json:"display_name" binding:"required"`
+	PoEName     string    `json:"poe_name" binding:"required"`
+	DiscordName string    `json:"discord_name" binding:"required"`
+	DiscordId   string    `json:"discord_id" binding:"required"`
+	TeamId      int       `json:"team_id" binding:"required"`
+	IsTeamLead  bool      `json:"is_team_lead" binding:"required"`
+	SortedAt    time.Time `json:"sorted_at" binding:"required"`
 }
 
 func (e *TeamServiceImpl) GetSortedUsersForEvent(eventId int) ([]*SortedUser, error) {
@@ -127,6 +129,7 @@ func (e *TeamServiceImpl) GetSortedUsersForEvent(eventId int) ([]*SortedUser, er
 				DisplayName: user.DisplayName,
 				TeamId:      teamUser.TeamId,
 				IsTeamLead:  teamUser.IsTeamLead,
+				SortedAt:    teamUser.SortedAt,
 			}
 			for _, account := range user.OauthAccounts {
 				if account.Provider == repository.ProviderPoE {

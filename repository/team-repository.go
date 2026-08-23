@@ -4,6 +4,7 @@ import (
 	"bpl/config"
 	"bpl/metrics"
 	"bpl/utils"
+	"time"
 
 	"github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
@@ -22,9 +23,10 @@ type Team struct {
 }
 
 type TeamUser struct {
-	TeamId     int  `gorm:"index;primaryKey"`
-	UserId     int  `gorm:"index;primaryKey"`
-	IsTeamLead bool `gorm:"not null;default:false"`
+	TeamId     int       `gorm:"index;primaryKey"`
+	UserId     int       `gorm:"index;primaryKey"`
+	IsTeamLead bool      `gorm:"not null;default:false"`
+	SortedAt   time.Time `gorm:"not null;autoCreateTime"`
 }
 
 type TeamRepository interface {

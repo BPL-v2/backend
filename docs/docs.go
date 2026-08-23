@@ -4796,6 +4796,9 @@ const docTemplate = `{
                     "poe_name": {
                         "type": "string"
                     },
+                    "sorted_at": {
+                        "type": "string"
+                    },
                     "team_id": {
                         "type": "integer"
                     },
@@ -4809,6 +4812,7 @@ const docTemplate = `{
                     "display_name",
                     "is_team_lead",
                     "poe_name",
+                    "sorted_at",
                     "team_id",
                     "user_id"
                 ],
