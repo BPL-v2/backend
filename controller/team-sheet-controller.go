@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type TeamSheetController struct {
@@ -89,7 +90,11 @@ func (e *TeamSheetController) saveMyTeamSheetEntryHandler() gin.HandlerFunc {
 			return
 		}
 		entry, err := e.teamSheetService.GetEntryForUser(event.Id, userId)
-		if err != nil {
+		if err != nil && err != gorm.ErrRecordNotFound {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		if err == gorm.ErrRecordNotFound {
 			entry = &repository.TeamSheetEntry{EventId: event.Id, UserId: userId}
 		}
 		entry.CharacterName = update.CharacterName
