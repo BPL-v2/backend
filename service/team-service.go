@@ -52,7 +52,21 @@ func (e *TeamServiceImpl) DeleteTeam(teamId int) error {
 }
 
 func (e *TeamServiceImpl) AddUsersToTeams(teamUsers []*repository.TeamUser, event *repository.Event) error {
-	err := e.teamRepository.RemoveTeamUsersForEvent(teamUsers, event)
+	existingTeamUsers, err := e.teamRepository.GetTeamUsersForEvent(event.Id)
+	if err != nil {
+		return err
+	}
+	existingTeamUserByUserId := make(map[int]*repository.TeamUser, len(existingTeamUsers))
+	for _, existingTeamUser := range existingTeamUsers {
+		existingTeamUserByUserId[existingTeamUser.UserId] = existingTeamUser
+	}
+	for _, teamUser := range teamUsers {
+		if existing, ok := existingTeamUserByUserId[teamUser.UserId]; ok && existing.TeamId == teamUser.TeamId {
+			teamUser.SortedAt = existing.SortedAt
+		}
+	}
+
+	err = e.teamRepository.RemoveTeamUsersForEvent(teamUsers, event)
 	if err != nil {
 		return err
 	}
