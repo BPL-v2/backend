@@ -10,6 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const maxItemWishQuantity = 5
+
 type ItemWishController struct {
 	itemWishService service.ItemWishService
 	userService     service.UserService
@@ -91,13 +93,22 @@ func (e *ItemWishController) creatItemWishHandler() gin.HandlerFunc {
 			return
 		}
 
+		quantity := itemWishReq.Quantity
+		if quantity < 1 {
+			quantity = 1
+		}
+		if quantity > maxItemWishQuantity {
+			quantity = maxItemWishQuantity
+		}
 		itemWish := &repository.ItemWish{
 			UserID:        userId,
 			TeamID:        teamId,
 			ItemField:     itemWishReq.ItemField,
 			Value:         itemWishReq.Value,
+			Extra:         itemWishReq.Extra,
 			Fulfilled:     false,
 			BuildEnabling: itemWishReq.BuildEnabling,
+			Quantity:      quantity,
 		}
 
 		savedItemWish, err := e.itemWishService.CreateItemWish(itemWish, teamId)
@@ -142,8 +153,8 @@ func (e *ItemWishController) changeItemWishHandler() gin.HandlerFunc {
 			c.JSON(403, gin.H{"error": "You are not part of a team"})
 			return
 		}
-		if (itemWishReq.BuildEnabling != nil || itemWishReq.Fulfilled != nil) && itemWish.UserID != teamUser.UserId {
-			c.JSON(403, gin.H{"error": "Only the user who created the wish can change its fulfilled or build enabling status"})
+		if (itemWishReq.BuildEnabling != nil || itemWishReq.Fulfilled != nil || itemWishReq.Quantity != nil) && itemWish.UserID != teamUser.UserId {
+			c.JSON(403, gin.H{"error": "Only the user who created the wish can change its fulfilled, build enabling or quantity status"})
 			return
 		}
 		if (itemWishReq.Priority != nil) && !teamUser.IsTeamLead {
@@ -151,7 +162,7 @@ func (e *ItemWishController) changeItemWishHandler() gin.HandlerFunc {
 			return
 		}
 
-		updatedItemWish, err := e.itemWishService.UpdateItemWish(itemWish, teamUser.TeamId, itemWishReq.Fulfilled, itemWishReq.BuildEnabling, itemWishReq.Priority)
+		updatedItemWish, err := e.itemWishService.UpdateItemWish(itemWish, teamUser.TeamId, itemWishReq.Fulfilled, itemWishReq.BuildEnabling, itemWishReq.Priority, itemWishReq.Quantity)
 		if err != nil {
 			c.JSON(500, gin.H{"error": fmt.Sprintf("Failed to update item wish %v", err)})
 			return
@@ -203,23 +214,28 @@ type ItemWish struct {
 	UserId    int                  `json:"user_id" binding:"required"`
 	ItemField repository.ItemField `json:"item_field" binding:"required"`
 	Value     string               `json:"value" binding:"required"`
+	Extra         string               `json:"extra"`
 	Fulfilled bool                 `json:"fulfilled" binding:"required"`
 	// BuildEnabling is a 1-5 importance scale (1 = nice to have, 5 = absolutely essential).
 	BuildEnabling int `json:"build_enabling" binding:"required"`
 	Priority      int `json:"priority" binding:"required"`
+	Quantity      int                  `json:"quantity" binding:"required"`
 }
 
 type CreateItemWish struct {
 	ItemField repository.ItemField `json:"item_field" binding:"required"`
 	Value     string               `json:"value" binding:"required"`
+	Extra         string               `json:"extra"`
 	// BuildEnabling is a mandatory 1-5 importance scale (1 = nice to have, 5 = absolutely essential).
 	BuildEnabling int `json:"build_enabling" binding:"required,min=1,max=5"`
+	Quantity      int                  `json:"quantity"`
 }
 
 type UpdateItemWish struct {
 	Fulfilled     *bool `json:"fulfilled"`
 	BuildEnabling *int  `json:"build_enabling" binding:"omitempty,min=1,max=5"`
 	Priority      *int  `json:"priority"`
+	Quantity      *int  `json:"quantity"`
 }
 
 func toItemWishModel(iw *repository.ItemWish) *ItemWish {
@@ -228,8 +244,10 @@ func toItemWishModel(iw *repository.ItemWish) *ItemWish {
 		UserId:        iw.UserID,
 		ItemField:     iw.ItemField,
 		Value:         iw.Value,
+		Extra:         iw.Extra,
 		Fulfilled:     iw.Fulfilled,
 		Priority:      iw.Priority,
 		BuildEnabling: iw.BuildEnabling,
+		Quantity:      iw.Quantity,
 	}
 }

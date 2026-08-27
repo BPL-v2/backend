@@ -8,21 +8,24 @@ import (
 )
 
 type TeamSheetEntry struct {
-	EventId         int   `gorm:"not null;primaryKey"`
-	UserId          int   `gorm:"not null;primaryKey"`
-	User            *User `gorm:"foreignKey:UserId;references:Id;constraint:OnDelete:CASCADE"`
-	CharacterName   *string
-	Role            *string
-	SecondaryRole   *string
-	Ascendancy      *string
-	MainSkill       *string
-	BuildNotes      *string
-	PobUrl          *string
-	Realm           *string
-	UniquesNeeded   *string
-	Altars          *string
-	LookingForGroup bool      `gorm:"not null;default:false"`
-	UpdatedAt       time.Time `gorm:"not null;autoUpdateTime"`
+	EventId                 int   `gorm:"not null;primaryKey"`
+	UserId                  int   `gorm:"not null;primaryKey"`
+	User                    *User `gorm:"foreignKey:UserId;references:Id;constraint:OnDelete:CASCADE"`
+	CharacterName           *string
+	Role                    *string
+	Specialization          *string
+	SecondaryRole           *string
+	SecondarySpecialization *string
+	Ascendancy              *string
+	MainSkill               *string
+	BuildNotes              *string
+	PobUrl                  *string
+	GuideUrl                *string
+	Realm                   *string
+	UniquesNeeded           *string
+	Altars                  *string
+	LookingForGroup         bool      `gorm:"not null;default:false"`
+	UpdatedAt               time.Time `gorm:"not null;autoUpdateTime"`
 }
 
 type TeamSheetRepository interface {

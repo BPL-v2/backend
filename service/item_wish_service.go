@@ -7,9 +7,11 @@ import (
 	"math"
 )
 
+const maxItemWishQuantity = 5
+
 type ItemWishService interface {
 	CreateItemWish(itemWish *repository.ItemWish, teamId int) (*repository.ItemWish, error)
-	UpdateItemWish(itemWish *repository.ItemWish, teamId int, Fulfilled *bool, BuildEnabling *int, Priority *int) (*repository.ItemWish, error)
+	UpdateItemWish(itemWish *repository.ItemWish, teamId int, Fulfilled *bool, BuildEnabling *int, Priority *int, Quantity *int) (*repository.ItemWish, error)
 	GetItemWishById(id int) (*repository.ItemWish, error)
 	DeleteItemWish(id int) error
 	GetItemWishesForTeam(teamId int) ([]*repository.ItemWish, error)
@@ -31,16 +33,27 @@ func (s *ItemWishServiceImpl) CreateItemWish(itemWish *repository.ItemWish, team
 	if err != nil {
 		return nil, err
 	}
+	// Idempotent: a client can end up asking to create the same wish twice
+	// (e.g. a stale-cache race from clicking Save repeatedly) - rather than
+	// duplicating the row, just hand back the one that's already there.
+	for _, existing := range itemWishes {
+		if existing.UserID == itemWish.UserID && existing.Extra == itemWish.Extra {
+			return existing, nil
+		}
+	}
 	itemWish.Priority = len(itemWishes)
 	return s.itemWishRepository.SaveItemWish(itemWish)
 }
 
-func (s *ItemWishServiceImpl) UpdateItemWish(itemWish *repository.ItemWish, teamId int, Fulfilled *bool, BuildEnabling *int, Priority *int) (*repository.ItemWish, error) {
+func (s *ItemWishServiceImpl) UpdateItemWish(itemWish *repository.ItemWish, teamId int, Fulfilled *bool, BuildEnabling *int, Priority *int, Quantity *int) (*repository.ItemWish, error) {
 	if Fulfilled != nil {
 		itemWish.Fulfilled = *Fulfilled
 	}
 	if BuildEnabling != nil {
 		itemWish.BuildEnabling = *BuildEnabling
+	}
+	if Quantity != nil {
+		itemWish.Quantity = int(math.Min(math.Max(float64(*Quantity), 1), maxItemWishQuantity))
 	}
 	if Priority != nil {
 		itemWishes, err := s.itemWishRepository.GetSimilarItemWishesInTeam(teamId, itemWish.ItemField, itemWish.Value)

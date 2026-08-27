@@ -2165,8 +2165,14 @@
                         "minimum": 1,
                         "type": "integer"
                     },
+                    "extra": {
+                        "type": "string"
+                    },
                     "item_field": {
                         "$ref": "#/components/schemas/ItemField"
+                    },
+                    "quantity": {
+                        "type": "integer"
                     },
                     "value": {
                         "type": "string"
@@ -2630,6 +2636,9 @@
                         "description": "BuildEnabling is a 1-5 importance scale (1 = nice to have, 5 = absolutely essential).",
                         "type": "integer"
                     },
+                    "extra": {
+                        "type": "string"
+                    },
                     "fulfilled": {
                         "type": "boolean"
                     },
@@ -2640,6 +2649,9 @@
                         "$ref": "#/components/schemas/ItemField"
                     },
                     "priority": {
+                        "type": "integer"
+                    },
+                    "quantity": {
                         "type": "integer"
                     },
                     "user_id": {
@@ -2655,6 +2667,7 @@
                     "id",
                     "item_field",
                     "priority",
+                    "quantity",
                     "user_id",
                     "value"
                 ],
@@ -4081,6 +4094,9 @@
                     "character_name": {
                         "type": "string"
                     },
+                    "guide_url": {
+                        "type": "string"
+                    },
                     "looking_for_group": {
                         "type": "boolean"
                     },
@@ -4097,6 +4113,12 @@
                         "type": "string"
                     },
                     "secondary_role": {
+                        "type": "string"
+                    },
+                    "secondary_specialization": {
+                        "type": "string"
+                    },
+                    "specialization": {
                         "type": "string"
                     },
                     "uniques_needed": {
@@ -4125,6 +4147,9 @@
                     "character_name": {
                         "type": "string"
                     },
+                    "guide_url": {
+                        "type": "string"
+                    },
                     "looking_for_group": {
                         "type": "boolean"
                     },
@@ -4141,6 +4166,12 @@
                         "type": "string"
                     },
                     "secondary_role": {
+                        "type": "string"
+                    },
+                    "secondary_specialization": {
+                        "type": "string"
+                    },
+                    "specialization": {
                         "type": "string"
                     },
                     "uniques_needed": {
@@ -4241,6 +4272,9 @@
                         "type": "boolean"
                     },
                     "priority": {
+                        "type": "integer"
+                    },
+                    "quantity": {
                         "type": "integer"
                     }
                 },

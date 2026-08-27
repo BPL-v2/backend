@@ -1577,8 +1577,12 @@ components:
           maximum: 5
           minimum: 1
           type: integer
+        extra:
+          type: string
         item_field:
           $ref: '#/components/schemas/ItemField'
+        quantity:
+          type: integer
         value:
           type: string
       required:
@@ -1905,6 +1909,9 @@ components:
           description: BuildEnabling is a 1-5 importance scale (1 = nice to have,
             5 = absolutely essential).
           type: integer
+          type: boolean
+        extra:
+          type: string
         fulfilled:
           type: boolean
         id:
@@ -1912,6 +1919,8 @@ components:
         item_field:
           $ref: '#/components/schemas/ItemField'
         priority:
+          type: integer
+        quantity:
           type: integer
         user_id:
           type: integer
@@ -1923,6 +1932,7 @@ components:
       - id
       - item_field
       - priority
+      - quantity
       - user_id
       - value
       type: object
@@ -2944,6 +2954,8 @@ components:
           type: string
         character_name:
           type: string
+        guide_url:
+          type: string
         looking_for_group:
           type: boolean
         main_skill:
@@ -2955,6 +2967,10 @@ components:
         role:
           type: string
         secondary_role:
+          type: string
+        secondary_specialization:
+          type: string
+        specialization:
           type: string
         uniques_needed:
           type: string
@@ -2973,6 +2989,8 @@ components:
           type: string
         character_name:
           type: string
+        guide_url:
+          type: string
         looking_for_group:
           type: boolean
         main_skill:
@@ -2984,6 +3002,10 @@ components:
         role:
           type: string
         secondary_role:
+          type: string
+        secondary_specialization:
+          type: string
+        specialization:
           type: string
         uniques_needed:
           type: string
@@ -3051,6 +3073,8 @@ components:
         fulfilled:
           type: boolean
         priority:
+          type: integer
+        quantity:
           type: integer
       type: object
     User:
