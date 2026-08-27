@@ -10,8 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const maxItemWishQuantity = 5
-
 type ItemWishController struct {
 	itemWishService service.ItemWishService
 	userService     service.UserService
@@ -93,13 +91,6 @@ func (e *ItemWishController) creatItemWishHandler() gin.HandlerFunc {
 			return
 		}
 
-		quantity := itemWishReq.Quantity
-		if quantity < 1 {
-			quantity = 1
-		}
-		if quantity > maxItemWishQuantity {
-			quantity = maxItemWishQuantity
-		}
 		itemWish := &repository.ItemWish{
 			UserID:        userId,
 			TeamID:        teamId,
@@ -108,7 +99,7 @@ func (e *ItemWishController) creatItemWishHandler() gin.HandlerFunc {
 			Extra:         itemWishReq.Extra,
 			Fulfilled:     false,
 			BuildEnabling: itemWishReq.BuildEnabling,
-			Quantity:      quantity,
+			Quantity:      itemWishReq.Quantity,
 		}
 
 		savedItemWish, err := e.itemWishService.CreateItemWish(itemWish, teamId)

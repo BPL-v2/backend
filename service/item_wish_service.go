@@ -9,6 +9,10 @@ import (
 
 const maxItemWishQuantity = 5
 
+func clampQuantity(quantity int) int {
+	return utils.Max(utils.Min(quantity, maxItemWishQuantity), 1)
+}
+
 type ItemWishService interface {
 	CreateItemWish(itemWish *repository.ItemWish, teamId int) (*repository.ItemWish, error)
 	UpdateItemWish(itemWish *repository.ItemWish, teamId int, Fulfilled *bool, BuildEnabling *int, Priority *int, Quantity *int) (*repository.ItemWish, error)
@@ -28,7 +32,17 @@ func NewItemWishService() ItemWishService {
 	}
 }
 
+// findDuplicateWish returns the wish among candidates that already covers the
+// same (user, extra) pair as itemWish, if any.
+func findDuplicateWish(candidates []*repository.ItemWish, itemWish *repository.ItemWish) *repository.ItemWish {
+	found, _ := utils.FindFirst(candidates, func(existing *repository.ItemWish) bool {
+		return existing.UserID == itemWish.UserID && existing.Extra == itemWish.Extra
+	})
+	return found
+}
+
 func (s *ItemWishServiceImpl) CreateItemWish(itemWish *repository.ItemWish, teamId int) (*repository.ItemWish, error) {
+	itemWish.Quantity = clampQuantity(itemWish.Quantity)
 	itemWishes, err := s.itemWishRepository.GetSimilarItemWishesInTeam(teamId, itemWish.ItemField, itemWish.Value)
 	if err != nil {
 		return nil, err
@@ -36,10 +50,8 @@ func (s *ItemWishServiceImpl) CreateItemWish(itemWish *repository.ItemWish, team
 	// Idempotent: a client can end up asking to create the same wish twice
 	// (e.g. a stale-cache race from clicking Save repeatedly) - rather than
 	// duplicating the row, just hand back the one that's already there.
-	for _, existing := range itemWishes {
-		if existing.UserID == itemWish.UserID && existing.Extra == itemWish.Extra {
-			return existing, nil
-		}
+	if duplicate := findDuplicateWish(itemWishes, itemWish); duplicate != nil {
+		return duplicate, nil
 	}
 	itemWish.Priority = len(itemWishes)
 	return s.itemWishRepository.SaveItemWish(itemWish)
@@ -53,7 +65,7 @@ func (s *ItemWishServiceImpl) UpdateItemWish(itemWish *repository.ItemWish, team
 		itemWish.BuildEnabling = *BuildEnabling
 	}
 	if Quantity != nil {
-		itemWish.Quantity = int(math.Min(math.Max(float64(*Quantity), 1), maxItemWishQuantity))
+		itemWish.Quantity = clampQuantity(*Quantity)
 	}
 	if Priority != nil {
 		itemWishes, err := s.itemWishRepository.GetSimilarItemWishesInTeam(teamId, itemWish.ItemField, itemWish.Value)
