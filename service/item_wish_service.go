@@ -7,11 +7,7 @@ import (
 	"math"
 )
 
-const maxItemWishQuantity = 5
-
-func clampQuantity(quantity int) int {
-	return utils.Max(utils.Min(quantity, maxItemWishQuantity), 1)
-}
+const MaxItemWishQuantity = 5
 
 type ItemWishService interface {
 	CreateItemWish(itemWish *repository.ItemWish, teamId int) (*repository.ItemWish, error)
@@ -42,7 +38,6 @@ func findDuplicateWish(candidates []*repository.ItemWish, itemWish *repository.I
 }
 
 func (s *ItemWishServiceImpl) CreateItemWish(itemWish *repository.ItemWish, teamId int) (*repository.ItemWish, error) {
-	itemWish.Quantity = clampQuantity(itemWish.Quantity)
 	itemWishes, err := s.itemWishRepository.GetSimilarItemWishesInTeam(teamId, itemWish.ItemField, itemWish.Value)
 	if err != nil {
 		return nil, err
@@ -65,7 +60,7 @@ func (s *ItemWishServiceImpl) UpdateItemWish(itemWish *repository.ItemWish, team
 		itemWish.BuildEnabling = *BuildEnabling
 	}
 	if Quantity != nil {
-		itemWish.Quantity = clampQuantity(*Quantity)
+		itemWish.Quantity = *Quantity
 	}
 	if Priority != nil {
 		itemWishes, err := s.itemWishRepository.GetSimilarItemWishesInTeam(teamId, itemWish.ItemField, itemWish.Value)

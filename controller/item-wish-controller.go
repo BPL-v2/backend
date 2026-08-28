@@ -90,6 +90,12 @@ func (e *ItemWishController) creatItemWishHandler() gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": "Invalid request body"})
 			return
 		}
+		if itemWishReq.Quantity == 0 {
+			itemWishReq.Quantity = 1
+		} else if itemWishReq.Quantity < 1 || itemWishReq.Quantity > service.MaxItemWishQuantity {
+			c.JSON(400, gin.H{"error": fmt.Sprintf("Quantity must be between 1 and %d", service.MaxItemWishQuantity)})
+			return
+		}
 
 		itemWish := &repository.ItemWish{
 			UserID:        userId,
@@ -132,6 +138,10 @@ func (e *ItemWishController) changeItemWishHandler() gin.HandlerFunc {
 		var itemWishReq UpdateItemWish
 		if err := c.ShouldBindJSON(&itemWishReq); err != nil {
 			c.JSON(400, gin.H{"error": "Invalid request body"})
+			return
+		}
+		if itemWishReq.Quantity != nil && (*itemWishReq.Quantity < 1 || *itemWishReq.Quantity > service.MaxItemWishQuantity) {
+			c.JSON(400, gin.H{"error": fmt.Sprintf("Quantity must be between 1 and %d", service.MaxItemWishQuantity)})
 			return
 		}
 		itemWish, err := e.itemWishService.GetItemWishById(wishId)
