@@ -44,6 +44,30 @@ type pobResultMessage struct {
 	QueuedAt    time.Time       `json:"queued_at"`
 }
 
+// decodePoBResultCharacter unmarshals the character echoed back on the
+// pob-results topic. Normally the field is a JSON object, but messages produced
+// by older pob-server / backend builds double-encoded it as a JSON string
+// (`"character": "{...}"`); tolerate that form so those results aren't dropped.
+func decodePoBResultCharacter(raw json.RawMessage) (*client.Character, error) {
+	if len(raw) == 0 {
+		return nil, fmt.Errorf("empty character payload")
+	}
+	character := &client.Character{}
+	if err := json.Unmarshal(raw, character); err == nil {
+		return character, nil
+	} else if raw[0] != '"' {
+		return nil, err
+	}
+	var nested string
+	if err := json.Unmarshal(raw, &nested); err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal([]byte(nested), character); err != nil {
+		return nil, err
+	}
+	return character, nil
+}
+
 func getPoBRequestWriter() *kafka.Writer {
 	pobWriterOnce.Do(func() {
 		pobWriter = config.GetPoBRequestWriter()
@@ -506,13 +530,13 @@ func PlayerStatsLoop(ctx context.Context) {
 			reader.CommitMessages(ctx, msg)
 			continue
 		}
-		var character client.Character
-		if err := json.Unmarshal(result.Character, &character); err != nil {
+		character, err := decodePoBResultCharacter(result.Character)
+		if err != nil {
 			log.Printf("Failed to unmarshal character from PoB result %s: %v", result.CharacterID, err)
 			reader.CommitMessages(ctx, msg)
 			continue
 		}
-		processPoBResult(&character, result.Export, result.QueuedAt, characterRepo, itemService)
+		processPoBResult(character, result.Export, result.QueuedAt, characterRepo, itemService)
 		reader.CommitMessages(ctx, msg)
 	}
 }
