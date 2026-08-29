@@ -512,7 +512,7 @@ func IntComparator(condition *dbModel.Condition) (itemChecker, error) {
 	if err != nil {
 		return nil, err
 	}
-	var values = strings.Split(condition.Value, ",")
+	var values = utils.Map(strings.Split(condition.Value, ","), strings.TrimSpace)
 	intValues := make([]int, len(values))
 	for i, v := range values {
 		intValue, err := strconv.Atoi(v)
@@ -569,12 +569,12 @@ func StringComparator(condition *dbModel.Condition) (itemChecker, error) {
 			return boolToInt(getter(item) != condition.Value)
 		}, nil
 	case dbModel.IN:
-		var values = strings.Split(condition.Value, ",")
+		var values = utils.Map(strings.Split(condition.Value, ","), strings.TrimSpace)
 		return func(item *clientModel.Item) int {
 			return boolToInt(slices.Contains(values, getter(item)))
 		}, nil
 	case dbModel.NOT_IN:
-		var values = strings.Split(condition.Value, ",")
+		var values = utils.Map(strings.Split(condition.Value, ","), strings.TrimSpace)
 		return func(item *clientModel.Item) int {
 			return boolToInt(!slices.Contains(values, getter(item)))
 		}, nil
@@ -786,7 +786,7 @@ func GetDiscriminators(conditions []*dbModel.Condition) ([]*Discriminator, []*db
 				return discriminators, remainingConditions
 			}
 			if condition.Operator == dbModel.IN {
-				values := strings.Split(condition.Value, ",")
+				values := utils.Map(strings.Split(condition.Value, ","), strings.TrimSpace)
 				discriminators := make([]*Discriminator, 0, len(values))
 				for _, value := range values {
 					discriminators = append(discriminators, &Discriminator{field: toDiscriminatorField(condition.Field), value: value})
