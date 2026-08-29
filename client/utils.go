@@ -100,7 +100,11 @@ func (c *Character) HasPantheon() bool {
 type ItemValue []any
 
 func (v ItemValue) Name() string {
-	return v[0].(string)
+	if len(v) == 0 {
+		return ""
+	}
+	name, _ := v[0].(string)
+	return name
 }
 
 func (v ItemValue) Id() int {

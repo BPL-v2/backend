@@ -125,7 +125,7 @@ func StringFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) st
 		return func(item *clientModel.Item) string {
 			if item.Properties != nil {
 				for _, property := range *item.Properties {
-					if property.Name == "From" {
+					if property.Name == "From" && len(property.Values) > 0 {
 						return property.Values[0].Name()
 					}
 				}
@@ -144,7 +144,7 @@ func StringFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) st
 		return func(item *clientModel.Item) string {
 			if item.Properties != nil {
 				for _, property := range *item.Properties {
-					if property.Name == "Heist Target: {0} ({1})" {
+					if property.Name == "Heist Target: {0} ({1})" && len(property.Values) > 1 {
 						return property.Values[0].Name() + " (" + property.Values[1].Name() + ")"
 					}
 				}
@@ -155,7 +155,7 @@ func StringFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) st
 		return func(item *clientModel.Item) string {
 			if item.Properties != nil {
 				for _, property := range *item.Properties {
-					if property.Name == "Requires {1} (Level {0})" {
+					if property.Name == "Requires {1} (Level {0})" && len(property.Values) > 1 {
 						return property.Values[0].Name() + " (Level " + property.Values[1].Name() + ")"
 					}
 				}
@@ -335,7 +335,7 @@ func StringArrayFieldGetter(field dbModel.ItemField) (func(item *clientModel.Ite
 		return func(item *clientModel.Item) []string {
 			if item.Properties != nil {
 				for _, property := range *item.Properties {
-					if property.Name == "Monsters:\n{0}" {
+					if property.Name == "Monsters:\n{0}" && len(property.Values) > 0 {
 						return strings.Split(property.Values[0].Name(), "\n")
 					}
 				}
@@ -360,7 +360,7 @@ func StringArrayFieldGetter(field dbModel.ItemField) (func(item *clientModel.Ite
 func propertyValue(item *clientModel.Item, propertyName string, cutOuts ...string) int {
 	if item.Properties != nil {
 		for _, property := range *item.Properties {
-			if property.Name == propertyName {
+			if property.Name == propertyName && len(property.Values) > 0 {
 				name := property.Values[0].Name()
 				for _, cutOut := range cutOuts {
 					name = strings.ReplaceAll(name, cutOut, "")

@@ -452,7 +452,7 @@ func toGGGModel(tab *repository.GuildStashTab, parser *parser.ItemChecker) *Stas
 	}
 	model := &StashTabWithCompletions{}
 	err := json.Unmarshal([]byte(tab.Raw), &model)
-	if err != nil {
+	if err != nil || model == nil {
 		return nil
 	}
 
@@ -460,6 +460,10 @@ func toGGGModel(tab *repository.GuildStashTab, parser *parser.ItemChecker) *Stas
 	if model.Items != nil {
 		items := make([]ItemWithCompletions, 0, len(*model.Items))
 		for _, item := range *model.Items {
+			if item.Item == nil {
+				items = append(items, item)
+				continue
+			}
 			completions := parser.CheckForCompletions(item.Item)
 			if len(completions) > 0 {
 				objectiveId := completions[0].ObjectiveId
