@@ -212,6 +212,11 @@ func TeamLeaderMiddleware() gin.HandlerFunc {
 			return
 		}
 		event := getEvent(r)
+		if event == nil {
+			fmt.Println("Event not found in context")
+			r.AbortWithStatus(400)
+			return
+		}
 		teamService := service.NewUserService()
 		teamUser, _, err := teamService.GetTeamForUser(r, event)
 		if (err != nil || teamUser.TeamId != teamId || !teamUser.IsTeamLead) && !slices.Contains(getUserRoles(r), repository.PermissionAdmin) {

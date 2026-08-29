@@ -468,6 +468,9 @@ func (f *FetchingService) updateGuildStash(stash *repository.GuildStashTab, fetc
 		}
 		return fmt.Errorf("failed to fetch guild stash %s for team %d: %d - %s", stash.Id, stash.TeamId, httpError.StatusCode, httpError.Description)
 	}
+	if response.Stash == nil {
+		return fmt.Errorf("empty stash response for stash %s for team %d", stash.Id, stash.TeamId)
+	}
 	stash.LastFetch = time.Now()
 	stash.Index = response.Stash.Index
 	stash.Name = response.Stash.Name
