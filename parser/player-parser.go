@@ -631,7 +631,7 @@ func quality(character *client.Character, superclass string) int {
 			continue
 		}
 		for _, property := range *item.Properties {
-			if strings.Contains(property.Name, "Quality") {
+			if strings.Contains(property.Name, "Quality") && len(property.Values) > 0 {
 				quality, err := strconv.Atoi(strings.ReplaceAll(strings.ReplaceAll(property.Values[0].Name(), "%", ""), "+", ""))
 				if err != nil {
 					continue

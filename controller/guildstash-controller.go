@@ -447,12 +447,12 @@ func toModel(tab *repository.GuildStashTab) *GuildStashTab {
 }
 
 func toGGGModel(tab *repository.GuildStashTab, parser *parser.ItemChecker) *StashTabWithCompletions {
-	if tab == nil {
+	if tab == nil || tab.Raw == "" || tab.Raw == "{}" {
 		return nil
 	}
 	model := &StashTabWithCompletions{}
 	err := json.Unmarshal([]byte(tab.Raw), &model)
-	if err != nil || model == nil {
+	if err != nil || model == nil || model.StashTab == nil {
 		return nil
 	}
 
