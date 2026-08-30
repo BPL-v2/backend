@@ -218,6 +218,10 @@ func (s *PlayerFetchingService) UpdateCharacter(player *parser.PlayerUpdate, eve
 	if err != nil {
 		log.Printf("Error updating item wish fulfillment for player %d: %v", player.UserId, err)
 	}
+	if characterResponse.Character == nil {
+		player.SuccessiveErrors++
+		return nil, fmt.Errorf("empty character response for player %d: %s", player.UserId, player.New.Character.Name)
+	}
 	player.SuccessiveErrors = 0
 	player.New.Character = characterResponse.Character
 	if !player.New.Character.HasSameEquipment(player.Old.Character) {
@@ -623,10 +627,6 @@ func PlayerFetchLoop(ctx context.Context, event *repository.Event, poeClient *cl
 
 			pobMap := drainStatQueue()
 			for _, player := range players {
-				if player.New.Character == nil {
-					fmt.Printf("Player %d has no new character, skipping...\n", player.UserId)
-					continue
-				}
 				player.Mu.Lock()
 				if pob, ok := pobMap[player.New.Character.Id]; ok {
 					player.New.PoB = pob
