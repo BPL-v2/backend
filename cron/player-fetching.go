@@ -117,18 +117,18 @@ func GetActiveServiceForEvent(eventId int) (*PlayerFetchingService, bool) {
 }
 
 type PlayerFetchingService struct {
-	userRepository            repository.UserRepository
-	objectiveMatchService     service.ObjectiveMatchService
-	objectiveService          service.ObjectiveService
-	characterService          service.CharacterService
-	ladderService             service.LadderService
-	atlasService              service.AtlasService
-	oauthService              service.OauthService
-	timingRepository          repository.TimingRepository
-	characterRepository       repository.CharacterRepository
-	activityRepository        repository.ActivityRepository
-	itemWishService           service.ItemWishService
-	timings                   map[repository.TimingKey]time.Duration
+	userRepository        repository.UserRepository
+	objectiveMatchService service.ObjectiveMatchService
+	objectiveService      service.ObjectiveService
+	characterService      service.CharacterService
+	ladderService         service.LadderService
+	atlasService          service.AtlasService
+	oauthService          service.OauthService
+	timingRepository      repository.TimingRepository
+	characterRepository   repository.CharacterRepository
+	activityRepository    repository.ActivityRepository
+	itemWishService       service.ItemWishService
+	timings               map[repository.TimingKey]time.Duration
 
 	lastLadderUpdate time.Time
 	poeClient        *client.PoEClient
@@ -151,19 +151,19 @@ func (s *PlayerFetchingService) ReloadTimings() error {
 
 func NewPlayerFetchingService(poeClient *client.PoEClient) *PlayerFetchingService {
 	return &PlayerFetchingService{
-		userRepository:            repository.NewUserRepository(),
-		objectiveMatchService:     service.NewObjectiveMatchService(),
-		objectiveService:          service.NewObjectiveService(),
-		ladderService:             service.NewLadderService(),
-		characterService:          service.NewCharacterService(poeClient),
-		atlasService:              service.NewAtlasService(),
-		oauthService:              service.NewOauthService(),
-		itemWishService:           service.NewItemWishService(),
-		timingRepository:          repository.NewTimingRepository(),
-		characterRepository:       repository.NewCharacterRepository(),
-		activityRepository:        repository.NewActivityRepository(),
-		lastLadderUpdate:          time.Now().Add(-1 * time.Hour),
-		poeClient:                 poeClient,
+		userRepository:        repository.NewUserRepository(),
+		objectiveMatchService: service.NewObjectiveMatchService(),
+		objectiveService:      service.NewObjectiveService(),
+		ladderService:         service.NewLadderService(),
+		characterService:      service.NewCharacterService(poeClient),
+		atlasService:          service.NewAtlasService(),
+		oauthService:          service.NewOauthService(),
+		itemWishService:       service.NewItemWishService(),
+		timingRepository:      repository.NewTimingRepository(),
+		characterRepository:   repository.NewCharacterRepository(),
+		activityRepository:    repository.NewActivityRepository(),
+		lastLadderUpdate:      time.Now().Add(-1 * time.Hour),
+		poeClient:             poeClient,
 	}
 }
 
@@ -623,6 +623,10 @@ func PlayerFetchLoop(ctx context.Context, event *repository.Event, poeClient *cl
 
 			pobMap := drainStatQueue()
 			for _, player := range players {
+				if player.New.Character == nil {
+					fmt.Printf("Player %d has no new character, skipping...\n", player.UserId)
+					continue
+				}
 				player.Mu.Lock()
 				if pob, ok := pobMap[player.New.Character.Id]; ok {
 					player.New.PoB = pob
