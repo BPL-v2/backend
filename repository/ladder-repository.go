@@ -49,9 +49,11 @@ func (r *LadderRepositoryImpl) UpsertLadder(ladder []*client.LadderEntry, eventI
 			Character: entry.Character.Name,
 			Level:     entry.Character.Level,
 			Class:     entry.Character.Class,
-			Account:   entry.Account.Name,
 			EventId:   eventId,
 			Rank:      entry.Rank,
+		}
+		if entry.Account != nil {
+			dbEntry.Account = entry.Account.Name
 		}
 		if userId, exists := playerMap[entry.Character.Name]; exists {
 			dbEntry.UserId = &userId
@@ -62,7 +64,7 @@ func (r *LadderRepositoryImpl) UpsertLadder(ladder []*client.LadderEntry, eventI
 		if entry.Character.Experience != nil {
 			dbEntry.Experience = *entry.Character.Experience
 		}
-		if entry.Account.Twitch != nil {
+		if entry.Account != nil && entry.Account.Twitch != nil {
 			dbEntry.TwitchAccount = &entry.Account.Twitch.Name
 		}
 		dbEntries = append(dbEntries, dbEntry)

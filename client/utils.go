@@ -24,7 +24,7 @@ func (c *Character) GetMainSkill() string {
 	mainSkill := ""
 	maxLinks := 0
 	if c.Realm == Poe2 {
-		for _, skillGem := range *c.Skills {
+		for _, skillGem := range utils.Deref(c.Skills) {
 			links := 0
 			if (skillGem.Support == nil || *skillGem.Support) || skillGem.Sockets == nil {
 				continue
@@ -42,7 +42,7 @@ func (c *Character) GetMainSkill() string {
 		return mainSkill
 	}
 
-	for _, item := range *c.Equipment {
+	for _, item := range utils.Deref(c.Equipment) {
 		if item.SocketedItems == nil || item.Sockets == nil {
 			continue
 		}
@@ -50,7 +50,7 @@ func (c *Character) GetMainSkill() string {
 		sockets := *item.Sockets
 		for _, gem := range socketedItems {
 
-			if gem.Support == nil || *gem.Support {
+			if gem.Support == nil || *gem.Support || gem.Socket == nil || *gem.Socket >= len(sockets) {
 				continue
 			}
 			group := sockets[*gem.Socket].Group
@@ -200,32 +200,25 @@ func (c *Character) HasSameEquipment(other *Character) bool {
 	if other == nil {
 		return false
 	}
-	if (c.Equipment == nil && other.Equipment == nil) && (c.Jewels == nil && other.Jewels == nil) {
-		return true
-	}
-	if (c.Equipment == nil && other.Equipment != nil) || (c.Equipment != nil && other.Equipment == nil) {
-		return false
-	}
-	if (c.Jewels == nil && other.Jewels != nil) || (c.Jewels != nil && other.Jewels == nil) {
-		return false
-	}
-	if len(*c.Equipment) != len(*other.Equipment) || len(*c.Jewels) != len(*other.Jewels) {
+	cEquipment, otherEquipment := utils.Deref(c.Equipment), utils.Deref(other.Equipment)
+	cJewels, otherJewels := utils.Deref(c.Jewels), utils.Deref(other.Jewels)
+	if len(cEquipment) != len(otherEquipment) || len(cJewels) != len(otherJewels) {
 		return false
 	}
 	itemMap := make(map[string]Item)
-	for _, item := range *c.Equipment {
+	for _, item := range cEquipment {
 		itemMap[item.GetPositionIndex()] = item
 	}
-	for _, item := range *c.Jewels {
+	for _, item := range cJewels {
 		itemMap[item.GetPositionIndex()] = item
 	}
-	for _, item := range *other.Equipment {
+	for _, item := range otherEquipment {
 		otherItem, exists := itemMap[item.GetPositionIndex()]
 		if !exists || !item.Equals(otherItem) {
 			return false
 		}
 	}
-	for _, item := range *other.Jewels {
+	for _, item := range otherJewels {
 		otherItem, exists := itemMap[item.GetPositionIndex()]
 		if !exists || !item.Equals(otherItem) {
 			return false

@@ -142,6 +142,9 @@ func (c *CharacterServiceImpl) UpdateCharacter(characterId string) (*client.Char
 	if clientErr != nil {
 		return nil, fmt.Errorf("%s", clientErr.Description)
 	}
+	if response.Character == nil {
+		return nil, fmt.Errorf("empty character response for %s", character.Name)
+	}
 	return response.Character, nil
 }
 
