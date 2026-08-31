@@ -479,7 +479,7 @@ func processPoBResult(character *client.Character, export string, queuedAt time.
 	pobQueue <- pobEntity
 	oldPob, _ := characterRepo.GetLatestCharacterPoB(character.Id)
 	if pobEntity.HasEqualStats(oldPob) {
-		log.Printf("No changes in stats for character %s, skipping save", character.Name)
+		log.Printf("No changes in stats for character %s, (dps: %d, ehp: %d) skipping save", character.Name, pobEntity.DPS, pobEntity.EHP)
 		return
 	}
 	if oldPob != nil {

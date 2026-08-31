@@ -247,6 +247,7 @@ type DelveProgressionEntry struct {
 	FromTime        time.Time `json:"from_time" binding:"required" format:"date-time"`
 	ToTime          time.Time `json:"to_time" binding:"required" format:"date-time"`
 	DurationSeconds int64     `json:"duration_seconds" binding:"required"`
+	Duration        string    `json:"duration" binding:"required"`
 }
 
 func toDelveProgressionResponse(progressions []*repository.DelveDepthProgression, characterMap map[string]*repository.Character) []*DelveProgressionEntry {
@@ -256,13 +257,15 @@ func toDelveProgressionResponse(progressions []*repository.DelveDepthProgression
 		if character == nil {
 			continue
 		}
+		duration := progression.ToTime.Sub(progression.FromTime).Round(time.Second)
 		response = append(response, &DelveProgressionEntry{
 			CharacterId:     character.Id,
 			CharacterName:   character.Name,
 			UserId:          character.UserId,
 			FromTime:        progression.FromTime,
 			ToTime:          progression.ToTime,
-			DurationSeconds: int64(progression.ToTime.Sub(progression.FromTime).Seconds()),
+			DurationSeconds: int64(duration.Seconds()),
+			Duration:        duration.String(),
 		})
 	}
 	return response
