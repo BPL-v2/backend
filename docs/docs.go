@@ -2166,7 +2166,6 @@ const docTemplate = `{
             "CreateItemWish": {
                 "properties": {
                     "build_enabling": {
-                        "description": "BuildEnabling is a mandatory 1-5 importance scale (1 = nice to have, 5 = absolutely essential).",
                         "maximum": 5,
                         "minimum": 1,
                         "type": "integer"
@@ -2178,6 +2177,8 @@ const docTemplate = `{
                         "$ref": "#/components/schemas/ItemField"
                     },
                     "quantity": {
+                        "maximum": 5,
+                        "minimum": 1,
                         "type": "integer"
                     },
                     "value": {
@@ -2187,6 +2188,7 @@ const docTemplate = `{
                 "required": [
                     "build_enabling",
                     "item_field",
+                    "quantity",
                     "value"
                 ],
                 "type": "object"
@@ -2639,7 +2641,6 @@ const docTemplate = `{
             "ItemWish": {
                 "properties": {
                     "build_enabling": {
-                        "description": "BuildEnabling is a 1-5 importance scale (1 = nice to have, 5 = absolutely essential).",
                         "type": "integer"
                     },
                     "extra": {
@@ -4088,6 +4089,9 @@ const docTemplate = `{
             },
             "TeamSheetEntry": {
                 "properties": {
+                    "alt_ascendancy": {
+                        "type": "string"
+                    },
                     "altars": {
                         "type": "string"
                     },
@@ -4141,6 +4145,9 @@ const docTemplate = `{
             },
             "TeamSheetEntryUpdate": {
                 "properties": {
+                    "alt_ascendancy": {
+                        "type": "string"
+                    },
                     "altars": {
                         "type": "string"
                     },
@@ -4278,9 +4285,12 @@ const docTemplate = `{
                         "type": "boolean"
                     },
                     "priority": {
+                        "minimum": 0,
                         "type": "integer"
                     },
                     "quantity": {
+                        "maximum": 5,
+                        "minimum": 1,
                         "type": "integer"
                     }
                 },
@@ -5180,6 +5190,32 @@ const docTemplate = `{
                 "summary": "Upload an icon for an achievement",
                 "tags": [
                     "Achievement"
+                ]
+            }
+        },
+        "/admin/fix-pobs": {
+            "post": {
+                "description": "Trigger the PoB maintenance/cleanup routine (admin only)",
+                "operationId": "FixPoBs",
+                "responses": {
+                    "202": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Accepted"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "characters"
                 ]
             }
         },
@@ -7860,6 +7896,38 @@ const docTemplate = `{
                 ],
                 "tags": [
                     "oauth"
+                ]
+            }
+        },
+        "/pob-import": {
+            "get": {
+                "description": "Resolves a Path of Building share link (Maxroll, pobb.in, pob.codes, PoE Ninja, Pastebin.com, PastebinP.com, Rentry.co, poedb.tw) into its raw PoB export code",
+                "operationId": "ImportPoBFromShareLink",
+                "parameters": [
+                    {
+                        "description": "Share link URL",
+                        "in": "query",
+                        "name": "url",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "description": "raw PoB export code"
+                    }
+                },
+                "tags": [
+                    "items"
                 ]
             }
         },

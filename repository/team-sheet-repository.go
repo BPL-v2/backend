@@ -24,6 +24,7 @@ type TeamSheetEntry struct {
 	Realm                   *string
 	UniquesNeeded           *string
 	Altars                  *string
+	AltAscendancy           *string
 	LookingForGroup         bool      `gorm:"not null;default:false"`
 	UpdatedAt               time.Time `gorm:"not null;autoUpdateTime"`
 }
