@@ -419,11 +419,10 @@ func (c *CharacterServiceImpl) FixPoBs() error {
 		if len(pobs) == 0 {
 			break
 		}
-		offset += len(pobs)
-		idsToDelete := []int{}
+		deleteIds := map[int]struct{}{}
 		for _, characterPob := range pobs {
 			if prev, ok := lastStats[characterPob.CharacterId]; ok && characterPob.HasEqualStats(prev) {
-				idsToDelete = append(idsToDelete, characterPob.Id)
+				deleteIds[characterPob.Id] = struct{}{}
 				continue
 			}
 			lastStats[characterPob.CharacterId] = characterPob
@@ -435,21 +434,26 @@ func (c *CharacterServiceImpl) FixPoBs() error {
 			}
 			count := pob.NumEquipmentPieces()
 			if previous, ok := lastEquipmentCount[characterPob.CharacterId]; ok && count < previous {
-				idsToDelete = append(idsToDelete, characterPob.Id)
+				deleteIds[characterPob.Id] = struct{}{}
 			} else {
 				lastEquipmentCount[characterPob.CharacterId] = count
 			}
 			if _, ok := lastPoB[characterPob.CharacterId]; ok && pob.SwappedWeaponsAndLostDps(lastPoB[characterPob.CharacterId]) {
-				idsToDelete = append(idsToDelete, characterPob.Id)
-
+				deleteIds[characterPob.Id] = struct{}{}
 			}
 			lastPoB[characterPob.CharacterId] = pob
-
+		}
+		idsToDelete := make([]int, 0, len(deleteIds))
+		for id := range deleteIds {
+			idsToDelete = append(idsToDelete, id)
 		}
 		if err := c.characterRepository.DeletePoBs(idsToDelete); err != nil {
 			fmt.Printf("Error deleting invalid PoBs: %v\n", err)
 			return err
 		}
+		// Advance only past the rows we kept: deleted rows shift the remaining
+		// ones down into the offset window, so counting them would skip records.
+		offset += len(pobs) - len(idsToDelete)
 		fmt.Printf("Processed PoBs up to offset %d, deleted %d invalid\n", offset, len(idsToDelete))
 	}
 	return nil
