@@ -411,6 +411,12 @@ func (c *CharacterServiceImpl) FixPoBs() error {
 	lastPoB := make(map[string]*client.PathOfBuilding)
 	lastStats := make(map[string]*repository.CharacterPob)
 
+	// Collect ids across the whole scan and delete once at the end. Deleting
+	// while paginating would shift not-yet-scanned rows into the offset window
+	// (skipping them) and shift already-scanned rows back out of it (re-scanning
+	// them, which would then flag a kept row as a duplicate of itself).
+	deleteIds := map[int]struct{}{}
+
 	for {
 		pobs, err := c.characterRepository.GetPobsOrderedByCharacterAndTime(offset, limit)
 		if err != nil {
@@ -419,7 +425,7 @@ func (c *CharacterServiceImpl) FixPoBs() error {
 		if len(pobs) == 0 {
 			break
 		}
-		deleteIds := map[int]struct{}{}
+		offset += len(pobs)
 		for _, characterPob := range pobs {
 			if prev, ok := lastStats[characterPob.CharacterId]; ok && characterPob.HasEqualStats(prev) {
 				deleteIds[characterPob.Id] = struct{}{}
@@ -443,18 +449,17 @@ func (c *CharacterServiceImpl) FixPoBs() error {
 			}
 			lastPoB[characterPob.CharacterId] = pob
 		}
-		idsToDelete := make([]int, 0, len(deleteIds))
-		for id := range deleteIds {
-			idsToDelete = append(idsToDelete, id)
-		}
-		if err := c.characterRepository.DeletePoBs(idsToDelete); err != nil {
-			fmt.Printf("Error deleting invalid PoBs: %v\n", err)
-			return err
-		}
-		// Advance only past the rows we kept: deleted rows shift the remaining
-		// ones down into the offset window, so counting them would skip records.
-		offset += len(pobs) - len(idsToDelete)
-		fmt.Printf("Processed PoBs up to offset %d, deleted %d invalid\n", offset, len(idsToDelete))
+		fmt.Printf("Scanned PoBs up to offset %d, %d flagged for deletion\n", offset, len(deleteIds))
 	}
+
+	idsToDelete := make([]int, 0, len(deleteIds))
+	for id := range deleteIds {
+		idsToDelete = append(idsToDelete, id)
+	}
+	if err := c.characterRepository.DeletePoBs(idsToDelete); err != nil {
+		fmt.Printf("Error deleting invalid PoBs: %v\n", err)
+		return err
+	}
+	fmt.Printf("Done fixing PoBs, deleted %d\n", len(idsToDelete))
 	return nil
 }

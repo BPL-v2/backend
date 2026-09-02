@@ -471,10 +471,14 @@ func (r *CharacterRepositoryImpl) GetPobsOrderedByCharacterAndTime(offset int, l
 }
 
 func (r *CharacterRepositoryImpl) DeletePoBs(ids []int) error {
-	if len(ids) == 0 {
-		return nil
+	const chunkSize = 1000
+	for start := 0; start < len(ids); start += chunkSize {
+		end := min(start+chunkSize, len(ids))
+		if err := r.DB.Delete(&CharacterPob{}, ids[start:end]).Error; err != nil {
+			return err
+		}
 	}
-	return r.DB.Delete(&CharacterPob{}, ids).Error
+	return nil
 }
 
 func (r *CharacterRepositoryImpl) SaveDelveHistoryEntries(entries []*CharacterDelveHistory) error {
