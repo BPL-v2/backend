@@ -30,6 +30,19 @@ var PobsSavedCounter = promauto.NewCounter(
 		Help: "Number of PoBs saved to the database",
 	},
 )
+var PobsSaveErrorCounter = promauto.NewCounter(
+	prometheus.CounterOpts{
+		Name: "bpl_pobs_save_error_total",
+		Help: "Number of PoBs that failed to be saved to the database",
+	},
+)
+var PobsSkippedCounter = promauto.NewCounterVec(
+	prometheus.CounterOpts{
+		Name: "bpl_pobs_skipped_total",
+		Help: "Number of calculated PoBs not persisted, by reason",
+	},
+	[]string{"reason"},
+)
 var PoeRequestCounter = promauto.NewCounterVec(prometheus.CounterOpts{
 	Name: "poe_request_total",
 	Help: "The total number of requests by endpoint to the PoE API",

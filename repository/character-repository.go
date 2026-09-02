@@ -143,7 +143,10 @@ func (c *CharacterPob) HasEqualStats(other *CharacterPob) bool {
 	if other == nil {
 		return false
 	}
-	return c.DPS == other.DPS &&
+	return c.Level == other.Level &&
+		c.MainSkill == other.MainSkill &&
+		c.Ascendancy == other.Ascendancy &&
+		c.DPS == other.DPS &&
 		c.EHP == other.EHP &&
 		c.PhysMaxHit == other.PhysMaxHit &&
 		c.EleMaxHit == other.EleMaxHit &&

@@ -1277,6 +1277,30 @@ func TestCharacterPob_HasEqualStats(t *testing.T) {
 		}
 		assert.False(t, pob1.HasEqualStats(pob2))
 	})
+
+	t.Run("different Level", func(t *testing.T) {
+		base := *pob1
+		base.Level = 90
+		other := base
+		other.Level = 91
+		assert.False(t, base.HasEqualStats(&other))
+	})
+
+	t.Run("different MainSkill", func(t *testing.T) {
+		base := *pob1
+		base.MainSkill = "Lightning Arrow"
+		other := base
+		other.MainSkill = "Tornado Shot"
+		assert.False(t, base.HasEqualStats(&other))
+	})
+
+	t.Run("different Ascendancy", func(t *testing.T) {
+		base := *pob1
+		base.Ascendancy = "Deadeye"
+		other := base
+		other.Ascendancy = "Pathfinder"
+		assert.False(t, base.HasEqualStats(&other))
+	})
 }
 
 // ==================== Event.GetRealm Tests ====================

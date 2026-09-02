@@ -10,6 +10,7 @@ import (
 	"bpl/utils"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -17,6 +18,7 @@ import (
 
 	"github.com/lib/pq"
 	"github.com/segmentio/kafka-go"
+	"gorm.io/gorm"
 )
 
 var (
@@ -224,11 +226,6 @@ func (s *PlayerFetchingService) UpdateCharacter(player *parser.PlayerUpdate, eve
 	}
 	player.SuccessiveErrors = 0
 	player.New.Character = characterResponse.Character
-	if !player.New.Character.HasSameEquipment(player.Old.Character) {
-		log.Printf("Character equipment changed for player %d, queuing for PoB processing", player.UserId)
-		publishPoBRequest(characterResponse.Character)
-		player.LastUpdateTimes.PoB = time.Now()
-	}
 	player.New.VoidStones = player.Old.VoidStones.Union(player.New.Character.GetVoidStones())
 	player.Old.VoidStones = player.New.VoidStones
 	character := &repository.Character{
@@ -246,6 +243,13 @@ func (s *PlayerFetchingService) UpdateCharacter(player *parser.PlayerUpdate, eve
 	err = s.characterRepository.Save(character)
 	if err != nil {
 		return nil, fmt.Errorf("error saving character %s (%s) for user %d: %v", character.Name, character.Id, player.UserId, err)
+	}
+	// Publish the PoB request only after the character row exists, otherwise the
+	// resulting character_pobs insert can fail the character_id foreign key.
+	if !player.New.Character.HasSameEquipment(player.Old.Character) {
+		log.Printf("Character equipment changed for player %d, queuing for PoB processing", player.UserId)
+		publishPoBRequest(characterResponse.Character)
+		player.LastUpdateTimes.PoB = time.Now()
 	}
 	return characterResponse.Character, nil
 }
@@ -445,24 +449,25 @@ func (service *PlayerFetchingService) UpdatePlayerTokens(players []*parser.Playe
 }
 
 // processPoBResult handles a PoB export result: decodes the export, builds the
-// CharacterPob entity, feeds it into pobQueue for the player loop, and persists
-// it if the stats changed.
+// CharacterPob entity, persists it if the stats changed, and only then feeds it
+// into pobQueue for the player loop. Anything not persisted must not reach the
+// queue either, otherwise the in-memory player state diverges from the database.
 func processPoBResult(character *client.Character, export string, queuedAt time.Time, characterRepo repository.CharacterRepository, itemService service.ItemService) {
 	pob, err := client.DecodePoBExport(export)
 	if err != nil {
 		metrics.PobsCalculatedErrorCounter.Inc()
-		log.Printf("Error decoding PoB export for character %s: %v", character.Name, err)
+		log.Printf("Error decoding PoB export for character %s (%s): %v", character.Name, character.Id, err)
 		return
 	}
 	metrics.PobsCalculatedCounter.Inc()
 	p := repository.PoBExport{}
 	if err = p.FromString(export); err != nil {
-		log.Printf("Error parsing PoB export for character %s: %v", character.Name, err)
+		log.Printf("Error parsing PoB export for character %s (%s): %v", character.Name, character.Id, err)
 		return
 	}
 	itemIds, err := itemService.GetItemIds(character)
 	if err != nil {
-		log.Printf("Error getting item ids for character %s: %v", character.Name, err)
+		log.Printf("Error getting item ids for character %s (%s): %v", character.Name, character.Id, err)
 	}
 	pobEntity := &repository.CharacterPob{
 		CreatedAt:        queuedAt,
@@ -476,28 +481,51 @@ func processPoBResult(character *client.Character, export string, queuedAt time.
 		HighIlevelFlasks: int8(character.GetNumberOfHighIlvlFlasks()),
 	}
 	pobEntity.UpdateStats(pob)
-	pobQueue <- pobEntity
-	oldPob, _ := characterRepo.GetLatestCharacterPoB(character.Id)
-	if pobEntity.HasEqualStats(oldPob) {
-		log.Printf("No changes in stats for character %s, (dps: %d, ehp: %d) skipping save", character.Name, pobEntity.DPS, pobEntity.EHP)
+
+	oldPob, err := characterRepo.GetLatestCharacterPoB(character.Id)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Printf("Error loading latest PoB for character %s (%s): %v", character.Name, character.Id, err)
+	}
+	if skip := pobSkipReason(pob, pobEntity, oldPob); skip != "" {
+		metrics.PobsSkippedCounter.WithLabelValues(skip).Inc()
+		oldId, oldAt := 0, time.Time{}
+		if oldPob != nil {
+			oldId, oldAt = oldPob.Id, oldPob.CreatedAt
+		}
+		log.Printf("Not persisting PoB for character %s (%s): %s (dps: %d, ehp: %d; baseline pob %d from %s)",
+			character.Name, character.Id, skip, pobEntity.DPS, pobEntity.EHP, oldId, oldAt.Format(time.RFC3339))
 		return
 	}
-	if oldPob != nil {
-		if oldPobDecoded, decodeErr := oldPob.Export.Decode(); decodeErr == nil {
-			if pob.NumEquipmentPieces() < oldPobDecoded.NumEquipmentPieces() {
-				log.Printf("PoB for character %s has fewer equipped items than previous, skipping save", character.Name)
-				return
-			}
-			if pob.SwappedWeaponsAndLostDps(oldPobDecoded) {
-				log.Printf("PoB for character %s swapped weapons and lost dps, skipping save", character.Name)
-				return
-			}
-		}
+
+	if err = characterRepo.SavePoB(pobEntity); err != nil {
+		metrics.PobsSaveErrorCounter.Inc()
+		log.Printf("Error saving PoB for character %s (%s): %v", character.Name, character.Id, err)
+		return
 	}
 	metrics.PobsSavedCounter.Inc()
-	if err = characterRepo.SavePoB(pobEntity); err != nil {
-		log.Printf("Error saving character stats for %s: %v", character.Name, err)
+	pobQueue <- pobEntity
+}
+
+// pobSkipReason returns a non-empty reason label when the freshly calculated PoB
+// should not be persisted, or "" when it should be saved.
+func pobSkipReason(pob *client.PathOfBuilding, pobEntity *repository.CharacterPob, oldPob *repository.CharacterPob) string {
+	if pobEntity.HasEqualStats(oldPob) {
+		return "equal_stats"
 	}
+	if oldPob == nil {
+		return ""
+	}
+	oldPobDecoded, decodeErr := oldPob.Export.Decode()
+	if decodeErr != nil {
+		return ""
+	}
+	if pob.NumEquipmentPieces() < oldPobDecoded.NumEquipmentPieces() {
+		return "fewer_items"
+	}
+	if pob.SwappedWeaponsAndLostDps(oldPobDecoded) {
+		return "weapon_swap"
+	}
+	return ""
 }
 
 // PlayerStatsLoop consumes PoB export results from the pob-results Kafka topic
