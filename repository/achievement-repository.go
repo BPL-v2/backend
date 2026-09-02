@@ -14,7 +14,24 @@ type Achievement struct {
 	IsCustom     bool   `gorm:"not null;default:false"`
 	Icon         []byte `gorm:"type:bytea"`
 	IconMimeType string
+	AutoCheckKey *AchievementCheckKey `gorm:"column:auto_check_key"`
+	EventId      *int                 `gorm:"column:event_id"`
 }
+
+type AchievementCheckKey string
+
+const (
+	CheckLevel90              AchievementCheckKey = "level_90"
+	CheckLevel95              AchievementCheckKey = "level_95"
+	CheckLevel100             AchievementCheckKey = "level_100"
+	CheckParticipatedInEvent  AchievementCheckKey = "participated_in_event"
+	CheckPlayed5Leagues       AchievementCheckKey = "played_5_leagues"
+	CheckPlayed10Leagues      AchievementCheckKey = "played_10_leagues"
+	CheckPlayed5Ascendancies  AchievementCheckKey = "played_5_ascendancies"
+	CheckPlayed10Ascendancies AchievementCheckKey = "played_10_ascendancies"
+	CheckTeamlead             AchievementCheckKey = "teamlead"
+	CheckSubmittedBounty      AchievementCheckKey = "submitted_bounty"
+)
 
 type UserAchievement struct {
 	UserId        int       `gorm:"primaryKey"`
@@ -23,32 +40,6 @@ type UserAchievement struct {
 	GrantedBy     *int
 
 	User *User `gorm:"foreignKey:UserId"`
-}
-
-const (
-	AchievementReachedLvl90                 = "Reached level 90"
-	AchievementReachedLvl95                 = "Reached level 95"
-	AchievementReachedLvl100                = "Reached level 100"
-	AchievementParticipated                 = "Participated in an event"
-	AchievementPlayed5Leagues               = "Played 5 leagues"
-	AchievementPlayed10Leagues              = "Played 10 leagues"
-	AchievementPlayed10DifferentAscendancies = "Played 10 different ascendancies"
-)
-
-// SystemAchievements lists all achievement names that are auto-awarded by the sync job.
-var SystemAchievements = []string{
-	"Participated in an event",
-	"Won an event",
-	"Teamlead",
-	"Played 5 leagues",
-	"Played 10 leagues",
-	"Reached level 90",
-	"Reached level 95",
-	"Reached level 100",
-	"Submitted a bounty",
-	"Submitted a point unique",
-	"Played 5 different ascendancies",
-	"Played 10 different ascendancies",
 }
 
 type AchievementRepository interface {
