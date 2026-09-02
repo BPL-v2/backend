@@ -116,7 +116,7 @@ func TestScoreCanShowTo(t *testing.T) {
 				1: {Finished: false},
 			},
 		}
-		assert.True(t, s.CanShowTo(1))
+		assert.True(t, s.CanShowTo(1, false))
 	})
 
 	t.Run("other team can see when finished", func(t *testing.T) {
@@ -127,7 +127,7 @@ func TestScoreCanShowTo(t *testing.T) {
 				1: {Finished: true},
 			},
 		}
-		assert.True(t, s.CanShowTo(2))
+		assert.True(t, s.CanShowTo(2, false))
 	})
 
 	t.Run("other team can see when progress not hidden", func(t *testing.T) {
@@ -138,7 +138,7 @@ func TestScoreCanShowTo(t *testing.T) {
 				1: {Finished: false},
 			},
 		}
-		assert.True(t, s.CanShowTo(2))
+		assert.True(t, s.CanShowTo(2, false))
 	})
 
 	t.Run("other team cannot see when hidden and not finished", func(t *testing.T) {
@@ -149,7 +149,18 @@ func TestScoreCanShowTo(t *testing.T) {
 				1: {Finished: false},
 			},
 		}
-		assert.False(t, s.CanShowTo(2))
+		assert.False(t, s.CanShowTo(2, false))
+	})
+
+	t.Run("other team can see hidden unfinished progress once the event has ended", func(t *testing.T) {
+		s := &Score{
+			TeamId:       1,
+			HideProgress: true,
+			PresetCompletions: map[int]*PresetCompletion{
+				1: {Finished: false},
+			},
+		}
+		assert.True(t, s.CanShowTo(2, true))
 	})
 }
 

@@ -202,7 +202,7 @@ func (e *ScoreController) StartScoreUpdater() {
 
 				e.mu.Lock()
 				for conn, teamId := range e.connections[eventId] {
-					serializedDiff, err := json.Marshal(toScoreMapResponse(diff, teamId))
+					serializedDiff, err := json.Marshal(toScoreMapResponse(diff, teamId, event.EventEndTime.Before(time.Now())))
 					if err != nil {
 						fmt.Printf("Failed to marshal score diff: %v", err)
 						continue
@@ -255,7 +255,7 @@ func (e *ScoreController) getLatestScoresForEventHandler() gin.HandlerFunc {
 			c.JSON(http.StatusNotFound, gin.H{"error": "No scores found for event"})
 			return
 		}
-		c.JSON(http.StatusOK, toScoreMapResponse(scores, teamId))
+		c.JSON(http.StatusOK, toScoreMapResponse(scores, teamId, event.EventEndTime.Before(time.Now())))
 	}
 }
 
@@ -292,11 +292,11 @@ func toScoreDiffResponse(scoreDiff *service.ScoreDifference) *ScoreDiff {
 	}
 }
 
-func toScoreMapResponse(scoreMap service.ScoreMap, teamId int) []*ScoreDiff {
+func toScoreMapResponse(scoreMap service.ScoreMap, teamId int, eventEnded bool) []*ScoreDiff {
 	response := make([]*ScoreDiff, 0)
 	for _, teamScores := range scoreMap {
 		for _, scoreDiff := range teamScores {
-			if scoreDiff.Score.CanShowTo(teamId) {
+			if scoreDiff.Score.CanShowTo(teamId, eventEnded) {
 				response = append(response, toScoreDiffResponse(scoreDiff))
 			}
 		}

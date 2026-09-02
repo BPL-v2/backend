@@ -67,8 +67,8 @@ func (s *Score) Points() int {
 	return total
 }
 
-func (s *Score) CanShowTo(teamId int) bool {
-	return (s.TeamId == teamId) || s.Finished() || !s.HideProgress
+func (s *Score) CanShowTo(teamId int, eventEnded bool) bool {
+	return (s.TeamId == teamId) || s.Finished() || !s.HideProgress || eventEnded
 }
 
 func EvaluateAggregations(objective *repository.Objective, aggregations ObjectiveTeamMatches, scoreMap map[int]map[int]*Score) error {
