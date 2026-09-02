@@ -7,6 +7,7 @@ import (
 	"bpl/repository"
 	"bpl/service"
 	"bpl/utils"
+	"log"
 	"slices"
 	"strconv"
 	"time"
@@ -25,7 +26,6 @@ type CharacterController struct {
 func NewCharacterController(poeClient *client.PoEClient) *CharacterController {
 	charService := service.NewCharacterService(poeClient)
 	// go charService.UpdateLatestPoBs()
-	// go charService.DeleteInvalidPoBs()
 	return &CharacterController{
 		characterService:      charService,
 		eventService:          service.NewEventService(),
@@ -49,7 +49,29 @@ func setupCharacterController(poeClient *client.PoEClient) []RouteInfo {
 	for i, route := range routes {
 		routes[i].Path = basePath + route.Path
 	}
+	routes = append(routes, RouteInfo{
+		Method: "POST", Path: "admin/fix-pobs", HandlerFunc: e.fixPoBsHandler(),
+		Authenticated: true, RequiredRoles: []repository.Permission{repository.PermissionAdmin},
+	})
 	return routes
+}
+
+// @id FixPoBs
+// @Description Trigger the PoB maintenance/cleanup routine (admin only)
+// @Security BearerAuth
+// @Tags characters
+// @Produce json
+// @Success 202 "Accepted"
+// @Router /admin/fix-pobs [post]
+func (e *CharacterController) fixPoBsHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		go func() {
+			if err := e.characterService.FixPoBs(); err != nil {
+				log.Printf("FixPoBs failed: %v", err)
+			}
+		}()
+		c.Status(202)
+	}
 }
 
 // @id UpdateCharacter

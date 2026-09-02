@@ -1260,6 +1260,15 @@ func TestCharacterPob_HasEqualStats(t *testing.T) {
 		assert.False(t, pob1.HasEqualStats(pob2))
 	})
 
+	t.Run("different XP is still equal", func(t *testing.T) {
+		pob2 := &CharacterPob{
+			DPS: 100, EHP: 200, PhysMaxHit: 300, EleMaxHit: 400,
+			HP: 500, Mana: 600, ES: 700, Armour: 800,
+			Evasion: 900, XP: 999999, MovementSpeed: 130,
+		}
+		assert.True(t, pob1.HasEqualStats(pob2))
+	})
+
 	t.Run("different MovementSpeed", func(t *testing.T) {
 		pob2 := &CharacterPob{
 			DPS: 100, EHP: 200, PhysMaxHit: 300, EleMaxHit: 400,

@@ -30,7 +30,7 @@ type CharacterService interface {
 	UpdatePoBStats() error
 	GetPoBById(pobId int) (*repository.CharacterPob, error)
 	DeletePoB(pobId int) error
-	DeleteInvalidPoBs() error
+	FixPoBs() error
 	SaveDelveHistoryEntries(entries []*repository.CharacterDelveHistory) error
 	GetLatestDelveDepthsForEvent(eventId int) (map[string]int, error)
 	GetDelveHistory(characterId string) ([]*repository.CharacterDelveHistory, error)
@@ -395,15 +395,21 @@ func (c *CharacterServiceImpl) DeletePoB(pobId int) error {
 	return c.characterRepository.DeletePoB(pobId)
 }
 
-// DeleteInvalidPoBs walks all PoB snapshots ordered by character and time,
-// deleting a snapshot whenever it has fewer equipped items than the previous
-// snapshot for the same character.
-func (c *CharacterServiceImpl) DeleteInvalidPoBs() error {
-	fmt.Println("Starting to delete invalid PoBs...")
+// FixPoBs is a general-purpose maintenance routine over all stored PoB
+// snapshots. Its exact behaviour is expected to change over time depending on
+// what needs cleaning up; it is triggered manually via the admin endpoint.
+//
+// Currently it walks all PoB snapshots ordered by character and time, deleting a
+// snapshot whenever it has stats identical to the previous kept snapshot for the
+// same character (duplicate), has fewer equipped items than the previous
+// snapshot, or swapped weapons and lost dps.
+func (c *CharacterServiceImpl) FixPoBs() error {
+	fmt.Println("Starting to fix PoBs...")
 	offset := 0
 	limit := 1000
 	lastEquipmentCount := make(map[string]int)
 	lastPoB := make(map[string]*client.PathOfBuilding)
+	lastStats := make(map[string]*repository.CharacterPob)
 
 	for {
 		pobs, err := c.characterRepository.GetPobsOrderedByCharacterAndTime(offset, limit)
@@ -416,6 +422,12 @@ func (c *CharacterServiceImpl) DeleteInvalidPoBs() error {
 		offset += len(pobs)
 		idsToDelete := []int{}
 		for _, characterPob := range pobs {
+			if prev, ok := lastStats[characterPob.CharacterId]; ok && characterPob.HasEqualStats(prev) {
+				idsToDelete = append(idsToDelete, characterPob.Id)
+				continue
+			}
+			lastStats[characterPob.CharacterId] = characterPob
+
 			pob, err := characterPob.Export.Decode()
 			if err != nil {
 				fmt.Printf("Error decoding PoB %d for character %s: %v\n", characterPob.Id, characterPob.CharacterId, err)
