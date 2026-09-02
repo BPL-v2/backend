@@ -7,8 +7,6 @@ import (
 	"math"
 )
 
-const MaxItemWishQuantity = 5
-
 type ItemWishService interface {
 	CreateItemWish(itemWish *repository.ItemWish, teamId int) (*repository.ItemWish, error)
 	UpdateItemWish(itemWish *repository.ItemWish, teamId int, Fulfilled *bool, BuildEnabling *int, Priority *int, Quantity *int) (*repository.ItemWish, error)

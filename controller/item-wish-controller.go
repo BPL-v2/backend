@@ -90,12 +90,6 @@ func (e *ItemWishController) creatItemWishHandler() gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": "Invalid request body"})
 			return
 		}
-		if itemWishReq.Quantity == 0 {
-			itemWishReq.Quantity = 1
-		} else if itemWishReq.Quantity < 1 || itemWishReq.Quantity > service.MaxItemWishQuantity {
-			c.JSON(400, gin.H{"error": fmt.Sprintf("Quantity must be between 1 and %d", service.MaxItemWishQuantity)})
-			return
-		}
 
 		itemWish := &repository.ItemWish{
 			UserID:        userId,
@@ -138,10 +132,6 @@ func (e *ItemWishController) changeItemWishHandler() gin.HandlerFunc {
 		var itemWishReq UpdateItemWish
 		if err := c.ShouldBindJSON(&itemWishReq); err != nil {
 			c.JSON(400, gin.H{"error": "Invalid request body"})
-			return
-		}
-		if itemWishReq.Quantity != nil && (*itemWishReq.Quantity < 1 || *itemWishReq.Quantity > service.MaxItemWishQuantity) {
-			c.JSON(400, gin.H{"error": fmt.Sprintf("Quantity must be between 1 and %d", service.MaxItemWishQuantity)})
 			return
 		}
 		itemWish, err := e.itemWishService.GetItemWishById(wishId)
@@ -211,32 +201,30 @@ func (e *ItemWishController) deleteItemWishHandler() gin.HandlerFunc {
 }
 
 type ItemWish struct {
-	Id        int                  `json:"id" binding:"required"`
-	UserId    int                  `json:"user_id" binding:"required"`
-	ItemField repository.ItemField `json:"item_field" binding:"required"`
-	Value     string               `json:"value" binding:"required"`
+	Id            int                  `json:"id" binding:"required"`
+	UserId        int                  `json:"user_id" binding:"required"`
+	ItemField     repository.ItemField `json:"item_field" binding:"required"`
+	Value         string               `json:"value" binding:"required"`
 	Extra         string               `json:"extra"`
-	Fulfilled bool                 `json:"fulfilled" binding:"required"`
-	// BuildEnabling is a 1-5 importance scale (1 = nice to have, 5 = absolutely essential).
-	BuildEnabling int `json:"build_enabling" binding:"required"`
-	Priority      int `json:"priority" binding:"required"`
+	Fulfilled     bool                 `json:"fulfilled" binding:"required"`
+	BuildEnabling int                  `json:"build_enabling" binding:"required"`
+	Priority      int                  `json:"priority" binding:"required"`
 	Quantity      int                  `json:"quantity" binding:"required"`
 }
 
 type CreateItemWish struct {
-	ItemField repository.ItemField `json:"item_field" binding:"required"`
-	Value     string               `json:"value" binding:"required"`
+	ItemField     repository.ItemField `json:"item_field" binding:"required"`
+	Value         string               `json:"value" binding:"required"`
 	Extra         string               `json:"extra"`
-	// BuildEnabling is a mandatory 1-5 importance scale (1 = nice to have, 5 = absolutely essential).
-	BuildEnabling int `json:"build_enabling" binding:"required,min=1,max=5"`
-	Quantity      int                  `json:"quantity"`
+	BuildEnabling int                  `json:"build_enabling" binding:"required,min=1,max=5"`
+	Quantity      int                  `json:"quantity" binding:"required,min=1,max=5"`
 }
 
 type UpdateItemWish struct {
 	Fulfilled     *bool `json:"fulfilled"`
 	BuildEnabling *int  `json:"build_enabling" binding:"omitempty,min=1,max=5"`
-	Priority      *int  `json:"priority"`
-	Quantity      *int  `json:"quantity"`
+	Priority      *int  `json:"priority" binding:"omitempty,min=0"`
+	Quantity      *int  `json:"quantity" binding:"omitempty,min=1,max=5"`
 }
 
 func toItemWishModel(iw *repository.ItemWish) *ItemWish {
