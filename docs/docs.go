@@ -2166,7 +2166,10 @@ const docTemplate = `{
             "CreateItemWish": {
                 "properties": {
                     "build_enabling": {
-                        "type": "boolean"
+                        "description": "BuildEnabling is a mandatory 1-5 importance scale (1 = nice to have, 5 = absolutely essential).",
+                        "maximum": 5,
+                        "minimum": 1,
+                        "type": "integer"
                     },
                     "item_field": {
                         "$ref": "#/components/schemas/ItemField"
@@ -2176,6 +2179,7 @@ const docTemplate = `{
                     }
                 },
                 "required": [
+                    "build_enabling",
                     "item_field",
                     "value"
                 ],
@@ -2205,6 +2209,9 @@ const docTemplate = `{
                     "character_name": {
                         "type": "string"
                     },
+                    "duration": {
+                        "type": "string"
+                    },
                     "duration_seconds": {
                         "type": "integer"
                     },
@@ -2223,6 +2230,7 @@ const docTemplate = `{
                 "required": [
                     "character_id",
                     "character_name",
+                    "duration",
                     "duration_seconds",
                     "from_time",
                     "to_time"
@@ -2625,7 +2633,8 @@ const docTemplate = `{
             "ItemWish": {
                 "properties": {
                     "build_enabling": {
-                        "type": "boolean"
+                        "description": "BuildEnabling is a 1-5 importance scale (1 = nice to have, 5 = absolutely essential).",
+                        "type": "integer"
                     },
                     "fulfilled": {
                         "type": "boolean"
@@ -4230,7 +4239,9 @@ const docTemplate = `{
             "UpdateItemWish": {
                 "properties": {
                     "build_enabling": {
-                        "type": "boolean"
+                        "maximum": 5,
+                        "minimum": 1,
+                        "type": "integer"
                     },
                     "fulfilled": {
                         "type": "boolean"

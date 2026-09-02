@@ -9,7 +9,7 @@ import (
 
 type ItemWishService interface {
 	CreateItemWish(itemWish *repository.ItemWish, teamId int) (*repository.ItemWish, error)
-	UpdateItemWish(itemWish *repository.ItemWish, teamId int, Fulfilled *bool, BuildEnabling *bool, Priority *int) (*repository.ItemWish, error)
+	UpdateItemWish(itemWish *repository.ItemWish, teamId int, Fulfilled *bool, BuildEnabling *int, Priority *int) (*repository.ItemWish, error)
 	GetItemWishById(id int) (*repository.ItemWish, error)
 	DeleteItemWish(id int) error
 	GetItemWishesForTeam(teamId int) ([]*repository.ItemWish, error)
@@ -35,7 +35,7 @@ func (s *ItemWishServiceImpl) CreateItemWish(itemWish *repository.ItemWish, team
 	return s.itemWishRepository.SaveItemWish(itemWish)
 }
 
-func (s *ItemWishServiceImpl) UpdateItemWish(itemWish *repository.ItemWish, teamId int, Fulfilled *bool, BuildEnabling *bool, Priority *int) (*repository.ItemWish, error) {
+func (s *ItemWishServiceImpl) UpdateItemWish(itemWish *repository.ItemWish, teamId int, Fulfilled *bool, BuildEnabling *int, Priority *int) (*repository.ItemWish, error) {
 	if Fulfilled != nil {
 		itemWish.Fulfilled = *Fulfilled
 	}

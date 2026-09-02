@@ -199,24 +199,26 @@ func (e *ItemWishController) deleteItemWishHandler() gin.HandlerFunc {
 }
 
 type ItemWish struct {
-	Id            int                  `json:"id" binding:"required"`
-	UserId        int                  `json:"user_id" binding:"required"`
-	ItemField     repository.ItemField `json:"item_field" binding:"required"`
-	Value         string               `json:"value" binding:"required"`
-	Fulfilled     bool                 `json:"fulfilled" binding:"required"`
-	BuildEnabling bool                 `json:"build_enabling" binding:"required"`
-	Priority      int                  `json:"priority" binding:"required"`
+	Id        int                  `json:"id" binding:"required"`
+	UserId    int                  `json:"user_id" binding:"required"`
+	ItemField repository.ItemField `json:"item_field" binding:"required"`
+	Value     string               `json:"value" binding:"required"`
+	Fulfilled bool                 `json:"fulfilled" binding:"required"`
+	// BuildEnabling is a 1-5 importance scale (1 = nice to have, 5 = absolutely essential).
+	BuildEnabling int `json:"build_enabling" binding:"required"`
+	Priority      int `json:"priority" binding:"required"`
 }
 
 type CreateItemWish struct {
-	ItemField     repository.ItemField `json:"item_field" binding:"required"`
-	Value         string               `json:"value" binding:"required"`
-	BuildEnabling bool                 `json:"build_enabling"`
+	ItemField repository.ItemField `json:"item_field" binding:"required"`
+	Value     string               `json:"value" binding:"required"`
+	// BuildEnabling is a mandatory 1-5 importance scale (1 = nice to have, 5 = absolutely essential).
+	BuildEnabling int `json:"build_enabling" binding:"required,min=1,max=5"`
 }
 
 type UpdateItemWish struct {
 	Fulfilled     *bool `json:"fulfilled"`
-	BuildEnabling *bool `json:"build_enabling"`
+	BuildEnabling *int  `json:"build_enabling" binding:"omitempty,min=1,max=5"`
 	Priority      *int  `json:"priority"`
 }
 

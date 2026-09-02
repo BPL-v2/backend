@@ -25,15 +25,17 @@ func NewItemWishRepository() ItemWishRepository {
 }
 
 type ItemWish struct {
-	Id            int       `gorm:"not null;primaryKey;autoIncrement"`
-	UserID        int       `gorm:"not null;index:idx_user_event_item_wish"`
-	TeamID        int       `gorm:"not null;index:idx_user_team_item_wish"`
-	ItemField     ItemField `gorm:"not null"`
-	Value         string    `gorm:"not null"`
-	Extra         string    `gorm:"not null;default:''"`
-	Fulfilled     bool      `gorm:"not null;default:false"`
-	BuildEnabling bool      `gorm:"not null;default:false"`
-	Priority      int       `gorm:"not null;default:0"`
+	Id        int       `gorm:"not null;primaryKey;autoIncrement"`
+	UserID    int       `gorm:"not null;index:idx_user_event_item_wish"`
+	TeamID    int       `gorm:"not null;index:idx_user_team_item_wish"`
+	ItemField ItemField `gorm:"not null"`
+	Value     string    `gorm:"not null"`
+	Extra     string    `gorm:"not null;default:''"`
+	Fulfilled bool      `gorm:"not null;default:false"`
+	// BuildEnabling is a 1-5 importance scale (1 = nice to have, 5 = absolutely
+	// essential). Legacy boolean values map false -> 1 and true -> 5.
+	BuildEnabling int `gorm:"not null;default:1"`
+	Priority      int `gorm:"not null;default:0"`
 
 	User *User `gorm:"foreignKey:UserID"`
 	Team *Team `gorm:"foreignKey:TeamID"`
