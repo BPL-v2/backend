@@ -2171,8 +2171,14 @@ const docTemplate = `{
                         "minimum": 1,
                         "type": "integer"
                     },
+                    "extra": {
+                        "type": "string"
+                    },
                     "item_field": {
                         "$ref": "#/components/schemas/ItemField"
+                    },
+                    "quantity": {
+                        "type": "integer"
                     },
                     "value": {
                         "type": "string"
@@ -2636,6 +2642,9 @@ const docTemplate = `{
                         "description": "BuildEnabling is a 1-5 importance scale (1 = nice to have, 5 = absolutely essential).",
                         "type": "integer"
                     },
+                    "extra": {
+                        "type": "string"
+                    },
                     "fulfilled": {
                         "type": "boolean"
                     },
@@ -2646,6 +2655,9 @@ const docTemplate = `{
                         "$ref": "#/components/schemas/ItemField"
                     },
                     "priority": {
+                        "type": "integer"
+                    },
+                    "quantity": {
                         "type": "integer"
                     },
                     "user_id": {
@@ -2661,6 +2673,7 @@ const docTemplate = `{
                     "id",
                     "item_field",
                     "priority",
+                    "quantity",
                     "user_id",
                     "value"
                 ],
@@ -4087,6 +4100,9 @@ const docTemplate = `{
                     "character_name": {
                         "type": "string"
                     },
+                    "guide_url": {
+                        "type": "string"
+                    },
                     "looking_for_group": {
                         "type": "boolean"
                     },
@@ -4103,6 +4119,12 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "secondary_role": {
+                        "type": "string"
+                    },
+                    "secondary_specialization": {
+                        "type": "string"
+                    },
+                    "specialization": {
                         "type": "string"
                     },
                     "uniques_needed": {
@@ -4131,6 +4153,9 @@ const docTemplate = `{
                     "character_name": {
                         "type": "string"
                     },
+                    "guide_url": {
+                        "type": "string"
+                    },
                     "looking_for_group": {
                         "type": "boolean"
                     },
@@ -4147,6 +4172,12 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "secondary_role": {
+                        "type": "string"
+                    },
+                    "secondary_specialization": {
+                        "type": "string"
+                    },
+                    "specialization": {
                         "type": "string"
                     },
                     "uniques_needed": {
@@ -4247,6 +4278,9 @@ const docTemplate = `{
                         "type": "boolean"
                     },
                     "priority": {
+                        "type": "integer"
+                    },
+                    "quantity": {
                         "type": "integer"
                     }
                 },

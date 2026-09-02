@@ -9,7 +9,7 @@ import (
 
 type ItemWishService interface {
 	CreateItemWish(itemWish *repository.ItemWish, teamId int) (*repository.ItemWish, error)
-	UpdateItemWish(itemWish *repository.ItemWish, teamId int, Fulfilled *bool, BuildEnabling *int, Priority *int) (*repository.ItemWish, error)
+	UpdateItemWish(itemWish *repository.ItemWish, teamId int, Fulfilled *bool, BuildEnabling *int, Priority *int, Quantity *int) (*repository.ItemWish, error)
 	GetItemWishById(id int) (*repository.ItemWish, error)
 	DeleteItemWish(id int) error
 	GetItemWishesForTeam(teamId int) ([]*repository.ItemWish, error)
@@ -26,21 +26,39 @@ func NewItemWishService() ItemWishService {
 	}
 }
 
+// findDuplicateWish returns the wish among candidates that already covers the
+// same (user, extra) pair as itemWish, if any.
+func findDuplicateWish(candidates []*repository.ItemWish, itemWish *repository.ItemWish) *repository.ItemWish {
+	found, _ := utils.FindFirst(candidates, func(existing *repository.ItemWish) bool {
+		return existing.UserID == itemWish.UserID && existing.Extra == itemWish.Extra
+	})
+	return found
+}
+
 func (s *ItemWishServiceImpl) CreateItemWish(itemWish *repository.ItemWish, teamId int) (*repository.ItemWish, error) {
 	itemWishes, err := s.itemWishRepository.GetSimilarItemWishesInTeam(teamId, itemWish.ItemField, itemWish.Value)
 	if err != nil {
 		return nil, err
 	}
+	// Idempotent: a client can end up asking to create the same wish twice
+	// (e.g. a stale-cache race from clicking Save repeatedly) - rather than
+	// duplicating the row, just hand back the one that's already there.
+	if duplicate := findDuplicateWish(itemWishes, itemWish); duplicate != nil {
+		return duplicate, nil
+	}
 	itemWish.Priority = len(itemWishes)
 	return s.itemWishRepository.SaveItemWish(itemWish)
 }
 
-func (s *ItemWishServiceImpl) UpdateItemWish(itemWish *repository.ItemWish, teamId int, Fulfilled *bool, BuildEnabling *int, Priority *int) (*repository.ItemWish, error) {
+func (s *ItemWishServiceImpl) UpdateItemWish(itemWish *repository.ItemWish, teamId int, Fulfilled *bool, BuildEnabling *int, Priority *int, Quantity *int) (*repository.ItemWish, error) {
 	if Fulfilled != nil {
 		itemWish.Fulfilled = *Fulfilled
 	}
 	if BuildEnabling != nil {
 		itemWish.BuildEnabling = *BuildEnabling
+	}
+	if Quantity != nil {
+		itemWish.Quantity = *Quantity
 	}
 	if Priority != nil {
 		itemWishes, err := s.itemWishRepository.GetSimilarItemWishesInTeam(teamId, itemWish.ItemField, itemWish.Value)

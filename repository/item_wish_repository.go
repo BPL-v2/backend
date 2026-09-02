@@ -36,6 +36,7 @@ type ItemWish struct {
 	// essential). Legacy boolean values map false -> 1 and true -> 5.
 	BuildEnabling int `gorm:"not null;default:1"`
 	Priority      int `gorm:"not null;default:0"`
+	Quantity      int       `gorm:"not null;default:1"`
 
 	User *User `gorm:"foreignKey:UserID"`
 	Team *Team `gorm:"foreignKey:TeamID"`

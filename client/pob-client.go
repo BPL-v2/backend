@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 )
 
@@ -50,6 +52,59 @@ func GetPoBExport(characterData *Character) (*PathOfBuilding, string, error) {
 		return nil, "", fmt.Errorf("failed to decode PoB export: %v", err)
 	}
 	return pob, export, nil
+}
+
+// Sites Path of Building itself supports importing from, mirrored from
+// buildSites.websiteList in PathOfBuildingCommunity/PathOfBuilding's
+// src/Modules/BuildSiteTools.lua so we resolve the exact same links a user
+// would paste straight into the desktop app.
+type pobShareSite struct {
+	label       string
+	matchURL    *regexp.Regexp
+	downloadURL string // %s is replaced with the captured share ID
+}
+
+var pobShareSites = []pobShareSite{
+	{"Maxroll", regexp.MustCompile(`^https://maxroll\.gg/poe/pob/([^/?#\s]+)`), "https://maxroll.gg/poe/api/pob/%s"},
+	{"pob.codes", regexp.MustCompile(`^https://pob\.codes/b/([^/?#\s]+)`), "https://api.pob.codes/%s/raw"},
+	{"pobb.in", regexp.MustCompile(`^https://pobb\.in/([^/?#\s]+)`), "https://pobb.in/pob/%s"},
+	{"PoE Ninja", regexp.MustCompile(`^https://poe\.ninja/(?:poe1/)?pob/(\w+)`), "https://poe.ninja/poe1/pob/raw/%s"},
+	{"Pastebin.com", regexp.MustCompile(`^https://pastebin\.com/(\w+)`), "https://pastebin.com/raw/%s"},
+	{"PastebinP.com", regexp.MustCompile(`^https://pastebinp\.com/(\w+)`), "https://pastebinp.com/raw/%s"},
+	{"Rentry.co", regexp.MustCompile(`^https://rentry\.co/(\w+)`), "https://rentry.co/paste/%s/raw"},
+	{"poedb.tw", regexp.MustCompile(`^https://poedb\.tw/pob/([^/?#\s]+)`), "https://poedb.tw/pob/%s/raw"},
+}
+
+// FetchPoBFromShareLink resolves a share link from one of the sites Path of
+// Building supports importing from (see pobShareSites) into its raw PoB
+// export code. Returns an error if the link doesn't match any known site.
+func FetchPoBFromShareLink(shareURL string) (string, error) {
+	for _, site := range pobShareSites {
+		match := site.matchURL.FindStringSubmatch(shareURL)
+		if match == nil {
+			continue
+		}
+		downloadURL := fmt.Sprintf(site.downloadURL, match[1])
+		request, err := http.NewRequest("GET", downloadURL, nil)
+		if err != nil {
+			return "", fmt.Errorf("failed to create request: %v", err)
+		}
+		request.Header.Set("User-Agent", "bpl-pob-import")
+		response, err := httpClient.Do(request)
+		if err != nil {
+			return "", fmt.Errorf("failed to fetch PoB code from %s: %v", site.label, err)
+		}
+		defer utils.Closer(response.Body)()
+		if response.StatusCode != 200 {
+			return "", fmt.Errorf("%s returned status %d", site.label, response.StatusCode)
+		}
+		body, err := io.ReadAll(response.Body)
+		if err != nil {
+			return "", fmt.Errorf("failed to read response body: %v", err)
+		}
+		return strings.TrimSpace(string(body)), nil
+	}
+	return "", fmt.Errorf("unrecognized PoB share link")
 }
 
 func UpdatePoBExport(pobString string) (string, error) {
