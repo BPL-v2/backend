@@ -2,7 +2,10 @@ package service
 
 import (
 	"bpl/repository"
+	"context"
 	"errors"
+	"fmt"
+	"time"
 )
 
 type AchievementService interface {
@@ -19,6 +22,7 @@ type AchievementService interface {
 	RevokeAchievement(userId, achievementId int) error
 
 	SyncAchievements() error
+	SyncAchievementsLoop(ctx context.Context, sleepDuration time.Duration)
 }
 
 type AchievementServiceImpl struct {
@@ -128,6 +132,21 @@ func (s *AchievementServiceImpl) SyncAchievements() error {
 		}
 	}
 	return s.achievementRepository.SaveUserAchievements(grants)
+}
+
+func (s *AchievementServiceImpl) SyncAchievementsLoop(ctx context.Context, sleepDuration time.Duration) {
+	ticker := time.NewTicker(sleepDuration)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := s.SyncAchievements(); err != nil {
+				fmt.Printf("Failed to sync achievements: %v\n", err)
+			}
+		}
+	}
 }
 
 var baseClasses = map[string]bool{
