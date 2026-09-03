@@ -1,9 +1,9 @@
-name: Deploy
+name: Deploy (Staging)
 
 on:
   push:
     branches:
-      - main
+      - develop
 
 env:
   IMAGE: ghcr.io/bpl-v2/backend
@@ -66,8 +66,6 @@ jobs:
             "host=localhost port=5432 user=postgres password=postgres dbname=postgres sslmode=disable search_path=bpl2,public" \
             status
 
-  # Builds and pushes the image under a throwaway commit-SHA tag in parallel
-  # with test + migrations. Nothing consumes this tag until deploy re-tags it.
   build:
     runs-on: ubuntu-latest
     permissions:
@@ -94,30 +92,17 @@ jobs:
       contents: read
       packages: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0 # Fetch all history for all tags and branches
-
-      - name: Print latest tag
-        run: git describe --tags --abbrev=0
-
-      - name: Get latest tag
-        id: get_tag
-        run: |
-          TAG=$(git describe --tags --abbrev=0)
-          echo "::set-output name=tag::${TAG#v}"
-
       - name: Login to GitHub Container Registry
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Tag release from build image
+      - name: Tag staging from build image
         run: |
           docker buildx imagetools create \
-            --tag ${{ env.IMAGE }}:${{ steps.get_tag.outputs.tag }} \
+            --tag ${{ env.IMAGE }}:staging \
             ${{ env.IMAGE }}:sha-${{ github.sha }}
 
-      - name: Notify watchtower
+      - name: Notify watchtower on staging
         run: |
-          curl -X POST "${{vars.SERVER_URL}}/watchtower/v1/update" -H "Authorization: Bearer ${{ secrets.WATCHTOWER_TOKEN }}"
+          curl -f -X POST "${{ vars.STAGING_SERVER_URL }}/watchtower/v1/update" \
+            -H "Authorization: Bearer ${{ secrets.WATCHTOWER_STAGING_TOKEN }}"
