@@ -936,6 +936,47 @@ func TestAchievementChecks_CharacterBased_EventScoped(t *testing.T) {
 	assert.Contains(t, userIds, 1)
 }
 
+func TestAchievementChecks_Teamlead_AllEvents(t *testing.T) {
+	mockTeamRepo := new(mockTeamRepo)
+	svc := &AchievementServiceImpl{teamRepository: mockTeamRepo}
+
+	mockTeamRepo.On("GetAllTeamLeadUserIds").Return([]int{10, 20}, nil)
+
+	userIds, err := achievementChecks[repository.CheckTeamlead](svc, nil, nil)
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []int{10, 20}, userIds)
+	mockTeamRepo.AssertExpectations(t)
+}
+
+func TestAchievementChecks_Teamlead_EventScoped(t *testing.T) {
+	mockTeamRepo := new(mockTeamRepo)
+	svc := &AchievementServiceImpl{teamRepository: mockTeamRepo}
+
+	eventId := 1
+	mockTeamRepo.On("GetTeamLeadsForEvent", eventId).Return([]*repository.TeamUser{{UserId: 10}, {UserId: 20}}, nil)
+
+	userIds, err := achievementChecks[repository.CheckTeamlead](svc, &eventId, nil)
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []int{10, 20}, userIds)
+	mockTeamRepo.AssertExpectations(t)
+}
+
+func TestAchievementChecks_SubmittedBounty_EventScoped(t *testing.T) {
+	mockSubmissionRepo := new(mockSubmissionRepository)
+	svc := &AchievementServiceImpl{submissionRepository: mockSubmissionRepo}
+
+	eventId := 1
+	mockSubmissionRepo.On(
+		"GetApprovedSubmissionUserIds",
+		mock.MatchedBy(func(id *int) bool { return id != nil && *id == eventId }),
+	).Return([]int{10}, nil)
+
+	userIds, err := achievementChecks[repository.CheckSubmittedBounty](svc, &eventId, nil)
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []int{10}, userIds)
+	mockSubmissionRepo.AssertExpectations(t)
+}
+
 // ==================== CharacterInfo.ToPlayerUpdate Tests ====================
 
 func TestCharacterInfo_ToPlayerUpdate_ValidToken(t *testing.T) {
