@@ -128,6 +128,7 @@ func (s *AchievementServiceImpl) SyncAchievements() error {
 		}
 		check, ok := achievementChecks[*achievement.AutoCheckKey]
 		if !ok {
+			fmt.Printf("Unknown achievement auto_check_key %q for achievement %d\n", *achievement.AutoCheckKey, achievement.Id)
 			continue
 		}
 		userIds, err := check(s, achievement.EventId, characterMap)
