@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/joho/godotenv"
@@ -40,6 +41,10 @@ type Config struct {
 	// Path of Building
 	POBServerURL        string
 	NumberOfPoBReplicas int
+
+	// URL and CORS
+	PublicURL      string
+	AllowedOrigins []string
 
 	// Other
 	KafkaBroker string
@@ -86,6 +91,10 @@ func loadConfig() *Config {
 		// Path of Building - optional
 		POBServerURL:        getEnvWithDefault("POB_SERVER_URL", "http://localhost:8080"),
 		NumberOfPoBReplicas: getEnvAsInt("POB_REPLICAS", 1),
+
+		// URL and CORS
+		PublicURL:      strings.TrimRight(getEnvWithDefault("PUBLIC_URL", "https://bpl-poe.com"), "/"),
+		AllowedOrigins: parseAllowedOrigins(getEnv("ALLOWED_ORIGINS")),
 
 		// Other
 		KafkaBroker: getEnvWithDefault("KAFKA_BROKER", "localhost:9092"),
@@ -140,4 +149,19 @@ func IsProduction() bool {
 // IsDevelopment returns true if running in development
 func IsDevelopment() bool {
 	return !IsProduction()
+}
+
+func parseAllowedOrigins(raw string) []string {
+	if raw == "" {
+		return nil
+	}
+	parts := strings.Split(raw, ",")
+	var origins []string
+	for _, p := range parts {
+		trimmed := strings.TrimSpace(p)
+		if trimmed != "" {
+			origins = append(origins, trimmed)
+		}
+	}
+	return origins
 }

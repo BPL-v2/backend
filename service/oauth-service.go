@@ -83,6 +83,12 @@ type TwitchExtendedUserResponse struct {
 }
 
 func NewOauthService() OauthService {
+	// if .env doesnt have a publicURL declared, default to bpl-poe.com
+	publicURL := config.Env().PublicURL
+	if publicURL == "" {
+		publicURL = "https://bpl-poe.com"
+	}
+
 	return &OauthServiceImpl{
 		Config: map[repository.Provider]*oauth2.Config{
 			repository.ProviderDiscord: {
@@ -93,7 +99,7 @@ func NewOauthService() OauthService {
 					AuthURL:  "https://discord.com/oauth2/authorize",
 					TokenURL: "https://discord.com/api/oauth2/token",
 				},
-				RedirectURL: "https://bpl-poe.com/auth/discord/callback",
+				RedirectURL: fmt.Sprintf("%s/auth/discord/callback", publicURL),
 			},
 			repository.ProviderTwitch: {
 				ClientID:     config.Env().TwitchClientID,
@@ -103,7 +109,7 @@ func NewOauthService() OauthService {
 					AuthURL:  "https://id.twitch.tv/oauth2/authorize",
 					TokenURL: "https://id.twitch.tv/oauth2/token",
 				},
-				RedirectURL: "https://bpl-poe.com/auth/twitch/callback",
+				RedirectURL: fmt.Sprintf("%s/auth/twitch/callback", publicURL),
 			},
 			repository.ProviderPoE: {
 				ClientID:     config.Env().POEClientID,
@@ -113,7 +119,7 @@ func NewOauthService() OauthService {
 					AuthURL:  "https://www.pathofexile.com/oauth/authorize",
 					TokenURL: "https://www.pathofexile.com/oauth/token",
 				},
-				RedirectURL: "https://bpl-poe.com/auth/poe/callback",
+				RedirectURL: fmt.Sprintf("%s/auth/poe/callback", publicURL),
 			},
 		},
 		clientConfig: map[repository.Provider]*clientcredentials.Config{

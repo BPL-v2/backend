@@ -62,5 +62,11 @@ func IsApprovedOrigin(origin string) bool {
 			return true
 		}
 	}
+	if pub := getEnvWithDefault("PUBLIC_URL", ""); pub != "" {
+		if u, err := url.Parse(pub); err == nil && u.Hostname() == hostname {
+			return true
+		}
+	}
+
 	return false
 }
