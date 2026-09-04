@@ -4093,6 +4093,9 @@ const docTemplate = `{
             },
             "TeamSheetEntry": {
                 "properties": {
+                    "alt_ascendancy": {
+                        "type": "string"
+                    },
                     "altars": {
                         "type": "string"
                     },
@@ -4146,6 +4149,9 @@ const docTemplate = `{
             },
             "TeamSheetEntryUpdate": {
                 "properties": {
+                    "alt_ascendancy": {
+                        "type": "string"
+                    },
                     "altars": {
                         "type": "string"
                     },

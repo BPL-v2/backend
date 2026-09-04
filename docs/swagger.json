@@ -4087,6 +4087,9 @@
             },
             "TeamSheetEntry": {
                 "properties": {
+                    "alt_ascendancy": {
+                        "type": "string"
+                    },
                     "altars": {
                         "type": "string"
                     },
@@ -4140,6 +4143,9 @@
             },
             "TeamSheetEntryUpdate": {
                 "properties": {
+                    "alt_ascendancy": {
+                        "type": "string"
+                    },
                     "altars": {
                         "type": "string"
                     },
