@@ -466,8 +466,11 @@ func toGGGModel(tab *repository.GuildStashTab, parser *parser.ItemChecker) *Stas
 			}
 			completions := parser.CheckForCompletions(item.Item)
 			if len(completions) > 0 {
-				objectiveId := completions[0].ObjectiveId
-				item.ObjectiveId = &objectiveId
+				objectiveIds := make([]int, 0, len(completions))
+				for _, completion := range completions {
+					objectiveIds = append(objectiveIds, completion.ObjectiveId)
+				}
+				item.ObjectiveIds = objectiveIds
 			}
 			items = append(items, item)
 		}
@@ -644,5 +647,5 @@ type StashTabWithCompletions struct {
 
 type ItemWithCompletions struct {
 	*client.Item
-	ObjectiveId *int `json:"objective_id,omitempty"`
+	ObjectiveIds []int `json:"objective_ids,omitempty"`
 }
