@@ -81,6 +81,7 @@ type SubmissionRepository interface {
 	AddMatchToSubmission(submission *Submission) error
 	RemoveMatchFromSubmission(submission *Submission) error
 	DeleteSubmission(submissionId int) error
+	GetApprovedSubmissionUserIds(eventId *int) ([]int, error)
 }
 
 type SubmissionRepositoryImpl struct {
@@ -142,4 +143,18 @@ func (r *SubmissionRepositoryImpl) RemoveMatchFromSubmission(submission *Submiss
 func (r *SubmissionRepositoryImpl) DeleteSubmission(submissionId int) error {
 	result := r.DB.Delete(&Submission{Id: submissionId})
 	return result.Error
+}
+
+func (r *SubmissionRepositoryImpl) GetApprovedSubmissionUserIds(eventId *int) ([]int, error) {
+	var userIds []int
+	query := r.DB.Model(&Submission{}).Where("submissions.approval_status = ?", APPROVED)
+	if eventId != nil {
+		query = query.Joins("JOIN teams ON teams.id = submissions.team_id").
+			Where("teams.event_id = ?", *eventId)
+	}
+	result := query.Distinct("submissions.user_id").Pluck("submissions.user_id", &userIds)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return userIds, nil
 }

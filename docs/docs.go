@@ -1784,6 +1784,10 @@ const docTemplate = `{
                     "description": {
                         "type": "string"
                     },
+                    "event_id": {
+                        "description": "EventId scopes the achievement to a single season - omit for an\nalways-obtainable achievement.",
+                        "type": "integer"
+                    },
                     "name": {
                         "type": "string"
                     }
@@ -1810,8 +1814,14 @@ const docTemplate = `{
             },
             "AchievementResponse": {
                 "properties": {
+                    "auto_check_key": {
+                        "$ref": "#/components/schemas/AchievementCheckKey"
+                    },
                     "description": {
                         "type": "string"
+                    },
+                    "event_id": {
+                        "type": "integer"
                     },
                     "icon_url": {
                         "type": "string"
@@ -4397,6 +4407,33 @@ const docTemplate = `{
                     "sleep_after_each_run_seconds"
                 ],
                 "type": "object"
+            },
+            "AchievementCheckKey": {
+                "enum": [
+                    "level_90",
+                    "level_95",
+                    "level_100",
+                    "participated_in_event",
+                    "played_5_leagues",
+                    "played_10_leagues",
+                    "played_5_ascendancies",
+                    "played_10_ascendancies",
+                    "teamlead",
+                    "submitted_bounty"
+                ],
+                "type": "string",
+                "x-enum-varnames": [
+                    "CheckLevel90",
+                    "CheckLevel95",
+                    "CheckLevel100",
+                    "CheckParticipatedInEvent",
+                    "CheckPlayed5Leagues",
+                    "CheckPlayed10Leagues",
+                    "CheckPlayed5Ascendancies",
+                    "CheckPlayed10Ascendancies",
+                    "CheckTeamlead",
+                    "CheckSubmittedBounty"
+                ]
             },
             "ApprovalStatus": {
                 "enum": [

@@ -42,6 +42,7 @@ type TeamRepository interface {
 	AddUsersToTeams(teamUsers []*TeamUser) error
 	GetTeamForUser(eventId int, userId int) (*TeamUser, error)
 	GetAllTeamUsers() ([]*TeamUser, error)
+	GetAllTeamLeadUserIds() ([]int, error)
 	GetNumbersOfPastEventsParticipatedByUsers(userIds []int) (map[int]int, error)
 }
 
@@ -198,6 +199,18 @@ func (r *TeamRepositoryImpl) GetAllTeamUsers() ([]*TeamUser, error) {
 		return nil, result.Error
 	}
 	return teamUsers, nil
+}
+
+func (r *TeamRepositoryImpl) GetAllTeamLeadUserIds() ([]int, error) {
+	var userIds []int
+	result := r.DB.Model(&TeamUser{}).
+		Where("is_team_lead = ?", true).
+		Distinct("user_id").
+		Pluck("user_id", &userIds)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return userIds, nil
 }
 
 func (r *TeamRepositoryImpl) GetNumbersOfPastEventsParticipatedByUsers(userIds []int) (map[int]int, error) {
