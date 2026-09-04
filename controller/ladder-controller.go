@@ -67,7 +67,8 @@ func (c *LadderController) getLadderHandler() gin.HandlerFunc {
 		}
 		hours_after_event_start := ctx.Query("hours_after_event_start")
 		cutoff := event.EventEndTime
-		if hours_after_event_start != "" {
+		isHistorical := hours_after_event_start != ""
+		if isHistorical {
 			hours, err := time.ParseDuration(hours_after_event_start + "h")
 			if err != nil {
 				ctx.JSON(400, gin.H{"error": "Invalid hours_after_event_start"})
@@ -95,7 +96,7 @@ func (c *LadderController) getLadderHandler() gin.HandlerFunc {
 			ctx.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
-		ctx.JSON(200, toLadderResponse(usersWithTeam, ladder, characters, characterStats, lastActivities))
+		ctx.JSON(200, toLadderResponse(usersWithTeam, ladder, characters, characterStats, lastActivities, isHistorical))
 	}
 }
 
@@ -309,7 +310,7 @@ func toAtlasResponses(atlases []*repository.AtlasTree) []*Atlas {
 	return mappedAtlases
 }
 
-func toLadderResponse(usersWithTeam map[int]*repository.UserWithTeam, ladderEntries []*repository.LadderEntry, characters []*repository.Character, stats map[string]*repository.CharacterPob, lastActivities map[int]time.Time) []*LadderEntry {
+func toLadderResponse(usersWithTeam map[int]*repository.UserWithTeam, ladderEntries []*repository.LadderEntry, characters []*repository.Character, stats map[string]*repository.CharacterPob, lastActivities map[int]time.Time, isHistorical bool) []*LadderEntry {
 	response := make([]*LadderEntry, 0, len(ladderEntries))
 	ladderMap := make(map[string]*repository.LadderEntry)
 	for _, entry := range ladderEntries {
@@ -327,6 +328,9 @@ func toLadderResponse(usersWithTeam map[int]*repository.UserWithTeam, ladderEntr
 		}
 		user := usersWithTeam[*character.UserId]
 		if user == nil {
+			continue
+		}
+		if stats == nil && isHistorical {
 			continue
 		}
 		resp := &LadderEntry{
