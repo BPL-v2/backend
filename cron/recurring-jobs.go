@@ -23,6 +23,7 @@ type RecurringJobService struct {
 	objectiveRepository repository.ObjectiveRepository
 	eventService        service.EventService
 	oauthService        service.OauthService
+	achievementService  service.AchievementService
 	poeClient           *client.PoEClient
 	jobRepository       repository.RecurringJobsRepository
 	Jobs                map[repository.JobType]*RecurringJob
@@ -35,6 +36,7 @@ func NewRecurringJobService(poeClient *client.PoEClient) *RecurringJobService {
 		objectiveRepository: repository.NewObjectiveRepository(),
 		jobRepository:       repository.NewRecurringJobsRepository(),
 		oauthService:        service.NewOauthService(),
+		achievementService:  service.NewAchievementService(),
 		eventService:        eventService,
 		poeClient:           poeClient,
 		Jobs:                make(map[repository.JobType]*RecurringJob),
@@ -55,6 +57,7 @@ func (s *RecurringJobService) StartLongRunningJobs() {
 		go s.oauthService.RefreshPoETokensLoop(context.Background(), time.Duration(10)*time.Minute)
 	}
 	go PlayerStatsLoop(context.Background())
+	go s.achievementService.SyncAchievementsLoop(context.Background(), 6*time.Hour)
 }
 
 func (s *RecurringJobService) InitializeJobs() (map[repository.JobType]*RecurringJob, error) {

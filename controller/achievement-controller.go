@@ -74,7 +74,7 @@ func (c *AchievementController) createAchievement() gin.HandlerFunc {
 			ctx.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		achievement, err := c.achievementService.CreateAchievement(body.Name, body.Description)
+		achievement, err := c.achievementService.CreateAchievement(body.Name, body.Description, body.EventId)
 		if err != nil {
 			ctx.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -105,7 +105,7 @@ func (c *AchievementController) updateAchievement() gin.HandlerFunc {
 			ctx.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		achievement, err := c.achievementService.UpdateAchievement(id, body.Name, body.Description)
+		achievement, err := c.achievementService.UpdateAchievement(id, body.Name, body.Description, body.EventId)
 		if err != nil {
 			ctx.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -301,6 +301,7 @@ func (c *AchievementController) syncAchievements() gin.HandlerFunc {
 type AchievementCreate struct {
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
+	EventId     *int   `json:"event_id"`
 }
 
 type AchievementGrant struct {
@@ -309,11 +310,13 @@ type AchievementGrant struct {
 }
 
 type AchievementResponse struct {
-	Id          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	IsCustom    bool   `json:"is_custom"`
-	IconUrl     string `json:"icon_url,omitempty"`
+	Id           int                             `json:"id"`
+	Name         string                          `json:"name"`
+	Description  string                          `json:"description"`
+	IsCustom     bool                            `json:"is_custom"`
+	IconUrl      string                          `json:"icon_url,omitempty"`
+	AutoCheckKey *repository.AchievementCheckKey `json:"auto_check_key,omitempty"`
+	EventId      *int                            `json:"event_id,omitempty"`
 }
 
 type UserAchievementResponse struct {
@@ -325,10 +328,12 @@ type UserAchievementResponse struct {
 
 func toAchievementResponse(a *repository.Achievement) *AchievementResponse {
 	resp := &AchievementResponse{
-		Id:          a.Id,
-		Name:        a.Name,
-		Description: a.Description,
-		IsCustom:    a.IsCustom,
+		Id:           a.Id,
+		Name:         a.Name,
+		Description:  a.Description,
+		IsCustom:     a.IsCustom,
+		AutoCheckKey: a.AutoCheckKey,
+		EventId:      a.EventId,
 	}
 	if len(a.Icon) > 0 {
 		resp.IconUrl = "/achievements/" + strconv.Itoa(a.Id) + "/icon"

@@ -2,14 +2,18 @@ package service
 
 import (
 	"bpl/repository"
+	"bpl/utils"
+	"context"
 	"errors"
+	"fmt"
+	"time"
 )
 
 type AchievementService interface {
 	GetAllAchievements() ([]*repository.Achievement, error)
 	GetAchievementById(id int) (*repository.Achievement, error)
-	CreateAchievement(name, description string) (*repository.Achievement, error)
-	UpdateAchievement(id int, name, description string) (*repository.Achievement, error)
+	CreateAchievement(name, description string, eventId *int) (*repository.Achievement, error)
+	UpdateAchievement(id int, name, description string, eventId *int) (*repository.Achievement, error)
 	DeleteAchievement(id int) error
 
 	UploadIcon(id int, icon []byte, mimeType string) error
@@ -19,17 +23,22 @@ type AchievementService interface {
 	RevokeAchievement(userId, achievementId int) error
 
 	SyncAchievements() error
+	SyncAchievementsLoop(ctx context.Context, sleepDuration time.Duration)
 }
 
 type AchievementServiceImpl struct {
 	achievementRepository repository.AchievementRepository
 	characterRepository   repository.CharacterRepository
+	teamRepository        repository.TeamRepository
+	submissionRepository  repository.SubmissionRepository
 }
 
 func NewAchievementService() AchievementService {
 	return &AchievementServiceImpl{
 		achievementRepository: repository.NewAchievementRepository(),
 		characterRepository:   repository.NewCharacterRepository(),
+		teamRepository:        repository.NewTeamRepository(),
+		submissionRepository:  repository.NewSubmissionRepository(),
 	}
 }
 
@@ -41,15 +50,16 @@ func (s *AchievementServiceImpl) GetAchievementById(id int) (*repository.Achieve
 	return s.achievementRepository.GetAchievementById(id)
 }
 
-func (s *AchievementServiceImpl) CreateAchievement(name, description string) (*repository.Achievement, error) {
+func (s *AchievementServiceImpl) CreateAchievement(name, description string, eventId *int) (*repository.Achievement, error) {
 	return s.achievementRepository.SaveAchievement(&repository.Achievement{
 		Name:        name,
 		Description: description,
 		IsCustom:    true,
+		EventId:     eventId,
 	})
 }
 
-func (s *AchievementServiceImpl) UpdateAchievement(id int, name, description string) (*repository.Achievement, error) {
+func (s *AchievementServiceImpl) UpdateAchievement(id int, name, description string, eventId *int) (*repository.Achievement, error) {
 	achievement, err := s.achievementRepository.GetAchievementById(id)
 	if err != nil {
 		return nil, err
@@ -59,6 +69,7 @@ func (s *AchievementServiceImpl) UpdateAchievement(id int, name, description str
 	}
 	achievement.Name = name
 	achievement.Description = description
+	achievement.EventId = eventId
 	return s.achievementRepository.SaveAchievement(achievement)
 }
 
@@ -98,10 +109,6 @@ func (s *AchievementServiceImpl) SyncAchievements() error {
 	if err != nil {
 		return err
 	}
-	nameToId := make(map[string]int, len(allAchievements))
-	for _, a := range allAchievements {
-		nameToId[a.Name] = a.Id
-	}
 
 	characters, err := s.characterRepository.GetAllHighestLevelCharactersForEachEventAndUser()
 	if err != nil {
@@ -115,19 +122,42 @@ func (s *AchievementServiceImpl) SyncAchievements() error {
 	}
 
 	var grants []*repository.UserAchievement
-	for userId, chars := range characterMap {
-		for _, name := range checkAchievements(chars) {
-			id, ok := nameToId[name]
-			if !ok {
-				continue
-			}
+	for _, achievement := range allAchievements {
+		if achievement.AutoCheckKey == nil {
+			continue
+		}
+		check, ok := achievementChecks[*achievement.AutoCheckKey]
+		if !ok {
+			fmt.Printf("Unknown achievement auto_check_key %q for achievement %d\n", *achievement.AutoCheckKey, achievement.Id)
+			continue
+		}
+		userIds, err := check(s, achievement.EventId, characterMap)
+		if err != nil {
+			return err
+		}
+		for _, userId := range userIds {
 			grants = append(grants, &repository.UserAchievement{
 				UserId:        userId,
-				AchievementId: id,
+				AchievementId: achievement.Id,
 			})
 		}
 	}
 	return s.achievementRepository.SaveUserAchievements(grants)
+}
+
+func (s *AchievementServiceImpl) SyncAchievementsLoop(ctx context.Context, sleepDuration time.Duration) {
+	ticker := time.NewTicker(sleepDuration)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			if err := s.SyncAchievements(); err != nil {
+				fmt.Printf("Failed to sync achievements: %v\n", err)
+			}
+		}
+	}
 }
 
 var baseClasses = map[string]bool{
@@ -140,27 +170,45 @@ var baseClasses = map[string]bool{
 	"Templar":  true,
 }
 
-func checkAchievements(chars []*repository.Character) []string {
-	var results []string
-	checks := []struct {
-		name string
-		pass bool
-	}{
-		{"Reached level 90", hasLevelNCharacter(90, chars)},
-		{"Reached level 95", hasLevelNCharacter(95, chars)},
-		{"Reached level 100", hasLevelNCharacter(100, chars)},
-		{"Participated in an event", playedNLeagues(1, chars)},
-		{"Played 5 leagues", playedNLeagues(5, chars)},
-		{"Played 10 leagues", playedNLeagues(10, chars)},
-		{"Played 5 different ascendancies", playedNDifferentAscendancies(5, chars)},
-		{"Played 10 different ascendancies", playedNDifferentAscendancies(10, chars)},
-	}
-	for _, c := range checks {
-		if c.pass {
-			results = append(results, c.name)
+type achievementCheckFunc func(s *AchievementServiceImpl, eventId *int, characterMap map[int][]*repository.Character) ([]int, error)
+
+func characterStatCheck(fn func([]*repository.Character) bool) achievementCheckFunc {
+	return func(_ *AchievementServiceImpl, eventId *int, characterMap map[int][]*repository.Character) ([]int, error) {
+		var userIds []int
+		for userId, chars := range characterMap {
+			if eventId != nil {
+				chars = utils.Filter(chars, func(c *repository.Character) bool { return c.EventId == *eventId })
+			}
+			if fn(chars) {
+				userIds = append(userIds, userId)
+			}
 		}
+		return userIds, nil
 	}
-	return results
+}
+
+var achievementChecks = map[repository.AchievementCheckKey]achievementCheckFunc{
+	repository.CheckLevel90:              characterStatCheck(func(c []*repository.Character) bool { return hasLevelNCharacter(90, c) }),
+	repository.CheckLevel95:              characterStatCheck(func(c []*repository.Character) bool { return hasLevelNCharacter(95, c) }),
+	repository.CheckLevel100:             characterStatCheck(func(c []*repository.Character) bool { return hasLevelNCharacter(100, c) }),
+	repository.CheckParticipatedInEvent:  characterStatCheck(func(c []*repository.Character) bool { return playedNLeagues(1, c) }),
+	repository.CheckPlayed5Leagues:       characterStatCheck(func(c []*repository.Character) bool { return playedNLeagues(5, c) }),
+	repository.CheckPlayed10Leagues:      characterStatCheck(func(c []*repository.Character) bool { return playedNLeagues(10, c) }),
+	repository.CheckPlayed5Ascendancies:  characterStatCheck(func(c []*repository.Character) bool { return playedNDifferentAscendancies(5, c) }),
+	repository.CheckPlayed10Ascendancies: characterStatCheck(func(c []*repository.Character) bool { return playedNDifferentAscendancies(10, c) }),
+	repository.CheckTeamlead: func(s *AchievementServiceImpl, eventId *int, _ map[int][]*repository.Character) ([]int, error) {
+		if eventId == nil {
+			return s.teamRepository.GetAllTeamLeadUserIds()
+		}
+		teamUsers, err := s.teamRepository.GetTeamLeadsForEvent(*eventId)
+		if err != nil {
+			return nil, err
+		}
+		return utils.Map(teamUsers, func(tu *repository.TeamUser) int { return tu.UserId }), nil
+	},
+	repository.CheckSubmittedBounty: func(s *AchievementServiceImpl, eventId *int, _ map[int][]*repository.Character) ([]int, error) {
+		return s.submissionRepository.GetApprovedSubmissionUserIds(eventId)
+	},
 }
 
 func hasLevelNCharacter(level int, chars []*repository.Character) bool {

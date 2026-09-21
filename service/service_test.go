@@ -187,6 +187,13 @@ func (m *mockTeamRepo) GetAllTeamUsers() ([]*repository.TeamUser, error) {
 	}
 	return args.Get(0).([]*repository.TeamUser), args.Error(1)
 }
+func (m *mockTeamRepo) GetAllTeamLeadUserIds() ([]int, error) {
+	args := m.Called()
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]int), args.Error(1)
+}
 func (m *mockTeamRepo) GetNumbersOfPastEventsParticipatedByUsers(userIds []int) (map[int]int, error) {
 	args := m.Called(userIds)
 	if args.Get(0) == nil {
@@ -867,30 +874,107 @@ func TestPlayedNDifferentAscendancies_AllBaseClasses(t *testing.T) {
 	assert.False(t, playedNDifferentAscendancies(1, chars))
 }
 
-func TestCheckAchievements(t *testing.T) {
+func TestAchievementChecks_CharacterBased(t *testing.T) {
 	chars := make([]*repository.Character, 10)
 	for i := range chars {
 		chars[i] = &repository.Character{Level: 95, Ascendancy: "Asc" + string(rune('A'+i))}
 	}
+	characterMap := map[int][]*repository.Character{1: chars}
 
-	achievements := checkAchievements(chars)
-	assert.Contains(t, achievements, repository.AchievementReachedLvl90)
-	assert.Contains(t, achievements, repository.AchievementReachedLvl95)
-	assert.NotContains(t, achievements, repository.AchievementReachedLvl100)
-	assert.Contains(t, achievements, repository.AchievementParticipated)
-	assert.Contains(t, achievements, repository.AchievementPlayed5Leagues)
-	assert.Contains(t, achievements, repository.AchievementPlayed10Leagues)
-	assert.Contains(t, achievements, repository.AchievementPlayed10DifferentAscendancies)
+	assertGrants := func(key repository.AchievementCheckKey, wantGranted bool) {
+		userIds, err := achievementChecks[key](nil, nil, characterMap)
+		assert.NoError(t, err)
+		if wantGranted {
+			assert.Contains(t, userIds, 1)
+		} else {
+			assert.NotContains(t, userIds, 1)
+		}
+	}
+	assertGrants(repository.CheckLevel90, true)
+	assertGrants(repository.CheckLevel95, true)
+	assertGrants(repository.CheckLevel100, false)
+	assertGrants(repository.CheckParticipatedInEvent, true)
+	assertGrants(repository.CheckPlayed5Leagues, true)
+	assertGrants(repository.CheckPlayed10Leagues, true)
+	assertGrants(repository.CheckPlayed10Ascendancies, true)
 }
 
-func TestCheckAchievements_MinimalChars(t *testing.T) {
-	chars := []*repository.Character{
-		{Level: 50, Ascendancy: "Berserker"},
+func TestAchievementChecks_CharacterBased_MinimalChars(t *testing.T) {
+	characterMap := map[int][]*repository.Character{
+		1: {{Level: 50, Ascendancy: "Berserker"}},
 	}
-	achievements := checkAchievements(chars)
-	assert.Contains(t, achievements, repository.AchievementParticipated)
-	assert.NotContains(t, achievements, repository.AchievementReachedLvl90)
-	assert.NotContains(t, achievements, repository.AchievementPlayed5Leagues)
+
+	userIds, err := achievementChecks[repository.CheckParticipatedInEvent](nil, nil, characterMap)
+	assert.NoError(t, err)
+	assert.Contains(t, userIds, 1)
+
+	userIds, err = achievementChecks[repository.CheckLevel90](nil, nil, characterMap)
+	assert.NoError(t, err)
+	assert.NotContains(t, userIds, 1)
+
+	userIds, err = achievementChecks[repository.CheckPlayed5Leagues](nil, nil, characterMap)
+	assert.NoError(t, err)
+	assert.NotContains(t, userIds, 1)
+}
+
+func TestAchievementChecks_CharacterBased_EventScoped(t *testing.T) {
+	characterMap := map[int][]*repository.Character{
+		1: {
+			{Level: 95, EventId: 1},
+			{Level: 10, EventId: 2},
+		},
+	}
+
+	eventTwo := 2
+	userIds, err := achievementChecks[repository.CheckLevel90](nil, &eventTwo, characterMap)
+	assert.NoError(t, err)
+	assert.NotContains(t, userIds, 1, "user's only level-90 character is in a different event")
+
+	eventOne := 1
+	userIds, err = achievementChecks[repository.CheckLevel90](nil, &eventOne, characterMap)
+	assert.NoError(t, err)
+	assert.Contains(t, userIds, 1)
+}
+
+func TestAchievementChecks_Teamlead_AllEvents(t *testing.T) {
+	mockTeamRepo := new(mockTeamRepo)
+	svc := &AchievementServiceImpl{teamRepository: mockTeamRepo}
+
+	mockTeamRepo.On("GetAllTeamLeadUserIds").Return([]int{10, 20}, nil)
+
+	userIds, err := achievementChecks[repository.CheckTeamlead](svc, nil, nil)
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []int{10, 20}, userIds)
+	mockTeamRepo.AssertExpectations(t)
+}
+
+func TestAchievementChecks_Teamlead_EventScoped(t *testing.T) {
+	mockTeamRepo := new(mockTeamRepo)
+	svc := &AchievementServiceImpl{teamRepository: mockTeamRepo}
+
+	eventId := 1
+	mockTeamRepo.On("GetTeamLeadsForEvent", eventId).Return([]*repository.TeamUser{{UserId: 10}, {UserId: 20}}, nil)
+
+	userIds, err := achievementChecks[repository.CheckTeamlead](svc, &eventId, nil)
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []int{10, 20}, userIds)
+	mockTeamRepo.AssertExpectations(t)
+}
+
+func TestAchievementChecks_SubmittedBounty_EventScoped(t *testing.T) {
+	mockSubmissionRepo := new(mockSubmissionRepository)
+	svc := &AchievementServiceImpl{submissionRepository: mockSubmissionRepo}
+
+	eventId := 1
+	mockSubmissionRepo.On(
+		"GetApprovedSubmissionUserIds",
+		mock.MatchedBy(func(id *int) bool { return id != nil && *id == eventId }),
+	).Return([]int{10}, nil)
+
+	userIds, err := achievementChecks[repository.CheckSubmittedBounty](svc, &eventId, nil)
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []int{10}, userIds)
+	mockSubmissionRepo.AssertExpectations(t)
 }
 
 // ==================== CharacterInfo.ToPlayerUpdate Tests ====================
@@ -989,6 +1073,13 @@ func (m *mockSubmissionRepository) AddMatchToSubmission(submission *repository.S
 }
 func (m *mockSubmissionRepository) RemoveMatchFromSubmission(submission *repository.Submission) error {
 	return m.Called(submission).Error(0)
+}
+func (m *mockSubmissionRepository) GetApprovedSubmissionUserIds(eventId *int) ([]int, error) {
+	args := m.Called(eventId)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]int), args.Error(1)
 }
 func (m *mockSubmissionRepository) DeleteSubmission(submissionId int) error {
 	return m.Called(submissionId).Error(0)
