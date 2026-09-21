@@ -57,7 +57,7 @@ func (s *RecurringJobService) StartLongRunningJobs() {
 		go s.oauthService.RefreshPoETokensLoop(context.Background(), time.Duration(10)*time.Minute)
 	}
 	go PlayerStatsLoop(context.Background())
-	go s.achievementService.SyncAchievementsLoop(context.Background(), 6*time.Hour)
+	go s.achievementService.SyncAchievementsLoop(context.Background(), time.Hour)
 }
 
 func (s *RecurringJobService) InitializeJobs() (map[repository.JobType]*RecurringJob, error) {

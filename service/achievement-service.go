@@ -153,6 +153,7 @@ func (s *AchievementServiceImpl) SyncAchievementsLoop(ctx context.Context, sleep
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			fmt.Println("Syncing achievements...")
 			if err := s.SyncAchievements(); err != nil {
 				fmt.Printf("Failed to sync achievements: %v\n", err)
 			}
