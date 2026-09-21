@@ -2956,6 +2956,8 @@ components:
       type: object
     TeamSheetEntry:
       properties:
+        alt_ascendancy:
+          type: string
         altars:
           type: string
         ascendancy:
@@ -2991,6 +2993,8 @@ components:
       type: object
     TeamSheetEntryUpdate:
       properties:
+        alt_ascendancy:
+          type: string
         altars:
           type: string
         ascendancy:

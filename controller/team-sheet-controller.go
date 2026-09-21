@@ -110,6 +110,7 @@ func (e *TeamSheetController) saveMyTeamSheetEntryHandler() gin.HandlerFunc {
 		entry.Realm = update.Realm
 		entry.UniquesNeeded = update.UniquesNeeded
 		entry.Altars = update.Altars
+		entry.AltAscendancy = update.AltAscendancy
 		entry.LookingForGroup = update.LookingForGroup
 
 		saved, err := e.teamSheetService.SaveEntry(entry)
@@ -137,6 +138,7 @@ func toTeamSheetEntryResponse(entry *repository.TeamSheetEntry) *TeamSheetEntry 
 		Realm:                   entry.Realm,
 		UniquesNeeded:           entry.UniquesNeeded,
 		Altars:                  entry.Altars,
+		AltAscendancy:           entry.AltAscendancy,
 		LookingForGroup:         entry.LookingForGroup,
 	}
 }
@@ -156,6 +158,7 @@ type TeamSheetEntry struct {
 	Realm                   *string           `json:"realm"`
 	UniquesNeeded           *string           `json:"uniques_needed"`
 	Altars                  *string           `json:"altars"`
+	AltAscendancy           *string           `json:"alt_ascendancy"`
 	LookingForGroup         bool              `json:"looking_for_group"`
 }
 
@@ -173,5 +176,6 @@ type TeamSheetEntryUpdate struct {
 	Realm                   *string `json:"realm"`
 	UniquesNeeded           *string `json:"uniques_needed"`
 	Altars                  *string `json:"altars"`
+	AltAscendancy           *string `json:"alt_ascendancy"`
 	LookingForGroup         bool    `json:"looking_for_group"`
 }
