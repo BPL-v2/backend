@@ -1785,7 +1785,6 @@ const docTemplate = `{
                         "type": "string"
                     },
                     "event_id": {
-                        "description": "EventId scopes the achievement to a single season - omit for an\nalways-obtainable achievement.",
                         "type": "integer"
                     },
                     "name": {
