@@ -479,7 +479,9 @@ type AccountTwitch struct {
 
 // Character defines model for Character.
 type Character struct {
-	Class string `binding:"required" json:"class"`
+	// ActiveMercenaryIndex PoE1 only
+	ActiveMercenaryIndex *int   `json:"active_mercenary_index,omitempty"`
+	Class                string `binding:"required" json:"class"`
 
 	// Current always true if present
 	Current *bool `json:"current,omitempty"`
@@ -885,8 +887,8 @@ type Item struct {
 	MaxStackSize      *int              `json:"maxStackSize,omitempty"`
 
 	// MemoryItem always true if present
-	MemoryItem      *bool                 `json:"memoryItem,omitempty"`
-	MercenarySkills *[]ItemMercenarySkill `json:"mercenarySkills,omitempty"`
+	MemoryItem      *bool             `json:"memoryItem,omitempty"`
+	MercenarySkills *[]MercenarySkill `json:"mercenarySkills,omitempty"`
 
 	// MonsterLevel PoE1 only; used for items that always display their monster level
 	MonsterLevel *int `json:"monsterLevel,omitempty"`
@@ -1101,14 +1103,6 @@ type ItemLogbookMod struct {
 	Name string `binding:"required" json:"name"`
 }
 
-// ItemMercenarySkill defines model for ItemMercenarySkill.
-type ItemMercenarySkill struct {
-	Hash     int        `binding:"required" json:"hash"`
-	Icon     string     `binding:"required" json:"icon"`
-	Name     string     `binding:"required" json:"name"`
-	Supports *[]Support `json:"supports,omitempty"`
-}
-
 // ItemMod defines model for ItemMod.
 type ItemMod struct {
 	Description string        `binding:"required" json:"description"`
@@ -1305,7 +1299,7 @@ type League struct {
 // LeagueAccount defines model for LeagueAccount.
 type LeagueAccount struct {
 	AtlasPassiveTrees []LeagueAccountAtlasPassiveTree `binding:"required" json:"atlas_passive_trees"`
-	AtlasPassives     *LeagueAccountAtlasPassives     `json:"atlas_passives,omitempty"`
+	Mercenaries       []LeagueAccountMercenarie       `binding:"required" json:"mercenaries"`
 }
 
 // LeagueAccountAtlasPassiveTree defines model for LeagueAccountAtlasPassiveTree.
@@ -1314,9 +1308,14 @@ type LeagueAccountAtlasPassiveTree struct {
 	Name   string `binding:"required" json:"name"`
 }
 
-// LeagueAccountAtlasPassives defines model for LeagueAccountAtlasPassives.
-type LeagueAccountAtlasPassives struct {
-	Hashes []int `binding:"required" json:"hashes"`
+// LeagueAccountMercenarie defines model for LeagueAccountMercenarie.
+type LeagueAccountMercenarie struct {
+	Build     string           `binding:"required" json:"build"`
+	BuildHash int              `binding:"required" json:"build_hash"`
+	Items     []Item           `binding:"required" json:"items"`
+	Level     int              `binding:"required" json:"level"`
+	Name      string           `binding:"required" json:"name"`
+	Skills    []MercenarySkill `binding:"required" json:"skills"`
 }
 
 // LeagueCategory defines model for LeagueCategory.
@@ -1380,6 +1379,21 @@ type Market struct {
 
 // MarketMarketId base item ids separated by a pipe. Example: Metadata/Items/Currency/CurrencyRerollRare|Metadata/Items/Currency/CurrencyModValues
 type MarketMarketId string
+
+// MercenarySkill defines model for MercenarySkill.
+type MercenarySkill struct {
+	Hash     int                      `binding:"required" json:"hash"`
+	Icon     string                   `binding:"required" json:"icon"`
+	Name     string                   `binding:"required" json:"name"`
+	Supports *[]MercenarySkillSupport `json:"supports,omitempty"`
+}
+
+// MercenarySkillSupport defines model for MercenarySkillSupport.
+type MercenarySkillSupport struct {
+	Hash int    `binding:"required" json:"hash"`
+	Name string `binding:"required" json:"name"`
+	Tier int    `binding:"required" json:"tier"`
+}
 
 // PassiveGroup defines model for PassiveGroup.
 type PassiveGroup struct {
@@ -1647,13 +1661,6 @@ type Stream struct {
 	Image  string `binding:"required" json:"image"`
 	Name   string `binding:"required" json:"name"`
 	Status string `binding:"required" json:"status"`
-}
-
-// Support defines model for Support.
-type Support struct {
-	Hash int    `binding:"required" json:"hash"`
-	Name string `binding:"required" json:"name"`
-	Tier int    `binding:"required" json:"tier"`
 }
 
 // Twitch defines model for Twitch.

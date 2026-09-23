@@ -9,6 +9,10 @@ const docTemplate = `{
         "schemas": {
             "Character": {
                 "properties": {
+                    "active_mercenary_index": {
+                        "description": "ActiveMercenaryIndex PoE1 only",
+                        "type": "integer"
+                    },
                     "class": {
                         "type": "string"
                     },
@@ -647,7 +651,7 @@ const docTemplate = `{
                     },
                     "mercenarySkills": {
                         "items": {
-                            "$ref": "#/components/schemas/ItemMercenarySkill"
+                            "$ref": "#/components/schemas/MercenarySkill"
                         },
                         "type": "array",
                         "uniqueItems": false
@@ -1083,32 +1087,6 @@ const docTemplate = `{
                 ],
                 "type": "object"
             },
-            "ItemMercenarySkill": {
-                "properties": {
-                    "hash": {
-                        "type": "integer"
-                    },
-                    "icon": {
-                        "type": "string"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "supports": {
-                        "items": {
-                            "$ref": "#/components/schemas/Support"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
-                    }
-                },
-                "required": [
-                    "hash",
-                    "icon",
-                    "name"
-                ],
-                "type": "object"
-            },
             "ItemMod": {
                 "properties": {
                     "description": {
@@ -1361,6 +1339,51 @@ const docTemplate = `{
                 "required": [
                     "tier",
                     "type"
+                ],
+                "type": "object"
+            },
+            "MercenarySkill": {
+                "properties": {
+                    "hash": {
+                        "type": "integer"
+                    },
+                    "icon": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "supports": {
+                        "items": {
+                            "$ref": "#/components/schemas/MercenarySkillSupport"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    }
+                },
+                "required": [
+                    "hash",
+                    "icon",
+                    "name"
+                ],
+                "type": "object"
+            },
+            "MercenarySkillSupport": {
+                "properties": {
+                    "hash": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "tier": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "hash",
+                    "name",
+                    "tier"
                 ],
                 "type": "object"
             },
@@ -1697,25 +1720,6 @@ const docTemplate = `{
                         "type": "boolean"
                     }
                 },
-                "type": "object"
-            },
-            "Support": {
-                "properties": {
-                    "hash": {
-                        "type": "integer"
-                    },
-                    "name": {
-                        "type": "string"
-                    },
-                    "tier": {
-                        "type": "integer"
-                    }
-                },
-                "required": [
-                    "hash",
-                    "name",
-                    "tier"
-                ],
                 "type": "object"
             },
             "TwitchStream": {
@@ -2936,7 +2940,7 @@ const docTemplate = `{
                     },
                     "mercenarySkills": {
                         "items": {
-                            "$ref": "#/components/schemas/ItemMercenarySkill"
+                            "$ref": "#/components/schemas/MercenarySkill"
                         },
                         "type": "array",
                         "uniqueItems": false
