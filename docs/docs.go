@@ -1373,6 +1373,9 @@ const docTemplate = `{
                     "hash": {
                         "type": "integer"
                     },
+                    "icon": {
+                        "type": "string"
+                    },
                     "name": {
                         "type": "string"
                     },
@@ -1382,6 +1385,7 @@ const docTemplate = `{
                 },
                 "required": [
                     "hash",
+                    "icon",
                     "name",
                     "tier"
                 ],

@@ -1007,12 +1007,15 @@ components:
       properties:
         hash:
           type: integer
+        icon:
+          type: string
         name:
           type: string
         tier:
           type: integer
       required:
       - hash
+      - icon
       - name
       - tier
       type: object

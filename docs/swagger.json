@@ -1367,6 +1367,9 @@
                     "hash": {
                         "type": "integer"
                     },
+                    "icon": {
+                        "type": "string"
+                    },
                     "name": {
                         "type": "string"
                     },
@@ -1376,6 +1379,7 @@
                 },
                 "required": [
                     "hash",
+                    "icon",
                     "name",
                     "tier"
                 ],

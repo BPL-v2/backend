@@ -1391,6 +1391,7 @@ type MercenarySkill struct {
 // MercenarySkillSupport defines model for MercenarySkillSupport.
 type MercenarySkillSupport struct {
 	Hash int    `binding:"required" json:"hash"`
+	Icon string `binding:"required" json:"icon"`
 	Name string `binding:"required" json:"name"`
 	Tier int    `binding:"required" json:"tier"`
 }
