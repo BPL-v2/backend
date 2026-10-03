@@ -16,13 +16,11 @@ const (
 )
 
 type EventStatus struct {
-	TeamId                      *int              `json:"team_id"`
-	IsTeamLead                  bool              `json:"is_team_lead" binding:"required"`
-	ApplicationStatus           ApplicationStatus `json:"application_status" binding:"required"`
-	NumberOfSignups             int               `json:"number_of_signups" binding:"required"`
-	NumberOfSignupsBefore       int               `json:"number_of_signups_before" binding:"required"`
-	PartnerWish                 *string           `json:"partner_wish"`
-	UsersWhoWantToSignUpWithYou []string          `json:"users_who_want_to_sign_up_with_you"`
+	TeamId                *int              `json:"team_id"`
+	IsTeamLead            bool              `json:"is_team_lead" binding:"required"`
+	ApplicationStatus     ApplicationStatus `json:"application_status" binding:"required"`
+	NumberOfSignups       int               `json:"number_of_signups" binding:"required"`
+	NumberOfSignupsBefore int               `json:"number_of_signups_before" binding:"required"`
 }
 
 type EventService interface {
@@ -132,10 +130,6 @@ func (e *EventServiceImpl) GetEventStatus(event *repository.Event, user *reposit
 				eventStatus.ApplicationStatus = ApplicationStatusApplied
 			}
 			eventStatus.NumberOfSignupsBefore = count - 1
-			eventStatus.PartnerWish = signup.PartnerWish
-		}
-		if signup.PartnerWish != nil && user.HasPoEName(*signup.PartnerWish) {
-			eventStatus.UsersWhoWantToSignUpWithYou = append(eventStatus.UsersWhoWantToSignUpWithYou, *signup.User.GetAccountName(repository.ProviderPoE))
 		}
 	}
 

@@ -1090,18 +1090,6 @@ func TestExtraMap_ScanNil(t *testing.T) {
 	assert.Empty(t, e)
 }
 
-// ==================== PoENameWithoutDiscriminator Tests ====================
-
-func TestPoENameWithoutDiscriminator(t *testing.T) {
-	name := "TestAccount#1234"
-	assert.Equal(t, "testaccount", PoENameWithoutDiscriminator(&name))
-
-	plain := "simpleaccount"
-	assert.Equal(t, "simpleaccount", PoENameWithoutDiscriminator(&plain))
-
-	assert.Equal(t, "", PoENameWithoutDiscriminator(nil))
-}
-
 // ==================== LoadUsersIntoEvent Tests ====================
 
 func TestLoadUsersIntoEvent(t *testing.T) {
@@ -1593,38 +1581,6 @@ func TestUser_GetPoEToken_NoPoe(t *testing.T) {
 func TestUser_GetPoEToken_NoOauths(t *testing.T) {
 	u := &User{}
 	assert.Equal(t, "", u.GetPoEToken())
-}
-
-// ==================== GetSignupPartners Tests ====================
-
-func TestGetSignupPartners(t *testing.T) {
-	partnerName := "player2#1234"
-	signups := []*Signup{
-		{User: &User{Id: 1, OauthAccounts: []*Oauth{{Provider: "poe", Name: "player1#5678"}}}, PartnerWish: &partnerName},
-		{User: &User{Id: 2, OauthAccounts: []*Oauth{{Provider: "poe", Name: "player2#1234"}}}},
-	}
-	partners := GetSignupPartners(signups)
-	assert.Len(t, partners, 1)
-	assert.Equal(t, 2, partners[1].User.Id)
-}
-
-func TestGetSignupPartners_NoPartnerWish(t *testing.T) {
-	signups := []*Signup{
-		{User: &User{Id: 1}},
-		{User: &User{Id: 2}},
-	}
-	partners := GetSignupPartners(signups)
-	assert.Empty(t, partners)
-}
-
-func TestGetSignupPartners_NoMatch(t *testing.T) {
-	wish := "nonexistent#0000"
-	signups := []*Signup{
-		{User: &User{Id: 1, OauthAccounts: []*Oauth{{Provider: "poe", Name: "player1#1111"}}}, PartnerWish: &wish},
-		{User: &User{Id: 2, OauthAccounts: []*Oauth{{Provider: "poe", Name: "player2#2222"}}}},
-	}
-	partners := GetSignupPartners(signups)
-	assert.Empty(t, partners)
 }
 
 // ==================== CharacterPob.UpdateStats Tests ====================

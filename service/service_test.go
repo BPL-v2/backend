@@ -583,40 +583,6 @@ func TestGetEventStatus_Accepted(t *testing.T) {
 	assert.True(t, status.IsTeamLead)
 }
 
-func TestGetEventStatus_PartnerWish(t *testing.T) {
-	mockSignup := new(mockSignupService)
-	mockTeam := new(mockTeamService)
-
-	event := &repository.Event{Id: 1, MaxSize: 10}
-	poeName := "MyPoEAccount#1234"
-	user := &repository.User{
-		Id:            5,
-		OauthAccounts: []*repository.Oauth{{Provider: repository.ProviderPoE, Name: poeName}},
-	}
-
-	partnerWish := "MyPoEAccount"
-	mockSignup.On("GetSignupsForEvent", event).Return([]*repository.Signup{
-		{
-			UserId:      10,
-			PartnerWish: &partnerWish,
-			User: &repository.User{
-				Id: 10,
-				OauthAccounts: []*repository.Oauth{
-					{Provider: repository.ProviderPoE, Name: "PartnerAccount#999"},
-				},
-			},
-		},
-		{UserId: 5, User: &repository.User{Id: 5}},
-	}, nil)
-	mockTeam.On("GetTeamForUser", 1, 5).Return(nil, gorm.ErrRecordNotFound)
-
-	svc := &EventServiceImpl{signupService: mockSignup, teamService: mockTeam}
-	status, err := svc.GetEventStatus(event, user)
-	require.NoError(t, err)
-	assert.Len(t, status.UsersWhoWantToSignUpWithYou, 1)
-	assert.Equal(t, "PartnerAccount#999", status.UsersWhoWantToSignUpWithYou[0])
-}
-
 // ==================== Mock-Based Tests: TeamService ====================
 
 func TestGetSortedUsersForEvent(t *testing.T) {

@@ -34,7 +34,7 @@ type Event struct {
 	Locked               bool         `gorm:"not null"`
 	IsMainEvent          bool         `gorm:"not null"`
 	UsesMedals           bool         `gorm:"not null"`
-	DuoSignups           bool         `gorm:"not null"`
+	MaxGroupSize         int          `gorm:"not null;default:1"`
 	Teams                []*Team      `gorm:"foreignKey:EventId;constraint:OnDelete:CASCADE"`
 	Objectives           []*Objective `gorm:"foreignKey:EventId;constraint:OnDelete:CASCADE"`
 }
