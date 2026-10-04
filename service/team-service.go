@@ -20,14 +20,16 @@ type TeamService interface {
 }
 
 type TeamServiceImpl struct {
-	teamRepository repository.TeamRepository
-	userRepository repository.UserRepository
+	teamRepository  repository.TeamRepository
+	userRepository  repository.UserRepository
+	groupRepository repository.SignupGroupRepository
 }
 
 func NewTeamService() TeamService {
 	return &TeamServiceImpl{
-		teamRepository: repository.NewTeamRepository(),
-		userRepository: repository.NewUserRepository(),
+		teamRepository:  repository.NewTeamRepository(),
+		userRepository:  repository.NewUserRepository(),
+		groupRepository: repository.NewSignupGroupRepository(),
 	}
 }
 
@@ -70,7 +72,16 @@ func (e *TeamServiceImpl) AddUsersToTeams(teamUsers []*repository.TeamUser, even
 	if err != nil {
 		return err
 	}
-	return e.teamRepository.AddUsersToTeams(teamUsers)
+	err = e.teamRepository.AddUsersToTeams(teamUsers)
+	if err != nil {
+		return err
+	}
+	// groups are locked as soon as any of their members got sorted
+	sortedUserIds := make([]int, 0, len(teamUsers))
+	for _, teamUser := range teamUsers {
+		sortedUserIds = append(sortedUserIds, teamUser.UserId)
+	}
+	return e.groupRepository.LockGroupsOfUsers(event.Id, sortedUserIds)
 }
 
 func (e *TeamServiceImpl) GetTeamUsersForEvent(eventId int) ([]*repository.TeamUser, error) {

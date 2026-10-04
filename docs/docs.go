@@ -2283,9 +2283,6 @@ const docTemplate = `{
                         "format": "date-time",
                         "type": "string"
                     },
-                    "duo_signups": {
-                        "type": "boolean"
-                    },
                     "event_end_time": {
                         "format": "date-time",
                         "type": "string"
@@ -2311,6 +2308,10 @@ const docTemplate = `{
                     },
                     "is_public": {
                         "type": "boolean"
+                    },
+                    "max_group_size": {
+                        "minimum": 1,
+                        "type": "integer"
                     },
                     "max_size": {
                         "type": "integer"
@@ -2338,7 +2339,6 @@ const docTemplate = `{
                 "required": [
                     "application_end_time",
                     "application_start_time",
-                    "duo_signups",
                     "event_end_time",
                     "event_start_time",
                     "game_version",
@@ -2347,6 +2347,7 @@ const docTemplate = `{
                     "is_locked",
                     "is_main_event",
                     "is_public",
+                    "max_group_size",
                     "max_size",
                     "name",
                     "teams",
@@ -2364,9 +2365,6 @@ const docTemplate = `{
                     "application_start_time": {
                         "format": "date-time",
                         "type": "string"
-                    },
-                    "duo_signups": {
-                        "type": "boolean"
                     },
                     "event_end_time": {
                         "format": "date-time",
@@ -2394,6 +2392,9 @@ const docTemplate = `{
                     "is_public": {
                         "type": "boolean"
                     },
+                    "max_group_size": {
+                        "type": "integer"
+                    },
                     "max_size": {
                         "type": "integer"
                     },
@@ -2416,6 +2417,7 @@ const docTemplate = `{
                     "event_end_time",
                     "event_start_time",
                     "game_version",
+                    "max_group_size",
                     "max_size",
                     "name",
                     "waitlist_size"
@@ -2430,6 +2432,9 @@ const docTemplate = `{
                     "extra": {
                         "type": "string"
                     },
+                    "group_key": {
+                        "type": "string"
+                    },
                     "highest_character_levels": {
                         "additionalProperties": {
                             "type": "integer"
@@ -2438,15 +2443,6 @@ const docTemplate = `{
                     },
                     "needs_help": {
                         "type": "boolean"
-                    },
-                    "partner": {
-                        "$ref": "#/components/schemas/NonSensitiveUser"
-                    },
-                    "partnerWish": {
-                        "type": "string"
-                    },
-                    "partner_id": {
-                        "type": "integer"
                     },
                     "playtimes_in_last_events_per_day_in_hours": {
                         "additionalProperties": {
@@ -2478,6 +2474,17 @@ const docTemplate = `{
                     "team_lead",
                     "timestamp",
                     "user"
+                ],
+                "type": "object"
+            },
+            "GroupJoin": {
+                "properties": {
+                    "group_key": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "group_key"
                 ],
                 "type": "object"
             },
@@ -3801,17 +3808,11 @@ const docTemplate = `{
                     "extra": {
                         "type": "string"
                     },
+                    "group": {
+                        "$ref": "#/components/schemas/SignupGroup"
+                    },
                     "needs_help": {
                         "type": "boolean"
-                    },
-                    "partner": {
-                        "$ref": "#/components/schemas/NonSensitiveUser"
-                    },
-                    "partnerWish": {
-                        "type": "string"
-                    },
-                    "partner_id": {
-                        "type": "integer"
                     },
                     "team_id": {
                         "type": "integer"
@@ -3849,15 +3850,39 @@ const docTemplate = `{
                     "needs_help": {
                         "type": "boolean"
                     },
-                    "partner_account_name": {
-                        "type": "string"
-                    },
                     "wants_to_help": {
                         "type": "boolean"
                     }
                 },
                 "required": [
                     "expected_playtime"
+                ],
+                "type": "object"
+            },
+            "SignupGroup": {
+                "properties": {
+                    "key": {
+                        "type": "string"
+                    },
+                    "locked": {
+                        "type": "boolean"
+                    },
+                    "max_size": {
+                        "type": "integer"
+                    },
+                    "members": {
+                        "items": {
+                            "$ref": "#/components/schemas/NonSensitiveUser"
+                        },
+                        "type": "array",
+                        "uniqueItems": false
+                    }
+                },
+                "required": [
+                    "key",
+                    "locked",
+                    "max_size",
+                    "members"
                 ],
                 "type": "object"
             },
@@ -4908,18 +4933,8 @@ const docTemplate = `{
                     "number_of_signups_before": {
                         "type": "integer"
                     },
-                    "partner_wish": {
-                        "type": "string"
-                    },
                     "team_id": {
                         "type": "integer"
-                    },
-                    "users_who_want_to_sign_up_with_you": {
-                        "items": {
-                            "type": "string"
-                        },
-                        "type": "array",
-                        "uniqueItems": false
                     }
                 },
                 "required": [
@@ -6458,6 +6473,135 @@ const docTemplate = `{
                             }
                         },
                         "description": "Created"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "signup"
+                ]
+            }
+        },
+        "/events/{event_id}/signups/self/group": {
+            "delete": {
+                "description": "Removes the authenticated user from their group",
+                "operationId": "LeaveSignupGroup",
+                "parameters": [
+                    {
+                        "description": "Event Id",
+                        "in": "path",
+                        "name": "event_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Signup"
+                                }
+                            }
+                        },
+                        "description": "OK"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "signup"
+                ]
+            },
+            "post": {
+                "description": "Creates a new group containing the authenticated user and returns the signup",
+                "operationId": "CreateSignupGroup",
+                "parameters": [
+                    {
+                        "description": "Event Id",
+                        "in": "path",
+                        "name": "event_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Signup"
+                                }
+                            }
+                        },
+                        "description": "Created"
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "tags": [
+                    "signup"
+                ]
+            }
+        },
+        "/events/{event_id}/signups/self/group/join": {
+            "post": {
+                "description": "Joins the group with the given key and returns the signup",
+                "operationId": "JoinSignupGroup",
+                "parameters": [
+                    {
+                        "description": "Event Id",
+                        "in": "path",
+                        "name": "event_id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object"
+                                    },
+                                    {
+                                        "$ref": "#/components/schemas/GroupJoin",
+                                        "summary": "groupJoin",
+                                        "description": "Group"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "description": "Group",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Signup"
+                                }
+                            }
+                        },
+                        "description": "OK"
                     }
                 },
                 "security": [

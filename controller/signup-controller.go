@@ -6,6 +6,7 @@ import (
 	"bpl/service"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +15,7 @@ import (
 
 type SignupController struct {
 	signupService service.SignupService
+	groupService  service.SignupGroupService
 	userService   service.UserService
 	teamService   service.TeamService
 	eventService  service.EventService
@@ -23,6 +25,7 @@ type SignupController struct {
 func NewSignupController() *SignupController {
 	return &SignupController{
 		signupService: service.NewSignupService(),
+		groupService:  service.NewSignupGroupService(),
 		userService:   service.NewUserService(),
 		teamService:   service.NewTeamService(),
 		eventService:  service.NewEventService(),
@@ -37,6 +40,9 @@ func setupSignupController() []RouteInfo {
 		{Method: "GET", Path: "", HandlerFunc: e.getSignupsForEvent(), Authenticated: true, RequiredRoles: []repository.Permission{repository.PermissionAdmin, repository.PermissionManager}},
 		{Method: "GET", Path: "/self", HandlerFunc: e.getPersonalSignupHandler(), Authenticated: true},
 		{Method: "PUT", Path: "/self", HandlerFunc: e.createSignupHandler(), Authenticated: true},
+		{Method: "POST", Path: "/self/group", HandlerFunc: e.createGroupHandler(), Authenticated: true},
+		{Method: "POST", Path: "/self/group/join", HandlerFunc: e.joinGroupHandler(), Authenticated: true},
+		{Method: "DELETE", Path: "/self/group", HandlerFunc: e.leaveGroupHandler(), Authenticated: true},
 		{Method: "DELETE", Path: "/:user_id", HandlerFunc: e.deleteSignupHandler(), Authenticated: true, RequiresUserSelf: true},
 	}
 	for i, route := range routes {
@@ -73,7 +79,10 @@ func (e *SignupController) getPersonalSignupHandler() gin.HandlerFunc {
 			}
 			return
 		}
-		c.JSON(200, toSignupResponse(signup))
+		signup.User = user
+		resp := toSignupResponse(signup)
+		e.attachGroup(resp, signup, event.MaxGroupSize)
+		c.JSON(200, resp)
 	}
 }
 
@@ -142,13 +151,14 @@ func (e *SignupController) createSignupHandler() gin.HandlerFunc {
 		signup.NeedsHelp = signupCreate.NeedsHelp
 		signup.WantsToHelp = signupCreate.WantsToHelp
 		signup.Extra = signupCreate.Extra
-		signup.PartnerWish = signupCreate.PartnerAccountName
 		signup, err = e.signupService.SaveSignup(signup)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(201, toSignupResponse(signup))
+		resp := toSignupResponse(signup)
+		e.attachGroup(resp, signup, event.MaxGroupSize)
+		c.JSON(201, resp)
 	}
 }
 
@@ -220,7 +230,11 @@ func (e *SignupController) getSignupsForEvent() gin.HandlerFunc {
 			teamUsersMap[teamUser.UserId] = teamUser
 		}
 		signupsWithUsers := make([]*ExtendedSignup, 0)
-		partnerMap := repository.GetSignupPartners(signups)
+		groupKeys, err := e.groupService.GetGroupKeysForEvent(event.Id)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
 		for _, signup := range signups {
 			playtimes := make(map[int]float64)
 			for eventId, duration := range userEventActivityCount[signup.UserId] {
@@ -236,10 +250,8 @@ func (e *SignupController) getSignupsForEvent() gin.HandlerFunc {
 				PlaytimesInLastEventsPerDayInHours: playtimes,
 				HighestCharacterLevels:             highestCharacterLevels[signup.UserId],
 			}
-			partnerSignup := partnerMap[signup.UserId]
-			if partnerSignup != nil && partnerMap[partnerSignup.User.Id] != nil && partnerMap[partnerSignup.User.Id].UserId == signup.UserId {
-				resp.PartnerId = &partnerSignup.UserId
-				resp.Partner = toNonSensitiveUserResponse(partnerSignup.User)
+			if key, ok := groupKeys[signup.UserId]; ok {
+				resp.GroupKey = &key
 			}
 			if teamUser, ok := teamUsersMap[signup.UserId]; ok {
 				resp.TeamId = &teamUser.TeamId
@@ -251,11 +263,20 @@ func (e *SignupController) getSignupsForEvent() gin.HandlerFunc {
 	}
 }
 
+type SignupGroup struct {
+	Key     string              `json:"key" binding:"required"`
+	Members []*NonSensitiveUser `json:"members" binding:"required"`
+	MaxSize int                 `json:"max_size" binding:"required"`
+	Locked  bool                `json:"locked" binding:"required"`
+}
+
+type GroupJoin struct {
+	GroupKey string `json:"group_key" binding:"required"`
+}
+
 type Signup struct {
+	Group            *SignupGroup      `json:"group"`
 	User             *NonSensitiveUser `json:"user" binding:"required"`
-	PartnerWish      *string
-	Partner          *NonSensitiveUser `json:"partner"`
-	PartnerId        *int              `json:"partner_id"`
 	Timestamp        time.Time         `json:"timestamp" binding:"required" format:"date-time"`
 	ExpectedPlaytime int               `json:"expected_playtime" binding:"required"`
 	TeamId           *int              `json:"team_id"`
@@ -266,10 +287,8 @@ type Signup struct {
 }
 
 type ExtendedSignup struct {
+	GroupKey         *string           `json:"group_key"`
 	User             *NonSensitiveUser `json:"user" binding:"required"`
-	PartnerWish      *string
-	Partner          *NonSensitiveUser `json:"partner"`
-	PartnerId        *int              `json:"partner_id"`
 	Timestamp        time.Time         `json:"timestamp" binding:"required" format:"date-time"`
 	ExpectedPlaytime int               `json:"expected_playtime" binding:"required"`
 	TeamId           *int              `json:"team_id"`
@@ -283,11 +302,10 @@ type ExtendedSignup struct {
 }
 
 type SignupCreate struct {
-	ExpectedPlaytime   int     `json:"expected_playtime" binding:"required"`
-	NeedsHelp          bool    `json:"needs_help"`
-	WantsToHelp        bool    `json:"wants_to_help"`
-	PartnerAccountName *string `json:"partner_account_name"`
-	Extra              *string `json:"extra"`
+	ExpectedPlaytime int     `json:"expected_playtime" binding:"required"`
+	NeedsHelp        bool    `json:"needs_help"`
+	WantsToHelp      bool    `json:"wants_to_help"`
+	Extra            *string `json:"extra"`
 }
 
 func toSignupResponse(signup *repository.Signup) *Signup {
@@ -297,11 +315,144 @@ func toSignupResponse(signup *repository.Signup) *Signup {
 
 	return &Signup{
 		User:             toNonSensitiveUserResponse(signup.User),
-		PartnerWish:      signup.PartnerWish,
 		Timestamp:        signup.Timestamp,
 		ExpectedPlaytime: signup.ExpectedPlayTime,
 		NeedsHelp:        signup.NeedsHelp,
 		WantsToHelp:      signup.WantsToHelp,
 		Extra:            signup.Extra,
+	}
+}
+
+// attachGroup adds the group the signup's user is part of (if any) to the response.
+func (e *SignupController) attachGroup(resp *Signup, signup *repository.Signup, maxGroupSize int) {
+	key, err := e.groupService.GetGroupKeyForUser(signup.EventId, signup.UserId)
+	if err != nil || key == nil {
+		return
+	}
+	members, err := e.groupService.GetGroupMembers(signup.EventId, *key)
+	if err != nil {
+		return
+	}
+	group := &SignupGroup{Key: *key, MaxSize: maxGroupSize, Members: make([]*NonSensitiveUser, 0, len(members))}
+	for _, member := range members {
+		group.Members = append(group.Members, toNonSensitiveUserResponse(member.User))
+		group.Locked = group.Locked || member.Locked
+	}
+	resp.Group = group
+}
+
+func groupErrorStatus(err error) int {
+	switch err {
+	case repository.ErrGroupNotFound:
+		return 404
+	case repository.ErrGroupFull, repository.ErrGroupLocked, repository.ErrAlreadyInGroup, repository.ErrNotInGroup:
+		return 400
+	default:
+		return 500
+	}
+}
+
+// groupContext resolves the event and user for group endpoints and makes sure the user has a signup.
+func (e *SignupController) groupContext(c *gin.Context) (*repository.Event, *repository.User, *repository.Signup) {
+	event := getEvent(c)
+	if event == nil {
+		return nil, nil, nil
+	}
+	user, err := e.userService.GetUserFromAuthHeader(c)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "Not authenticated"})
+		return nil, nil, nil
+	}
+	if event.MaxGroupSize < 2 {
+		c.JSON(400, gin.H{"error": "Group signups are not enabled for this event"})
+		return nil, nil, nil
+	}
+	signup, err := e.signupService.GetSignupForUser(user.Id, event.Id)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "You need to sign up before you can use groups"})
+		return nil, nil, nil
+	}
+	if _, err := e.teamService.GetTeamForUser(event.Id, user.Id); err == nil {
+		c.JSON(400, gin.H{"error": repository.ErrGroupLocked.Error()})
+		return nil, nil, nil
+	}
+	signup.User = user
+	return event, user, signup
+}
+
+// @id CreateSignupGroup
+// @Description Creates a new group containing the authenticated user and returns the signup
+// @Tags signup
+// @Produce json
+// @Security BearerAuth
+// @Success 201 {object} Signup
+// @Param event_id path int true "Event Id"
+// @Router /events/{event_id}/signups/self/group [post]
+func (e *SignupController) createGroupHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		event, user, signup := e.groupContext(c)
+		if signup == nil {
+			return
+		}
+		if _, err := e.groupService.CreateGroup(event.Id, user.Id, event.MaxGroupSize); err != nil {
+			c.JSON(groupErrorStatus(err), gin.H{"error": err.Error()})
+			return
+		}
+		resp := toSignupResponse(signup)
+		e.attachGroup(resp, signup, event.MaxGroupSize)
+		c.JSON(201, resp)
+	}
+}
+
+// @id JoinSignupGroup
+// @Description Joins the group with the given key and returns the signup
+// @Tags signup
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} Signup
+// @Param event_id path int true "Event Id"
+// @Param groupJoin body GroupJoin true "Group"
+// @Router /events/{event_id}/signups/self/group/join [post]
+func (e *SignupController) joinGroupHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		event, user, signup := e.groupContext(c)
+		if signup == nil {
+			return
+		}
+		var body GroupJoin
+		if err := c.BindJSON(&body); err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		if err := e.groupService.JoinGroup(event.Id, user.Id, strings.TrimSpace(body.GroupKey), event.MaxGroupSize); err != nil {
+			c.JSON(groupErrorStatus(err), gin.H{"error": err.Error()})
+			return
+		}
+		resp := toSignupResponse(signup)
+		e.attachGroup(resp, signup, event.MaxGroupSize)
+		c.JSON(200, resp)
+	}
+}
+
+// @id LeaveSignupGroup
+// @Description Removes the authenticated user from their group
+// @Tags signup
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} Signup
+// @Param event_id path int true "Event Id"
+// @Router /events/{event_id}/signups/self/group [delete]
+func (e *SignupController) leaveGroupHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		event, user, signup := e.groupContext(c)
+		if signup == nil {
+			return
+		}
+		if err := e.groupService.LeaveGroup(event.Id, user.Id); err != nil {
+			c.JSON(groupErrorStatus(err), gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, toSignupResponse(signup))
 	}
 }

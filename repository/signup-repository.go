@@ -3,7 +3,6 @@ package repository
 import (
 	"bpl/config"
 	"bpl/metrics"
-	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -15,33 +14,10 @@ type Signup struct {
 	UserId           int       `gorm:"not null;references:event(id);primaryKey"`
 	Timestamp        time.Time `gorm:"not null"`
 	User             *User     `gorm:"foreignKey:UserId;references:Id;constraint:OnDelete:CASCADE"`
-	PartnerWish      *string   `gorm:"null"`
 	ExpectedPlayTime int       `gorm:"not null"`
 	NeedsHelp        bool      `gorm:"not null"`
 	WantsToHelp      bool      `gorm:"not null"`
-	ActualPlayTime   int       `gorm:"not null;default:0"`
 	Extra            *string   `gorm:"null"`
-}
-
-func GetSignupPartners(signups []*Signup) map[int]*Signup {
-	partnerMap := make(map[int]*Signup)
-	for _, signup1 := range signups {
-		if signup1.PartnerWish != nil {
-			for _, signup2 := range signups {
-				if signup2.User.HasPoEName(*signup1.PartnerWish) {
-					partnerMap[signup1.User.Id] = signup2
-				}
-			}
-		}
-	}
-	return partnerMap
-}
-
-func PoENameWithoutDiscriminator(name *string) string {
-	if name == nil {
-		return ""
-	}
-	return strings.ToLower(strings.Split(*name, "#")[0])
 }
 
 type SignupRepository interface {

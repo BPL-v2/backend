@@ -9,7 +9,6 @@ type SignupService interface {
 	SaveSignup(signup *repository.Signup) (*repository.Signup, error)
 	RemoveSignupForUser(userId int, eventId int) error
 	GetSignupForUser(userId int, eventId int) (*repository.Signup, error)
-	ReportPlaytime(userId int, eventId int, actualPlaytime int) (*repository.Signup, error)
 	GetSignupsForEvent(event *repository.Event) ([]*repository.Signup, error)
 	GetExtendedSignupsForEvent(event *repository.Event) ([]*repository.Signup, map[int]map[int]time.Duration, map[int]map[int]int, error)
 }
@@ -46,15 +45,6 @@ func (r *SignupServiceImpl) RemoveSignupForUser(userId int, eventId int) error {
 
 func (r *SignupServiceImpl) GetSignupForUser(userId int, eventId int) (*repository.Signup, error) {
 	return r.signupRepository.GetSignupForUser(userId, eventId)
-}
-
-func (r *SignupServiceImpl) ReportPlaytime(userId int, eventId int, actualPlaytime int) (*repository.Signup, error) {
-	signup, err := r.signupRepository.GetSignupForUser(userId, eventId)
-	if err != nil {
-		return nil, err
-	}
-	signup.ActualPlayTime = actualPlaytime
-	return r.signupRepository.SaveSignup(signup)
 }
 
 type SignupWithUser struct {

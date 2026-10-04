@@ -237,7 +237,7 @@ type EventCreate struct {
 	Locked               bool                   `json:"is_locked"`
 	IsMainEvent          bool                   `json:"is_main_event"`
 	UsesMedals           bool                   `json:"uses_medals"`
-	DuoSignups           bool                   `json:"duo_signups"`
+	MaxGroupSize         int                    `json:"max_group_size" binding:"required"`
 }
 
 type Event struct {
@@ -257,7 +257,7 @@ type Event struct {
 	Locked               bool                   `json:"is_locked" binding:"required"`
 	IsMainEvent          bool                   `json:"is_main_event" binding:"required"`
 	UsesMedals           bool                   `json:"uses_medals" binding:"required"`
-	DuoSignups           bool                   `json:"duo_signups" binding:"required"`
+	MaxGroupSize         int                    `json:"max_group_size" binding:"required,min=1"`
 }
 
 func (e *EventCreate) toModel() *repository.Event {
@@ -276,7 +276,7 @@ func (e *EventCreate) toModel() *repository.Event {
 		Locked:               e.Locked,
 		IsMainEvent:          e.IsMainEvent,
 		UsesMedals:           e.UsesMedals,
-		DuoSignups:           e.DuoSignups,
+		MaxGroupSize:         e.MaxGroupSize,
 	}
 	if e.Id != nil {
 		event.Id = *e.Id
@@ -305,6 +305,6 @@ func toEventResponse(event *repository.Event) *Event {
 		Locked:               event.Locked,
 		IsMainEvent:          event.IsMainEvent,
 		UsesMedals:           event.UsesMedals,
-		DuoSignups:           event.DuoSignups,
+		MaxGroupSize:         event.MaxGroupSize,
 	}
 }
