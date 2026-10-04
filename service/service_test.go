@@ -37,7 +37,14 @@ func (m *mockSignupService) GetSignupForUser(userId int, eventId int) (*reposito
 	}
 	return args.Get(0).(*repository.Signup), args.Error(1)
 }
-^func (m *mockSignupService) GetSignupsForEvent(event *repository.Event) ([]*repository.Signup, error) {
+func (m *mockSignupService) ReportPlaytime(userId int, eventId int, actualPlaytime int) (*repository.Signup, error) {
+	args := m.Called(userId, eventId, actualPlaytime)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*repository.Signup), args.Error(1)
+}
+func (m *mockSignupService) GetSignupsForEvent(event *repository.Event) ([]*repository.Signup, error) {
 	args := m.Called(event)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
