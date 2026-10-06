@@ -15,17 +15,7 @@ import (
 var ninjaStatsURL = "https://poe.ninja/poe1/api/data/stats"
 
 type NinjaResponse struct {
-	Id                      int    `json:"id"`
-	NextChangeId            string `json:"next_change_id"`
-	APIBytesDownloaded      int    `json:"api_bytes_downloaded"`
-	StashTabsProcessed      int    `json:"stash_tabs_processed"`
-	APICalls                int    `json:"api_calls"`
-	CharacterBytesDl        int    `json:"character_bytes_downloaded"`
-	CharacterAPICalls       int    `json:"character_api_calls"`
-	LadderBytesDl           int    `json:"ladder_bytes_downloaded"`
-	LadderAPICalls          int    `json:"ladder_api_calls"`
-	PoBCharactersCalculated int    `json:"pob_characters_calculated"`
-	OAuthFlows              int    `json:"oauth_flows"`
+	NextChangeId string `json:"river_next_change_id"`
 }
 
 type StashChangeService interface {
