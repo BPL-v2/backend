@@ -3300,6 +3300,7 @@ components:
       - IS_IDENTIFIED
       - IS_MIRRORED
       - IS_VEILED
+      - IS_FORESEEING
       - SANCTUM_AFFLICTIONS
       - TEMPLE_ROOMS
       - TEMPLE_ROOMS_OPEN
@@ -3354,6 +3355,7 @@ components:
       - IS_IDENTIFIED
       - IS_MIRRORED
       - IS_VEILED
+      - IS_FORESEEING
       - SANCTUM_MODS
       - TEMPLE_ROOMS
       - TEMPLE_ROOMS_OPEN

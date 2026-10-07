@@ -81,6 +81,13 @@ func BoolFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) bool
 			return false
 		}, nil
 
+	case dbModel.IS_FORESEEING:
+		return func(item *clientModel.Item) bool {
+			if item.Foreseeing != nil {
+				return *item.Foreseeing
+			}
+			return false
+		}, nil
 	default:
 		return nil, fmt.Errorf("%s is not a valid boolean field", field)
 	}
@@ -324,7 +331,7 @@ func StringArrayFieldGetter(field dbModel.ItemField) (func(item *clientModel.Ite
 					if property.Type != nil && *property.Type == 49 {
 						for _, value := range property.Values {
 							// value.ID == 0 => open room
-							if value.Id() == 0 {  
+							if value.Id() == 0 {
 								rooms = append(rooms, strings.Split(value.Name(), " (Tier")[0])
 							}
 						}

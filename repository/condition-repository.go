@@ -48,6 +48,7 @@ const (
 	IS_IDENTIFIED           ItemField = "IS_IDENTIFIED"
 	IS_MIRRORED             ItemField = "IS_MIRRORED"
 	IS_VEILED               ItemField = "IS_VEILED"
+	IS_FORESEEING           ItemField = "IS_FORESEEING"
 	SANCTUM_MODS            ItemField = "SANCTUM_AFFLICTIONS"
 	TEMPLE_ROOMS            ItemField = "TEMPLE_ROOMS"
 	TEMPLE_ROOMS_OPEN       ItemField = "TEMPLE_ROOMS_OPEN"
@@ -111,6 +112,7 @@ var FieldToType = map[ItemField]FieldType{
 	IS_MIRRORED:             Bool,
 	IS_VESTIGAL:             Bool,
 	IS_VEILED:               Bool,
+	IS_FORESEEING:           Bool,
 	SANCTUM_MODS:            StringArray,
 	TEMPLE_ROOMS:            StringArray,
 	TEMPLE_ROOMS_T3:         StringArray,

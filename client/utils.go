@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 )
 
@@ -118,7 +117,6 @@ func (v ItemValue) Id() int {
 	case int:
 		return id
 	case float64:
-		log.Printf("ItemValue.Id: id %v is a float64, converting to int", id)
 		return int(id)
 	case int64:
 		return int(id)
