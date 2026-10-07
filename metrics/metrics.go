@@ -100,3 +100,8 @@ var ScoreEvaluationDuration = promauto.NewHistogram(prometheus.HistogramOpts{
 		0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10,
 	},
 })
+
+var PanicsRecoveredCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+	Name: "bpl_panics_recovered_total",
+	Help: "Number of panics recovered in background goroutines, by goroutine name",
+}, []string{"goroutine"})

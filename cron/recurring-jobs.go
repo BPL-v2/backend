@@ -5,6 +5,7 @@ import (
 	"bpl/config"
 	"bpl/repository"
 	"bpl/service"
+	"bpl/utils"
 	"context"
 	"fmt"
 	"log"
@@ -54,10 +55,14 @@ func NewRecurringJobService(poeClient *client.PoEClient) *RecurringJobService {
 func (s *RecurringJobService) StartLongRunningJobs() {
 	if config.Env().RefreshPoETokens {
 		// make sure to only run this on the server
-		go s.oauthService.RefreshPoETokensLoop(context.Background(), time.Duration(10)*time.Minute)
+		utils.Go("refresh-poe-tokens", func() {
+			s.oauthService.RefreshPoETokensLoop(context.Background(), time.Duration(10)*time.Minute)
+		})
 	}
-	go PlayerStatsLoop(context.Background())
-	go s.achievementService.SyncAchievementsLoop(context.Background(), time.Hour)
+	utils.Go("player-stats", func() { PlayerStatsLoop(context.Background()) })
+	utils.Go("sync-achievements", func() {
+		s.achievementService.SyncAchievementsLoop(context.Background(), time.Hour)
+	})
 }
 
 func (s *RecurringJobService) InitializeJobs() (map[repository.JobType]*RecurringJob, error) {
@@ -153,8 +158,8 @@ func (s *RecurringJobService) FetchCharacterData(job *RecurringJob) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Until(job.EndDate))
 	job.Cancel = cancel
-	go PlayerFetchLoop(ctx, event, s.poeClient)
-	go PlayerStatsLoop(ctx)
+	utils.Go("player-fetch", func() { PlayerFetchLoop(ctx, event, s.poeClient) })
+	utils.Go("player-stats", func() { PlayerStatsLoop(ctx) })
 	return nil
 }
 
@@ -166,6 +171,6 @@ func (s *RecurringJobService) FetchGuildStashes(job *RecurringJob) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Until(job.EndDate))
 	job.Cancel = cancel
-	go GuildStashFetchLoop(ctx, event, s.poeClient)
+	utils.Go("guild-stash-fetch", func() { GuildStashFetchLoop(ctx, event, s.poeClient) })
 	return nil
 }

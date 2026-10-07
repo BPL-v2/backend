@@ -241,6 +241,6 @@ func StashEvaluationLoop(ctx context.Context, poeClient *client.PoEClient, event
 		return err
 	}
 	fmt.Println("Item checker initialized with", len(objectives), "objectives")
-	go m.ProcessStashChanges(itemChecker, objectives)
+	utils.Go("process-stash-changes", func() { m.ProcessStashChanges(itemChecker, objectives) })
 	return nil
 }

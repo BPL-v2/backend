@@ -542,29 +542,29 @@ func addGuildStashesToQueue(kafkaWriter *kafka.Writer, change *client.PublicStas
 
 func GuildStashFetchLoop(ctx context.Context, event *repository.Event, poeClient *client.PoEClient) {
 	fetchingService := NewFetchingService(ctx, event, poeClient)
-	go func() {
+	utils.Go("fetch-guild-stashes", func() {
 		err := fetchingService.FetchGuildStashes()
 		if err != nil {
 			fmt.Printf("Failed to fetch guild stashes: %v\n", err)
 		}
-	}()
-	go fetchingService.AccessDeterminationLoop()
+	})
+	utils.Go("access-determination", fetchingService.AccessDeterminationLoop)
 }
 
 func ItemFetchLoop(ctx context.Context, event *repository.Event, poeClient *client.PoEClient) {
 	fmt.Println("Starting item fetch loop")
 	fetchingService := NewFetchingService(ctx, event, poeClient)
-	go func() {
+	utils.Go("fetch-stash-changes", func() {
 		err := fetchingService.FetchStashChanges()
 		if err != nil {
 			fmt.Printf("Failed to fetch stash changes: %v\n", err)
 		}
-	}()
-	go func() {
+	})
+	utils.Go("filter-stash-changes", func() {
 		err := fetchingService.FilterStashChanges()
 		if err != nil {
 			fmt.Printf("Failed to filter stash changes: %v\n", err)
 		}
-	}()
+	})
 
 }

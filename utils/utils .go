@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"bpl/metrics"
 	"fmt"
 	"log"
+	"runtime/debug"
 	"strings"
 
 	"github.com/lib/pq"
@@ -111,6 +113,20 @@ func Uniques[A comparable](input []A) []A {
 		ids[item] = true
 	}
 	return Keys(ids)
+}
+
+// Go runs fn in a new goroutine and recovers from panics, logging the panic
+// and stack trace instead of crashing the whole process.
+func Go(name string, fn func()) {
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				metrics.PanicsRecoveredCounter.WithLabelValues(name).Inc()
+				log.Printf("panic recovered in goroutine %q: %v\n%s", name, r, debug.Stack())
+			}
+		}()
+		fn()
+	}()
 }
 
 func BatchIterator[A any](input []A, batchSize int) <-chan []A {

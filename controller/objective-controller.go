@@ -96,10 +96,10 @@ func (e *ObjectiveController) validateObjectivesHandler() gin.HandlerFunc {
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(validationRequest.TimeoutSeconds)*time.Second)
 		e.validationContextCancel = &cancel
-		go func() {
+		utils.Go("objective-validation", func() {
 			defer cancel()
 			cron.ValidationLoop(ctx, e.poeClient)
-		}()
+		})
 		c.JSON(204, nil)
 	}
 }
