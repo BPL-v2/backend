@@ -1312,6 +1312,7 @@ type LeagueAccountAtlasPassiveTree struct {
 type LeagueAccountMercenarie struct {
 	Build     string           `binding:"required" json:"build"`
 	BuildHash int              `binding:"required" json:"build_hash"`
+	Index     int              `binding:"required" json:"index"`
 	Items     []Item           `binding:"required" json:"items"`
 	Level     int              `binding:"required" json:"level"`
 	Name      string           `binding:"required" json:"name"`
