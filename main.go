@@ -4,9 +4,12 @@ import (
 	"bpl/config"
 	"bpl/controller"
 	_ "bpl/docs"
+	"bpl/metrics"
 	"fmt"
 	"log"
+	"net/http"
 	"regexp"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -45,7 +48,11 @@ func main() {
 	_ = db
 	// autoMigrate(db)
 	r := gin.New()
-	r.Use(gin.Recovery())
+	r.Use(gin.CustomRecovery(func(c *gin.Context, err any) {
+		metrics.PanicsRecoveredCounter.WithLabelValues("http").Inc()
+		log.Printf("panic recovered in %s %s: %v\n%s", c.Request.Method, c.Request.URL.Path, err, debug.Stack())
+		c.AbortWithStatus(http.StatusInternalServerError)
+	}))
 	err = r.SetTrustedProxies(nil)
 	if err != nil {
 		log.Fatalf("Failed to set trusted proxies: %v", err)
