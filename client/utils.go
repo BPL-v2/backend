@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 )
 
@@ -107,8 +108,23 @@ func (v ItemValue) Name() string {
 	return name
 }
 
+// Id returns the numeric id of the value. JSON numbers decode as float64, so
+// several numeric types are handled; a missing or non-numeric id yields -1.
 func (v ItemValue) Id() int {
-	return v[1].(int)
+	if len(v) < 2 {
+		return -1
+	}
+	switch id := v[1].(type) {
+	case int:
+		return id
+	case float64:
+		log.Printf("ItemValue.Id: id %v is a float64, converting to int", id)
+		return int(id)
+	case int64:
+		return int(id)
+	default:
+		return -1
+	}
 }
 
 type ClientCredentialsGrantResponse struct {
