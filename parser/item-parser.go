@@ -30,6 +30,10 @@ func BoolFieldGetter(field dbModel.ItemField) (func(item *clientModel.Item) bool
 			}
 			return false
 		}, nil
+	case dbModel.IS_ELDRITCH:
+		return func(item *clientModel.Item) bool {
+			return item.Tangled != nil || item.Searing != nil
+		}, nil
 	case dbModel.IS_VAAL:
 		return func(item *clientModel.Item) bool {
 			if item.Hybrid != nil && item.Hybrid.IsVaalGem != nil {

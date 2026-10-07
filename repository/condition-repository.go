@@ -40,6 +40,7 @@ const (
 	MAX_LINKS               ItemField = "MAX_LINKS"
 	SOCKETS                 ItemField = "SOCKETS" // as string like "RGBW"
 	INCUBATOR_KILLS         ItemField = "INCUBATOR_KILLS"
+	IS_ELDRITCH             ItemField = "IS_ELDRITCH"
 	IS_CORRUPTED            ItemField = "IS_CORRUPTED"
 	IS_VESTIGAL             ItemField = "IS_VESTIGAL"
 	IS_VAAL                 ItemField = "IS_VAAL"
@@ -101,6 +102,7 @@ var FieldToType = map[ItemField]FieldType{
 	SOCKETS:                 String,
 	INCUBATOR_KILLS:         Int,
 	FACETOR_LENS_EXP:        Int,
+	IS_ELDRITCH:             Bool,
 	IS_CORRUPTED:            Bool,
 	IS_VAAL:                 Bool,
 	IS_SPLIT:                Bool,

@@ -3292,6 +3292,7 @@ components:
       - MAX_LINKS
       - SOCKETS
       - INCUBATOR_KILLS
+      - IS_ELDRITCH
       - IS_CORRUPTED
       - IS_VESTIGAL
       - IS_VAAL
@@ -3344,6 +3345,7 @@ components:
       - MAX_LINKS
       - SOCKETS
       - INCUBATOR_KILLS
+      - IS_ELDRITCH
       - IS_CORRUPTED
       - IS_VESTIGAL
       - IS_VAAL
