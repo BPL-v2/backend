@@ -439,3 +439,13 @@ func TestCloser_Error(t *testing.T) {
 	closer()
 	assert.Contains(t, buf.String(), "Error closing resource")
 }
+
+// ==================== SplitEscaped ====================
+
+func TestSplitEscaped(t *testing.T) {
+	assert.Equal(t, []string{"a", "b", "c"}, SplitEscaped("a, b,c"))
+	assert.Equal(t, []string{"d,e", "b", "c"}, SplitEscaped(`d\,e,b, c`))
+	assert.Equal(t, []string{`a\`, "b"}, SplitEscaped(`a\\,b`))
+	assert.Equal(t, []string{`a\x`}, SplitEscaped(`a\x`))
+	assert.Equal(t, []string{"single"}, SplitEscaped("single"))
+}

@@ -16,6 +16,27 @@ func Map[A any, B any](input []A, mapper func(A) B) []B {
 	return output
 }
 
+// SplitEscaped splits s on commas and trims whitespace around each part.
+// A comma can be kept as part of a value by escaping it with a backslash (`d\,e`),
+// and a literal backslash can be written as `\\`. Any other backslash is kept as is.
+func SplitEscaped(s string) []string {
+	parts := []string{}
+	var current strings.Builder
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c == '\\' && i+1 < len(s) && (s[i+1] == ',' || s[i+1] == '\\') {
+			current.WriteByte(s[i+1])
+			i++
+		} else if c == ',' {
+			parts = append(parts, strings.TrimSpace(current.String()))
+			current.Reset()
+		} else {
+			current.WriteByte(c)
+		}
+	}
+	return append(parts, strings.TrimSpace(current.String()))
+}
+
 func FilterNull[A any](input []*A) []*A {
 	output := make([]*A, 0)
 	for _, item := range input {

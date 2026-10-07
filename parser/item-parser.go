@@ -512,7 +512,7 @@ func IntComparator(condition *dbModel.Condition) (itemChecker, error) {
 	if err != nil {
 		return nil, err
 	}
-	var values = utils.Map(strings.Split(condition.Value, ","), strings.TrimSpace)
+	var values = utils.SplitEscaped(condition.Value)
 	intValues := make([]int, len(values))
 	for i, v := range values {
 		intValue, err := strconv.Atoi(v)
@@ -569,12 +569,12 @@ func StringComparator(condition *dbModel.Condition) (itemChecker, error) {
 			return boolToInt(getter(item) != condition.Value)
 		}, nil
 	case dbModel.IN:
-		var values = utils.Map(strings.Split(condition.Value, ","), strings.TrimSpace)
+		var values = utils.SplitEscaped(condition.Value)
 		return func(item *clientModel.Item) int {
 			return boolToInt(slices.Contains(values, getter(item)))
 		}, nil
 	case dbModel.NOT_IN:
-		var values = utils.Map(strings.Split(condition.Value, ","), strings.TrimSpace)
+		var values = utils.SplitEscaped(condition.Value)
 		return func(item *clientModel.Item) int {
 			return boolToInt(!slices.Contains(values, getter(item)))
 		}, nil
@@ -643,9 +643,7 @@ func StringArrayComparator(condition *dbModel.Condition) (itemChecker, error) {
 			return 0
 		}, nil
 	case dbModel.CONTAINS_ALL:
-		values := utils.Map(strings.Split(condition.Value, ","), func(s string) string {
-			return strings.Trim(s, " ")
-		})
+		values := utils.SplitEscaped(condition.Value)
 		return func(item *clientModel.Item) int {
 			for _, expectedValue := range values {
 				found := false
@@ -786,7 +784,7 @@ func GetDiscriminators(conditions []*dbModel.Condition) ([]*Discriminator, []*db
 				return discriminators, remainingConditions
 			}
 			if condition.Operator == dbModel.IN {
-				values := utils.Map(strings.Split(condition.Value, ","), strings.TrimSpace)
+				values := utils.SplitEscaped(condition.Value)
 				discriminators := make([]*Discriminator, 0, len(values))
 				for _, value := range values {
 					discriminators = append(discriminators, &Discriminator{field: toDiscriminatorField(condition.Field), value: value})
