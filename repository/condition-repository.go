@@ -50,6 +50,7 @@ const (
 	IS_VEILED               ItemField = "IS_VEILED"
 	SANCTUM_MODS            ItemField = "SANCTUM_AFFLICTIONS"
 	TEMPLE_ROOMS            ItemField = "TEMPLE_ROOMS"
+	TEMPLE_ROOMS_OPEN       ItemField = "TEMPLE_ROOMS_OPEN"
 	TEMPLE_ROOMS_T3         ItemField = "TEMPLE_ROOMS_T3"
 	RITUAL_BOSSES           ItemField = "RITUAL_VESSEL_BOSSES"
 	RITUAL_MAP              ItemField = "RITUAL_VESSEL_MAP"
@@ -113,6 +114,7 @@ var FieldToType = map[ItemField]FieldType{
 	SANCTUM_MODS:            StringArray,
 	TEMPLE_ROOMS:            StringArray,
 	TEMPLE_ROOMS_T3:         StringArray,
+	TEMPLE_ROOMS_OPEN:       StringArray,
 	RITUAL_BOSSES:           StringArray,
 	RITUAL_MAP:              StringArray,
 	MEMORY_STRANDS:          Int,

@@ -308,9 +308,25 @@ func StringArrayFieldGetter(field dbModel.ItemField) (func(item *clientModel.Ite
 			if item.AdditionalProperties != nil {
 				for _, property := range *item.AdditionalProperties {
 					if property.Type != nil && *property.Type == 49 {
-						// we can also only look for open rooms by requiring value.ID == 0
 						for _, value := range property.Values {
 							rooms = append(rooms, strings.Split(value.Name(), " (Tier")[0])
+						}
+					}
+				}
+			}
+			return rooms
+		}, nil
+	case dbModel.TEMPLE_ROOMS_OPEN:
+		return func(item *clientModel.Item) []string {
+			rooms := make([]string, 0)
+			if item.AdditionalProperties != nil {
+				for _, property := range *item.AdditionalProperties {
+					if property.Type != nil && *property.Type == 49 {
+						for _, value := range property.Values {
+							// value.ID == 0 => open room
+							if value.Id() == 0 {  
+								rooms = append(rooms, strings.Split(value.Name(), " (Tier")[0])
+							}
 						}
 					}
 				}
