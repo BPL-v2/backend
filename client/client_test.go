@@ -2,6 +2,7 @@ package client
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"sync"
 	"testing"
@@ -190,4 +191,67 @@ func TestIpIsRateLimited_RecentRequest(t *testing.T) {
 	key := RequestKey{Token: "tok", Endpoint: "ep"}
 	c.requestTimestamps[key] = []time.Time{time.Now()}
 	assert.True(t, c.ipIsRateLimited())
+}
+
+// ========== poe.ninja character PoB links ==========
+
+func newFakeNinja(t *testing.T) *[]url.Values {
+	t.Helper()
+	var seen []url.Values
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/data/index-state":
+			w.Write([]byte(`{"snapshotVersions":[
+				{"url":"pl86992","type":"depthsolo","version":"1530-20261012-40697","snapshotName":"sgf-vespers-treasure-(pl86992)","overviewType":1},
+				{"url":"pl86992","type":"exp","version":"1530-20261012-37024","snapshotName":"sgf-vespers-treasure-(pl86992)","overviewType":0}
+			]}`))
+		case "/api/builds/1530-20261012-37024/character":
+			seen = append(seen, r.URL.Query())
+			w.Write([]byte(`{"name":"Kel_Sleeping","pathOfBuildingExport":"eNrtexport"}`))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	t.Cleanup(server.Close)
+	previous := ninjaBaseURL
+	ninjaBaseURL = server.URL
+	t.Cleanup(func() { ninjaBaseURL = previous })
+	return &seen
+}
+
+func TestFetchPoBFromShareLink_NinjaCharacterPage(t *testing.T) {
+	requests := newFakeNinja(t)
+
+	code, err := FetchPoBFromShareLink("https://poe.ninja/poe1/builds/pl86992/character/Keltra-6990/Kel_Sleeping?i=0&search=sort%3Ddps&timemachine=day-3")
+
+	require.NoError(t, err)
+	assert.Equal(t, "eNrtexport", code)
+	require.Len(t, *requests, 1)
+	query := (*requests)[0]
+	assert.Equal(t, "Keltra-6990", query.Get("account"))
+	assert.Equal(t, "Kel_Sleeping", query.Get("name"))
+	assert.Equal(t, "sgf-vespers-treasure-(pl86992)", query.Get("overview"))
+	assert.Equal(t, "0", query.Get("type"))
+	assert.Equal(t, "day-3", query.Get("timeMachine"))
+}
+
+func TestFetchPoBFromShareLink_NinjaCharacterPage_NoTimeMachine(t *testing.T) {
+	requests := newFakeNinja(t)
+
+	_, err := FetchPoBFromShareLink("https://poe.ninja/builds/pl86992/character/Keltra-6990/Kel%20Sleeping")
+
+	require.NoError(t, err)
+	require.Len(t, *requests, 1)
+	query := (*requests)[0]
+	assert.False(t, query.Has("timeMachine"))
+	assert.Equal(t, "Kel Sleeping", query.Get("name"))
+}
+
+func TestFetchPoBFromShareLink_NinjaCharacterPage_UnknownLeague(t *testing.T) {
+	newFakeNinja(t)
+
+	_, err := FetchPoBFromShareLink("https://poe.ninja/poe1/builds/nosuchleague/character/Keltra-6990/Kel_Sleeping")
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "nosuchleague")
 }
