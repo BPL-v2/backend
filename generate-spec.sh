@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # script to remove package names from generated Swagger doc
 swag init --v3.1
