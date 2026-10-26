@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Build stage
-FROM golang:1.26 AS builder
+FROM golang:1.27.3-alpine3.24 AS builder
 
 WORKDIR /app
 RUN wget https://github.com/swaggo/swag/releases/download/v1.16.4/swag_1.16.4_Linux_x86_64.tar.gz && \
