@@ -46,10 +46,10 @@ func setupGuildStashController(PoEClient *client.PoEClient) []RouteInfo {
 		{Method: "POST", Path: "/:event_id/teams/:team_id/guild-stash/:stash_id/update", HandlerFunc: e.updateStashTab(), Authenticated: true, RequiresTeamLeader: true},
 
 		{Method: "GET", Path: "/:event_id/guilds", HandlerFunc: e.getGuilds()},
-		{Method: "PUT", Path: "/:event_id/guilds/:guildId", HandlerFunc: e.saveGuild(), Authenticated: true},
-		{Method: "GET", Path: "/:event_id/guilds/:guildId/stash-history", HandlerFunc: e.getLogEntriesForGuild(), Authenticated: true},
-		{Method: "POST", Path: "/:event_id/guilds/:guildId/stash-history", HandlerFunc: e.addHistory(), Authenticated: true},
-		{Method: "GET", Path: "/:event_id/guilds/:guildId/stash-history/latest_timestamp", HandlerFunc: e.getLatestTimestampForUser(), Authenticated: true},
+		{Method: "PUT", Path: "/:event_id/guilds/:guildId", HandlerFunc: e.saveGuild(), Authenticated: true, RequiresTeamLeader: true},
+		{Method: "GET", Path: "/:event_id/guilds/:guildId/stash-history", HandlerFunc: e.getLogEntriesForGuild(), Authenticated: true, RequiresTeamLeader: true},
+		{Method: "POST", Path: "/:event_id/guilds/:guildId/stash-history", HandlerFunc: e.addHistory(), Authenticated: true, RequiresTeamLeader: true},
+		{Method: "GET", Path: "/:event_id/guilds/:guildId/stash-history/latest_timestamp", HandlerFunc: e.getLatestTimestampForUser(), Authenticated: true, RequiresTeamLeader: true},
 	}
 	for i, route := range routes {
 		routes[i].Path = basePath + route.Path
@@ -584,8 +584,8 @@ type GuildStashChangelog struct {
 
 type Guild struct {
 	Id      int    `json:"id" binding:"required"`
-	TeamId  int    `json:"team_id"`
-	EventId int    `json:"event_id"`
+	TeamId  int    `json:"team_id" binding:"required"`
+	EventId int    `json:"event_id" binding:"required"`
 	Name    string `json:"name" binding:"required"`
 	Tag     string `json:"tag" binding:"required"`
 }

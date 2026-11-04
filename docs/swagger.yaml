@@ -1830,9 +1830,11 @@ components:
         team_id:
           type: integer
       required:
+      - event_id
       - id
       - name
       - tag
+      - team_id
       type: object
     GuildStashChangeResponse:
       properties:

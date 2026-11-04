@@ -2526,9 +2526,11 @@ const docTemplate = `{
                     }
                 },
                 "required": [
+                    "event_id",
                     "id",
                     "name",
-                    "tag"
+                    "tag",
+                    "team_id"
                 ],
                 "type": "object"
             },
