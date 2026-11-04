@@ -46,10 +46,10 @@ func setupGuildStashController(PoEClient *client.PoEClient) []RouteInfo {
 		{Method: "POST", Path: "/:event_id/teams/:team_id/guild-stash/:stash_id/update", HandlerFunc: e.updateStashTab(), Authenticated: true, RequiresTeamLeader: true},
 
 		{Method: "GET", Path: "/:event_id/guilds", HandlerFunc: e.getGuilds()},
-		{Method: "PUT", Path: "/:event_id/guilds/:guildId", HandlerFunc: e.saveGuild(), Authenticated: true, RequiresTeamLeader: true},
-		{Method: "GET", Path: "/:event_id/guilds/:guildId/stash-history", HandlerFunc: e.getLogEntriesForGuild(), Authenticated: true, RequiresTeamLeader: true},
-		{Method: "POST", Path: "/:event_id/guilds/:guildId/stash-history", HandlerFunc: e.addHistory(), Authenticated: true, RequiresTeamLeader: true},
-		{Method: "GET", Path: "/:event_id/guilds/:guildId/stash-history/latest_timestamp", HandlerFunc: e.getLatestTimestampForUser(), Authenticated: true, RequiresTeamLeader: true},
+		{Method: "PUT", Path: "/:event_id/guilds/:guildId", HandlerFunc: e.saveGuild(), Authenticated: true},
+		{Method: "GET", Path: "/:event_id/guilds/:guildId/stash-history", HandlerFunc: e.getLogEntriesForGuild(), Authenticated: true},
+		{Method: "POST", Path: "/:event_id/guilds/:guildId/stash-history", HandlerFunc: e.addHistory(), Authenticated: true},
+		{Method: "GET", Path: "/:event_id/guilds/:guildId/stash-history/latest_timestamp", HandlerFunc: e.getLatestTimestampForUser(), Authenticated: true},
 	}
 	for i, route := range routes {
 		routes[i].Path = basePath + route.Path
@@ -235,15 +235,21 @@ func (e *GuildStashController) getLogEntriesForGuild() gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": "invalid guild id"})
 			return
 		}
-		existingGuild, err := e.guildStashService.GetGuildById(guildId, event.Id)
-		if err != nil {
-			respondError(c, err)
-			return
-		}
-		teamUser, _, err := e.userService.GetTeamForUser(c, event)
-		if err != nil || existingGuild.TeamId != teamUser.TeamId {
-			c.JSON(403, gin.H{"message": "Team lead access required"})
-			return
+		if !isAdmin(c) {
+			existingGuild, err := e.guildStashService.GetGuildById(guildId, event.Id)
+			if err != nil {
+				respondError(c, err)
+				return
+			}
+			teamUser, _, err := e.userService.GetTeamForUser(c, event)
+			if err != nil {
+				respondError(c, err)
+				return
+			}
+			if !(existingGuild.TeamId == teamUser.TeamId && teamUser.IsTeamLead) {
+				c.JSON(403, gin.H{"message": "Team lead access required"})
+				return
+			}
 		}
 		limit, err := getIntQueryParam(c, "limit")
 		if err != nil {

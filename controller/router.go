@@ -233,7 +233,7 @@ func TeamSelfMiddleware() gin.HandlerFunc {
 		}
 		teamService := service.NewUserService()
 		teamUser, _, err := teamService.GetTeamForUser(r, event)
-		if (err != nil || teamUser.TeamId != teamId) && !slices.Contains(getUserRoles(r), repository.PermissionAdmin) {
+		if (err != nil || teamUser.TeamId != teamId) && !isAdmin(r) {
 			r.AbortWithStatus(403)
 			return
 		}
@@ -326,6 +326,11 @@ func getUserRoles(r *gin.Context) (permissions []repository.Permission) {
 	return utils.Map(claims.Permissions, func(perm string) repository.Permission {
 		return repository.Permission(perm)
 	})
+}
+
+func isAdmin(r *gin.Context) bool {
+	userRoles := getUserRoles(r)
+	return slices.Contains(userRoles, repository.PermissionAdmin)
 }
 
 func isAuthenticated(r *gin.Context) bool {
